@@ -1,0 +1,7 @@
+{
+  "name": "The Haven",
+  "description": "A financial trust platform for the Kenyan diaspora to manage funds, verify recipients, and ensure transparent transactions home.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
