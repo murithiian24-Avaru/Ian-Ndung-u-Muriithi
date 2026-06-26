@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Wallet, TransactionCategory, Recipient } from '../types';
-import { Send, PieChart, Coins } from 'lucide-react';
+import { Send, PieChart, Coins, AlertTriangle } from 'lucide-react';
 
 interface FundManagerProps {
   wallet: Wallet;
@@ -15,19 +15,33 @@ export default function FundManager({ wallet, setWallet, recipients }: FundManag
   const [note, setNote] = useState('');
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSend = () => {
-    if (!amount || !selectedRecipient) return;
+    setError(null);
+
+    if (!amount || !selectedRecipient) {
+      setError('Please select a recipient and enter an amount.');
+      return;
+    }
+
+    const amt = parseFloat(amount);
+    if (isNaN(amt) || amt <= 0) {
+      setError('Please enter a valid positive amount.');
+      return;
+    }
+
+    if (amt > wallet.balance) {
+      setError(`Insufficient balance. You have KES ${wallet.balance.toLocaleString()} available but tried to send KES ${amt.toLocaleString()}.`);
+      return;
+    }
+
     setProcessing(true);
 
     setTimeout(() => {
-        const amt = parseFloat(amount);
         const newWallet = { ...wallet };
-        
-        // Deduct from main balance (simplified logic: usually you allocate first, then send)
-        // Here we just update the specific allocation bucket
         newWallet.allocated[category] += amt;
-        newWallet.balance -= amt; // Assuming main balance is unallocated pool for this demo
+        newWallet.balance -= amt;
 
         setWallet(newWallet);
         setProcessing(false);
@@ -103,8 +117,15 @@ export default function FundManager({ wallet, setWallet, recipients }: FundManag
                         />
                     </div>
 
+                    {error && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-2 text-red-700 text-sm">
+                            <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
                     <button 
-                        disabled={processing || !amount || !selectedRecipient}
+                        disabled={processing}
                         onClick={handleSend}
                         className={`w-full py-4 rounded-xl font-bold text-lg text-white transition-all ${processing ? 'bg-gray-400 cursor-wait' : 'bg-brand-600 hover:bg-brand-700 shadow-lg hover:shadow-xl hover:-translate-y-1'}`}
                     >

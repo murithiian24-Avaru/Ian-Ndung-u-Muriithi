@@ -4,16 +4,25 @@ import { TransactionCategory } from "../types";
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
+export interface AnalysisResult {
+  recommendation: string;
+  category: TransactionCategory;
+  confidence: number;
+  summary: string;
+  error?: string;
+}
+
 export const analyzeRequest = async (
   text: string, 
   imageUrl?: string
-): Promise<{ recommendation: string; category: TransactionCategory; confidence: number; summary: string }> => {
+): Promise<AnalysisResult> => {
   if (!apiKey) {
     return {
-      recommendation: "API Key missing. Cannot analyze.",
+      recommendation: "Manual Review Needed",
       category: TransactionCategory.GENERAL,
       confidence: 0,
-      summary: "Simulated analysis: Looks like a valid request."
+      summary: "Automatic analysis unavailable.",
+      error: "API key is not configured. Please set the GEMINI_API_KEY environment variable."
     };
   }
 
@@ -36,9 +45,6 @@ export const analyzeRequest = async (
 
     const modelId = "gemini-2.5-flash";
     
-    // In a real scenario with image, we'd pass the base64 or blob.
-    // For this demo, if imageUrl is present, we assume it's a valid invoice for the context.
-    
     const response = await ai.models.generateContent({
       model: modelId,
       contents: prompt,
@@ -47,29 +53,75 @@ export const analyzeRequest = async (
       }
     });
 
-    const jsonText = response.text || "{}";
-    const result = JSON.parse(jsonText);
+    const jsonText = response.text;
+    if (!jsonText) {
+      return {
+        recommendation: "Manual Review Needed",
+        category: TransactionCategory.GENERAL,
+        confidence: 0,
+        summary: "Analysis returned an empty response.",
+        error: "The AI model returned an empty response. Please try again."
+      };
+    }
+
+    let result: Record<string, unknown>;
+    try {
+      result = JSON.parse(jsonText);
+    } catch (parseError) {
+      return {
+        recommendation: "Manual Review Needed",
+        category: TransactionCategory.GENERAL,
+        confidence: 0,
+        summary: "Analysis returned an unparseable response.",
+        error: "Failed to parse AI response. Please try again."
+      };
+    }
 
     return {
-      recommendation: result.recommendation || "Verify",
-      category: result.category || TransactionCategory.GENERAL,
-      confidence: result.confidence || 50,
-      summary: result.summary || "Request analyzed."
+      recommendation: (result.recommendation as string) || "Verify",
+      category: (result.category as TransactionCategory) || TransactionCategory.GENERAL,
+      confidence: (result.confidence as number) || 50,
+      summary: (result.summary as string) || "Request analyzed."
     };
 
   } catch (error) {
-    console.error("Gemini analysis failed", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Gemini analysis failed:", message);
     return {
       recommendation: "Manual Review Needed",
       category: TransactionCategory.GENERAL,
       confidence: 0,
-      summary: "Could not analyze request automatically."
+      summary: "Could not analyze request automatically.",
+      error: `Analysis failed: ${message}`
     };
   }
 };
 
-export const verifyDocument = async (base64Image: string): Promise<{ isValid: boolean; extractedAmount: number; merchant: string }> => {
-    if (!apiKey) return { isValid: true, extractedAmount: 0, merchant: "Unknown" };
+export interface VerifyDocumentResult {
+  isValid: boolean;
+  extractedAmount: number;
+  merchant: string;
+  error?: string;
+}
+
+export const verifyDocument = async (base64Image: string): Promise<VerifyDocumentResult> => {
+    if (!apiKey) {
+        return {
+            isValid: false,
+            extractedAmount: 0,
+            merchant: "Unknown",
+            error: "API key is not configured. Document could not be verified."
+        };
+    }
+
+    if (!base64Image) {
+        return {
+            isValid: false,
+            extractedAmount: 0,
+            merchant: "Unknown",
+            error: "No image data provided for verification."
+        };
+    }
 
     try {
         const response = await ai.models.generateContent({
@@ -92,9 +144,41 @@ export const verifyDocument = async (base64Image: string): Promise<{ isValid: bo
             }
         });
 
-        return JSON.parse(response.text || "{}");
+        const jsonText = response.text;
+        if (!jsonText) {
+            return {
+                isValid: false,
+                extractedAmount: 0,
+                merchant: "Unknown",
+                error: "Document verification returned an empty response."
+            };
+        }
+
+        let result: Record<string, unknown>;
+        try {
+            result = JSON.parse(jsonText);
+        } catch (parseError) {
+            return {
+                isValid: false,
+                extractedAmount: 0,
+                merchant: "Unknown",
+                error: "Failed to parse verification response."
+            };
+        }
+
+        return {
+            isValid: Boolean(result.isValid),
+            extractedAmount: Number(result.amount) || 0,
+            merchant: (result.merchant as string) || "Unknown"
+        };
     } catch (e) {
-        console.error(e);
-        return { isValid: false, extractedAmount: 0, merchant: "Error" };
+        const message = e instanceof Error ? e.message : "Unknown error";
+        console.error("Document verification failed:", message);
+        return {
+            isValid: false,
+            extractedAmount: 0,
+            merchant: "Unknown",
+            error: `Document verification failed: ${message}`
+        };
     }
 }
