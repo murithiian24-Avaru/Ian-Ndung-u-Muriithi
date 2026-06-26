@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Recipient, RecipientStatus } from '../types';
-import { Plus, CheckCircle, Clock, XCircle, ShieldCheck, User } from 'lucide-react';
+import { Plus, CheckCircle, Clock, XCircle, ShieldCheck, User, AlertTriangle } from 'lucide-react';
 
 interface RecipientsProps {
   recipients: Recipient[];
@@ -12,19 +12,36 @@ export default function Recipients({ recipients, setRecipients }: RecipientsProp
   const [newRecipient, setNewRecipient] = useState<Partial<Recipient>>({
     name: '', relation: '', type: 'Family', phone: ''
   });
+  const [addError, setAddError] = useState<string | null>(null);
 
   const handleAdd = () => {
+    setAddError(null);
+
+    const missingFields: string[] = [];
+    if (!newRecipient.name?.trim()) missingFields.push('Name');
+    if (!newRecipient.relation?.trim()) missingFields.push('Relation');
+    if (!newRecipient.phone?.trim()) missingFields.push('M-Pesa Number / Paybill');
+
+    if (missingFields.length > 0) {
+      setAddError(`Please fill in: ${missingFields.join(', ')}`);
+      return;
+    }
+
     const id = (Math.random() * 1000).toString();
     setRecipients([
       ...recipients, 
       { 
-        ...newRecipient as Recipient, 
-        id, 
+        id,
+        name: newRecipient.name!.trim(),
+        relation: newRecipient.relation!.trim(),
+        type: newRecipient.type || 'Family',
+        phone: newRecipient.phone!.trim(),
         status: RecipientStatus.PENDING, 
         trustScore: 50 
       }
     ]);
     setShowAddModal(false);
+    setAddError(null);
     setNewRecipient({ name: '', relation: '', type: 'Family', phone: '' });
   };
 
@@ -147,8 +164,14 @@ export default function Recipients({ recipients, setRecipients }: RecipientsProp
                 onChange={e => setNewRecipient({...newRecipient, phone: e.target.value})}
               />
             </div>
+            {addError && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-2 text-red-700 text-sm">
+                <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                <span>{addError}</span>
+              </div>
+            )}
             <div className="flex justify-end space-x-3 mt-6">
-              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">Cancel</button>
+              <button onClick={() => { setShowAddModal(false); setAddError(null); }} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">Cancel</button>
               <button onClick={handleAdd} className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700">Add & Verify</button>
             </div>
           </div>
