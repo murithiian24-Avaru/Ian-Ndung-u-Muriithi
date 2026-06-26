@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Wallet, Recipient } from '../types';
 import { AlertTriangle, Lock, PhoneCall, ShieldAlert } from 'lucide-react';
+import PageHeader from './ui/PageHeader';
 
 interface EmergencyProps {
   wallet: Wallet;
@@ -39,11 +40,11 @@ export default function Emergency({ wallet, recipients }: EmergencyProps) {
     <div className="max-w-2xl mx-auto text-center pt-10">
       <div className="mb-8">
         <ShieldAlert size={64} className="mx-auto text-red-600 mb-4" />
-        <h1 className="text-3xl font-bold text-gray-900">Emergency Mode</h1>
-        <p className="text-gray-600 mt-2">
-            Instantly release funds to your primary trusted contact. <br/>
-            Use only in critical situations (Medical, Security, Travel).
-        </p>
+        <PageHeader
+          title="Emergency Mode"
+          description="Instantly release funds to your primary trusted contact. Use only in critical situations (Medical, Security, Travel)."
+          className=""
+        />
       </div>
 
       <div className="bg-white p-8 rounded-3xl shadow-xl border border-red-100 relative overflow-hidden">
