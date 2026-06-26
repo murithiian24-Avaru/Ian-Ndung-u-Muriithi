@@ -35,14 +35,23 @@ export default function ChatRequests({ requests, setRequests, wallet, setWallet 
     const updated = requests.map(r => r.id === selectedRequest.id ? { ...r, status } : r);
     setRequests(updated);
     
-    // If approved, deduct funds (simplified)
+    // If approved, deduct funds with balance validation
     if (status === RequestStatus.APPROVED) {
         const newWallet = { ...wallet };
-        // Check if category has funds, else take from balance
-        if (newWallet.allocated[selectedRequest.category] >= selectedRequest.amount) {
+        const categoryBalance = newWallet.allocated[selectedRequest.category] || 0;
+        const totalAvailable = categoryBalance + newWallet.balance;
+
+        if (selectedRequest.amount > totalAvailable) {
+          alert('Insufficient funds to approve this request.');
+          return;
+        }
+
+        if (categoryBalance >= selectedRequest.amount) {
             newWallet.allocated[selectedRequest.category] -= selectedRequest.amount;
         } else {
-            newWallet.balance -= selectedRequest.amount;
+            const remainder = selectedRequest.amount - categoryBalance;
+            newWallet.allocated[selectedRequest.category] = 0;
+            newWallet.balance -= remainder;
         }
         setWallet(newWallet);
     }
