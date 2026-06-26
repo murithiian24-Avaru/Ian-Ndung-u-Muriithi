@@ -14,12 +14,21 @@ export default function Recipients({ recipients, setRecipients }: RecipientsProp
   });
 
   const handleAdd = () => {
-    const id = (Math.random() * 1000).toString();
+    const trimmedName = (newRecipient.name || '').trim();
+    const trimmedPhone = (newRecipient.phone || '').trim();
+    const trimmedRelation = (newRecipient.relation || '').trim();
+
+    if (!trimmedName || !trimmedPhone || !trimmedRelation) return;
+
+    const id = crypto.randomUUID();
     setRecipients([
       ...recipients, 
       { 
-        ...newRecipient as Recipient, 
-        id, 
+        id,
+        name: trimmedName,
+        relation: trimmedRelation,
+        type: newRecipient.type || 'Family',
+        phone: trimmedPhone,
         status: RecipientStatus.PENDING, 
         trustScore: 50 
       }

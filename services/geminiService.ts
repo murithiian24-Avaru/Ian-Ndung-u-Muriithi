@@ -2,6 +2,14 @@ import { GoogleGenAI } from "@google/genai";
 import { TransactionCategory } from "../types";
 
 const apiKey = process.env.API_KEY || '';
+
+if (apiKey && typeof window !== 'undefined') {
+  console.warn(
+    '[Security] Gemini API key is embedded in the client bundle. ' +
+    'In production, route AI requests through a backend proxy to avoid exposing your key.'
+  );
+}
+
 const ai = new GoogleGenAI({ apiKey });
 
 export const analyzeRequest = async (
@@ -48,13 +56,27 @@ export const analyzeRequest = async (
     });
 
     const jsonText = response.text || "{}";
-    const result = JSON.parse(jsonText);
+    let result: Record<string, unknown>;
+    try {
+      result = JSON.parse(jsonText);
+    } catch {
+      return {
+        recommendation: "Manual Review Needed",
+        category: TransactionCategory.GENERAL,
+        confidence: 0,
+        summary: "AI returned malformed data. Please review manually."
+      };
+    }
+
+    const confidence = typeof result.confidence === 'number'
+      ? Math.max(0, Math.min(100, result.confidence))
+      : 50;
 
     return {
-      recommendation: result.recommendation || "Verify",
-      category: result.category || TransactionCategory.GENERAL,
-      confidence: result.confidence || 50,
-      summary: result.summary || "Request analyzed."
+      recommendation: typeof result.recommendation === 'string' ? result.recommendation : "Verify",
+      category: typeof result.category === 'string' ? (result.category as TransactionCategory) : TransactionCategory.GENERAL,
+      confidence,
+      summary: typeof result.summary === 'string' ? result.summary : "Request analyzed."
     };
 
   } catch (error) {
@@ -92,7 +114,18 @@ export const verifyDocument = async (base64Image: string): Promise<{ isValid: bo
             }
         });
 
-        return JSON.parse(response.text || "{}");
+        let parsed: Record<string, unknown>;
+        try {
+          parsed = JSON.parse(response.text || "{}");
+        } catch {
+          return { isValid: false, extractedAmount: 0, merchant: "Parse Error" };
+        }
+
+        return {
+          isValid: typeof parsed.isValid === 'boolean' ? parsed.isValid : false,
+          extractedAmount: typeof parsed.amount === 'number' ? parsed.amount : 0,
+          merchant: typeof parsed.merchant === 'string' ? parsed.merchant : "Unknown"
+        };
     } catch (e) {
         console.error(e);
         return { isValid: false, extractedAmount: 0, merchant: "Error" };
