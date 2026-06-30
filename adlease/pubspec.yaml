@@ -1,0 +1,50 @@
+name: adlease
+description: "AdLease - Watch. Earn. Own. Ad-powered phone ownership platform."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.2
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.4.1
+  cloud_firestore: ^5.6.1
+  firebase_storage: ^12.4.1
+  google_sign_in: ^6.2.2
+  shared_preferences: ^2.3.4
+  intl: ^0.19.0
+  uuid: ^4.5.1
+  crypto: ^3.0.6
+  percent_indicator: ^4.2.4
+  fl_chart: ^0.70.2
+  shimmer: ^3.0.0
+  cached_network_image: ^3.4.1
+  flutter_animate: ^4.5.2
+  google_fonts: ^6.2.1
+  device_info_plus: ^11.2.0
+  package_info_plus: ^8.1.3
+  url_launcher: ^6.3.1
+  share_plus: ^10.1.4
+  image_picker: ^1.1.2
+  path_provider: ^2.1.5
+  connectivity_plus: ^6.1.1
+  flutter_secure_storage: ^9.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/images/
