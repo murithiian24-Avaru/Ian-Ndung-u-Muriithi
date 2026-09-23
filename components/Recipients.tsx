@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Recipient, RecipientStatus } from '../types';
 import { Plus, CheckCircle, Clock, XCircle, ShieldCheck, User } from 'lucide-react';
+import PageHeader from './ui/PageHeader';
+import Card from './ui/Card';
+import Modal from './ui/Modal';
+import { FormInput, FormSelect } from './ui/FormField';
 
 interface RecipientsProps {
   recipients: Recipient[];
@@ -38,10 +42,7 @@ export default function Recipients({ recipients, setRecipients }: RecipientsProp
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Trusted Recipients</h1>
-          <p className="text-gray-500">Manage who can receive funds directly.</p>
-        </div>
+        <PageHeader title="Trusted Recipients" description="Manage who can receive funds directly." className="" />
         <button 
           onClick={() => setShowAddModal(true)}
           className="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition shadow-lg shadow-brand-200"
@@ -51,9 +52,11 @@ export default function Recipients({ recipients, setRecipients }: RecipientsProp
         </button>
       </div>
 
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {recipients.map((recipient) => (
-          <div key={recipient.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
+          <div key={recipient.id}>
+          <Card className="flex flex-col h-full !rounded-xl">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center space-x-3">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${recipient.type === 'Family' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
@@ -105,44 +108,39 @@ export default function Recipients({ recipients, setRecipients }: RecipientsProp
                  Verified & Secure
                </button>
             )}
+          </Card>
           </div>
         ))}
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Add Trusted Recipient</h2>
+        <Modal title="Add Trusted Recipient" onClose={() => setShowAddModal(false)}>
             <div className="space-y-4">
-              <input 
-                type="text" 
-                placeholder="Full Name / Company Name" 
-                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+              <FormInput
+                type="text"
+                placeholder="Full Name / Company Name"
                 value={newRecipient.name}
                 onChange={e => setNewRecipient({...newRecipient, name: e.target.value})}
               />
               <div className="grid grid-cols-2 gap-4">
-                  <select 
-                    className="p-3 border border-gray-200 rounded-lg outline-none"
+                  <FormSelect
                     value={newRecipient.type}
                     onChange={e => setNewRecipient({...newRecipient, type: e.target.value as any})}
                   >
                     <option value="Family">Family</option>
                     <option value="Service Provider">Service Provider</option>
                     <option value="Institution">Institution</option>
-                  </select>
-                  <input 
-                    type="text" 
-                    placeholder="Relation (e.g., Mom)" 
-                    className="p-3 border border-gray-200 rounded-lg outline-none"
+                  </FormSelect>
+                  <FormInput
+                    type="text"
+                    placeholder="Relation (e.g., Mom)"
                     value={newRecipient.relation}
                     onChange={e => setNewRecipient({...newRecipient, relation: e.target.value})}
                   />
               </div>
-              <input 
-                type="text" 
-                placeholder="M-Pesa Number / Paybill" 
-                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none"
+              <FormInput
+                type="text"
+                placeholder="M-Pesa Number / Paybill"
                 value={newRecipient.phone}
                 onChange={e => setNewRecipient({...newRecipient, phone: e.target.value})}
               />
@@ -151,8 +149,7 @@ export default function Recipients({ recipients, setRecipients }: RecipientsProp
               <button onClick={() => setShowAddModal(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">Cancel</button>
               <button onClick={handleAdd} className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700">Add & Verify</button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
