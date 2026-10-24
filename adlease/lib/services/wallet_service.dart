@@ -78,9 +78,27 @@ class WalletService {
     required String paymentMethod,
     required String paymentDetails,
   }) async {
+    if (amount <= 0) {
+      throw Exception('Enter an amount greater than zero');
+    }
     final wallet = await getWallet(userId);
     if (wallet.balance < amount) {
       throw Exception('Insufficient balance');
+    }
+
+    // Reserve the amount immediately so the same balance cannot be requested
+    // twice. The request stays "pending"; totalWithdrawn is only updated once
+    // a payout is actually made.
+    final wallets = await _getWallets();
+    final walletIndex = wallets.indexWhere((w) => w['userId'] == userId);
+    if (walletIndex != -1) {
+      wallets[walletIndex] = wallet
+          .copyWith(
+            balance: wallet.balance - amount,
+            lastUpdated: DateTime.now(),
+          )
+          .toMap();
+      await _saveWallets(wallets);
     }
 
     final request = WithdrawalRequest(

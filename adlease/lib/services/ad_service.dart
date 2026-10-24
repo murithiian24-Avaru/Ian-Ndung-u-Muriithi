@@ -119,6 +119,13 @@ class AdService {
     required bool completedFully,
     required String deviceId,
   }) async {
+    // Enforce the daily limit at the point the reward is recorded, not only
+    // before an ad starts, so a second claim cannot exceed maxAdsPerDay.
+    // (Still based on the device clock; a server must enforce this for real.)
+    if (completedFully && !await canWatchAd(userId)) {
+      throw StateError('Daily ad limit reached');
+    }
+
     final now = DateTime.now();
     final record = AdViewRecord(
       id: const Uuid().v4(),

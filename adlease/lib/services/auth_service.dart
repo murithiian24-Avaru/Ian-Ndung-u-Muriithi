@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter/foundation.dart';
 import 'package:adlease/models/user_model.dart';
 import 'package:adlease/services/storage_service.dart';
 
@@ -95,39 +94,21 @@ class AuthService {
     return user;
   }
 
+  // Google sign-in previously logged every user into a hard-coded
+  // "Demo User" account. It stays unavailable until real Firebase
+  // Authentication with Google is configured.
   Future<UserModel?> signInWithGoogle() async {
-    final uid = const Uuid().v4();
-    final user = UserModel(
-      uid: uid,
-      email: 'demo@gmail.com',
-      fullName: 'Demo User',
-      phoneNumber: '+254700000000',
-      country: 'Kenya',
-      referralCode: _generateReferralCode(),
-      createdAt: DateTime.now(),
-      lastLoginAt: DateTime.now(),
-      isVerified: true,
+    throw Exception(
+      'Google sign-in is not available yet. Please use email and password.',
     );
-
-    final users = await _getUsers();
-    final existing = users.where((u) => u['email'] == user.email).toList();
-    if (existing.isEmpty) {
-      final userData = user.toMap();
-      userData['passwordHash'] = '';
-      users.add(userData);
-      await _saveUsers(users);
-    }
-    await _storage.saveString(_currentUserKey, jsonEncode(user.toMap()));
-    return user;
   }
 
+  // There is no email backend yet, so no reset link can be sent. Say so
+  // instead of pretending a link was sent.
   Future<void> resetPassword(String email) async {
-    final users = await _getUsers();
-    final matching = users.where((u) => u['email'] == email).toList();
-    if (matching.isEmpty) {
-      throw Exception('No account found with this email');
-    }
-    debugPrint('Password reset link sent to $email');
+    throw Exception(
+      'Password reset by email is not available yet. Please contact support.',
+    );
   }
 
   Future<UserModel?> getCurrentUser() async {

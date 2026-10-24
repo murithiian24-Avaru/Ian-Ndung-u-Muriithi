@@ -60,6 +60,13 @@ class _LoginScreenState extends State<LoginScreen> {
         AppRoutes.main,
         (route) => false,
       );
+    } else if (mounted && auth.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(auth.error!),
+          backgroundColor: AdLeaseTheme.errorRed,
+        ),
+      );
     }
   }
 

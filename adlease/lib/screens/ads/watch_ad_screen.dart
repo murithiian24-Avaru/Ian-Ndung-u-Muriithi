@@ -18,12 +18,13 @@ class WatchAdScreen extends StatefulWidget {
 }
 
 class _WatchAdScreenState extends State<WatchAdScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const int adDuration = 60;
   int _secondsRemaining = adDuration;
   bool _isPlaying = false;
   bool _isCompleted = false;
   bool _rewardClaimed = false;
+  bool _isClaiming = false;
   Timer? _timer;
   late AnimationController _pulseController;
   // ignore: unused_field
@@ -32,6 +33,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -40,9 +42,33 @@ class _WatchAdScreenState extends State<WatchAdScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _pulseController.dispose();
     super.dispose();
+  }
+
+  // The countdown used to keep running while the app was in the background,
+  // so a reward could be earned without watching. If the app leaves the
+  // foreground mid-ad, stop and reset the ad.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final leftForeground =
+        state == AppLifecycleState.paused || state == AppLifecycleState.hidden;
+    if (_isPlaying && leftForeground) {
+      _timer?.cancel();
+      setState(() {
+        _isPlaying = false;
+        _secondsRemaining = adDuration;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'The ad was stopped because you left the app. Start it again to earn the reward.',
+          ),
+        ),
+      );
+    }
   }
 
   void _startAd() {
@@ -72,6 +98,8 @@ class _WatchAdScreenState extends State<WatchAdScreen>
   }
 
   Future<void> _claimReward() async {
+    // Guard against a double tap claiming the same reward twice.
+    if (_isClaiming || _rewardClaimed || !_isCompleted) return;
     final user = context.read<AuthProvider>().user;
     if (user == null) return;
 
@@ -79,14 +107,30 @@ class _WatchAdScreenState extends State<WatchAdScreen>
     final ads = adProvider.availableAds;
     if (ads.isEmpty) return;
 
-    final record = await adProvider.recordAdView(
-      userId: user.uid,
-      adId: ads.first.id,
-      completedFully: true,
-      deviceId: user.deviceId,
-    );
+    setState(() => _isClaiming = true);
+    try {
+      final record = await adProvider.recordAdView(
+        userId: user.uid,
+        adId: ads.first.id,
+        completedFully: true,
+        deviceId: user.deviceId,
+      );
+      if (!mounted) return;
 
-    if (record != null && mounted) {
+      if (record == null) {
+        // recordAdView returns null when the service rejects the view,
+        // for example because today's limit has been reached.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'This reward could not be recorded. You may have reached today\'s limit.',
+            ),
+            backgroundColor: AdLeaseTheme.errorRed,
+          ),
+        );
+        return;
+      }
+
       await context.read<WalletProvider>().addEarning(
             user.uid,
             AdService.rewardPerAd,
@@ -94,14 +138,21 @@ class _WatchAdScreenState extends State<WatchAdScreen>
           );
 
       if (!mounted) return;
+      // NOTE: the same reward is also applied to the phone payment below,
+      // so it is counted twice (audit finding H3). Left unchanged pending a
+      // product decision on where rewards should go.
       final ownershipProvider = context.read<OwnershipProvider>();
       if (ownershipProvider.hasActiveOwnership) {
         await ownershipProvider.addPayment(user.uid, AdService.rewardPerAd);
       }
 
-      setState(() {
-        _rewardClaimed = true;
-      });
+      if (mounted) {
+        setState(() {
+          _rewardClaimed = true;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isClaiming = false);
     }
   }
 
@@ -381,7 +432,8 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         GradientButton(
           text: 'Claim Reward',
           icon: Icons.card_giftcard,
-          onPressed: _claimReward,
+          isLoading: _isClaiming,
+          onPressed: _isClaiming ? null : _claimReward,
         ),
       ],
     );
