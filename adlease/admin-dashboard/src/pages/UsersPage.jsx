@@ -52,7 +52,7 @@ export default function UsersPage() {
               <tr className="border-b border-gray-100">
                 <th className="text-left p-4 text-sm font-semibold text-gray-600">User</th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-600">Country</th>
-                <th className="text-left p-4 text-sm font-semibold text-gray-600">Balance</th>
+                <th className="text-left p-4 text-sm font-semibold text-gray-600">Applied to phone (demo)</th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-600">Ownership</th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-600">Status</th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-600">Actions</th>
@@ -73,7 +73,7 @@ export default function UsersPage() {
                     </div>
                   </td>
                   <td className="p-4 text-sm text-gray-600">{user.country}</td>
-                  <td className="p-4 text-sm font-semibold">${user.balance.toFixed(2)}</td>
+                  <td className="p-4 text-sm font-semibold">KSh {user.balance.toFixed(2)}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">

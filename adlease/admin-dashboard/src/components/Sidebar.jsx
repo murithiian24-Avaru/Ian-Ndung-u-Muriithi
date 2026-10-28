@@ -3,8 +3,9 @@ import {
   LayoutDashboard, Users, Megaphone, PlayCircle,
   CreditCard, BarChart3, ShieldAlert, LogOut, Smartphone
 } from 'lucide-react'
+import { WITHDRAWALS_ENABLED } from '../features'
 
-const menuItems = [
+const allMenuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'advertisers', label: 'Advertisers', icon: Megaphone },
@@ -13,6 +14,10 @@ const menuItems = [
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'fraud', label: 'Fraud Monitor', icon: ShieldAlert },
 ]
+
+const menuItems = allMenuItems.filter(
+  (item) => item.id !== 'withdrawals' || WITHDRAWALS_ENABLED
+)
 
 export default function Sidebar({ currentPage, onNavigate }) {
   return (

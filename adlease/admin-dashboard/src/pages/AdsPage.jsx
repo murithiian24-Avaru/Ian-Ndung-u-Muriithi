@@ -2,11 +2,12 @@ import React, { useState } from 'react'
 import { Plus, Upload, PlayCircle, Eye, Trash2, Clock } from 'lucide-react'
 
 const sampleAds = [
-  { id: 1, title: 'Safaricom M-Pesa Go', advertiser: 'Safaricom', duration: 60, views: 1240, reward: 2.50, status: 'active', created: '2024-01-15' },
-  { id: 2, title: 'Samsung Galaxy S24 Launch', advertiser: 'Samsung', duration: 60, views: 890, reward: 2.50, status: 'active', created: '2024-01-20' },
-  { id: 3, title: 'Equity Bank Digital Account', advertiser: 'Equity Bank', duration: 60, views: 560, reward: 2.50, status: 'active', created: '2024-02-01' },
-  { id: 4, title: 'Tecno Camon 20 Pro', advertiser: 'Tecno Mobile', duration: 60, views: 2100, reward: 2.50, status: 'paused', created: '2024-01-10' },
-  { id: 5, title: 'KCB M-Shwari Savings', advertiser: 'KCB Bank', duration: 60, views: 340, reward: 2.50, status: 'active', created: '2024-02-10' },
+  // Generic samples only: no real company has agreed to appear.
+  { id: 1, title: 'Sample Ad 1', advertiser: 'Sample Advertiser A', duration: 60, views: 1240, reward: 2.50, status: 'active', created: '2024-01-15' },
+  { id: 2, title: 'Sample Ad 2', advertiser: 'Sample Advertiser B', duration: 60, views: 890, reward: 2.50, status: 'active', created: '2024-01-20' },
+  { id: 3, title: 'Sample Ad 3', advertiser: 'Sample Advertiser C', duration: 60, views: 560, reward: 2.50, status: 'active', created: '2024-02-01' },
+  { id: 4, title: 'Sample Ad 4', advertiser: 'Sample Advertiser D', duration: 60, views: 2100, reward: 2.50, status: 'paused', created: '2024-01-10' },
+  { id: 5, title: 'Sample Ad 5', advertiser: 'Sample Advertiser E', duration: 60, views: 340, reward: 2.50, status: 'active', created: '2024-02-10' },
 ]
 
 export default function AdsPage() {
@@ -34,11 +35,11 @@ export default function AdsPage() {
             <input placeholder="Ad Title" className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
             <select className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none">
               <option>Select Advertiser</option>
-              <option>Safaricom</option>
-              <option>Samsung</option>
-              <option>Equity Bank</option>
+              <option>Sample Advertiser A</option>
+              <option>Sample Advertiser B</option>
+              <option>Sample Advertiser C</option>
             </select>
-            <input placeholder="Reward Amount ($)" className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            <input placeholder="Reward Amount (KSh)" className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
             <input type="number" placeholder="Duration (seconds)" defaultValue={60} className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
           </div>
           <div className="mt-4 border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
@@ -84,7 +85,7 @@ export default function AdsPage() {
                   <td className="p-4 text-sm text-gray-600">{ad.advertiser}</td>
                   <td className="p-4 text-sm text-gray-600">{ad.duration}s</td>
                   <td className="p-4 text-sm font-semibold">{ad.views.toLocaleString()}</td>
-                  <td className="p-4 text-sm font-semibold text-green-600">${ad.reward.toFixed(2)}</td>
+                  <td className="p-4 text-sm font-semibold text-green-600">KSh {ad.reward.toFixed(2)}</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       ad.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
