@@ -112,27 +112,25 @@ class SettingsScreen extends StatelessWidget {
       ),
       child: Consumer<LocaleProvider>(
         builder: (_, localeProvider, __) {
-          return Column(
-            children: [
-              RadioListTile<String>(
-                title: Text('English', style: GoogleFonts.poppins()),
-                secondary: const Text('🇺🇸'),
-                value: 'en',
-                groupValue: localeProvider.locale.languageCode,
-                onChanged: (value) {
-                  localeProvider.setLocale(const Locale('en'));
-                },
-              ),
-              RadioListTile<String>(
-                title: Text('Kiswahili', style: GoogleFonts.poppins()),
-                secondary: const Text('🇰🇪'),
-                value: 'sw',
-                groupValue: localeProvider.locale.languageCode,
-                onChanged: (value) {
-                  localeProvider.setLocale(const Locale('sw'));
-                },
-              ),
-            ],
+          return RadioGroup<String>(
+            groupValue: localeProvider.locale.languageCode,
+            onChanged: (value) {
+              if (value != null) localeProvider.setLocale(Locale(value));
+            },
+            child: Column(
+              children: [
+                RadioListTile<String>(
+                  title: Text('English', style: GoogleFonts.poppins()),
+                  secondary: const Text('🇺🇸'),
+                  value: 'en',
+                ),
+                RadioListTile<String>(
+                  title: Text('Kiswahili', style: GoogleFonts.poppins()),
+                  secondary: const Text('🇰🇪'),
+                  value: 'sw',
+                ),
+              ],
+            ),
           );
         },
       ),

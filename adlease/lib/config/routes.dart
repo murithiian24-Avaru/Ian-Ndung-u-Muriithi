@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:adlease/config/features.dart';
 import 'package:adlease/screens/splash/splash_screen.dart';
 import 'package:adlease/screens/auth/welcome_screen.dart';
 import 'package:adlease/screens/auth/login_screen.dart';
@@ -34,7 +35,9 @@ class AppRoutes {
         watchAd: (_) => const WatchAdScreen(),
         selectPhone: (_) => const SelectPhoneScreen(),
         editProfile: (_) => const EditProfileScreen(),
-        withdrawal: (_) => const WithdrawalScreen(),
+        // Hidden until a secure payout system exists (AppFeatures).
+        if (AppFeatures.withdrawalsEnabled)
+          withdrawal: (_) => const WithdrawalScreen(),
         referral: (_) => const ReferralScreen(),
       };
 }

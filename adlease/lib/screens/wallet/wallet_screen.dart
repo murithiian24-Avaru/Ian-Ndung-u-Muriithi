@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:adlease/config/features.dart';
 import 'package:adlease/config/routes.dart';
 import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/wallet_provider.dart';
 import 'package:adlease/providers/auth_provider.dart';
+import 'package:adlease/providers/ownership_provider.dart';
+import 'package:adlease/l10n/app_localizations.dart';
+import 'package:adlease/utils/currency.dart';
 import 'package:adlease/models/transaction_model.dart';
 import 'package:adlease/widgets/gradient_button.dart';
 
@@ -39,11 +43,11 @@ class WalletScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _buildWalletCard(walletProvider, isDark),
+                    _buildWalletCard(context, isDark),
                     const SizedBox(height: 20),
                     _buildActionButtons(context),
                     const SizedBox(height: 24),
-                    _buildEarningsOverview(walletProvider, isDark),
+                    _buildEarningsOverview(context, isDark),
                     const SizedBox(height: 24),
                     _buildTransactionHistory(walletProvider, isDark),
                   ],
@@ -56,7 +60,10 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWalletCard(WalletProvider walletProvider, bool isDark) {
+  // There is no cash balance: ad rewards count only toward the phone, and
+  // withdrawals are not available yet.
+  Widget _buildWalletCard(BuildContext context, bool isDark) {
+    final l = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -80,7 +87,7 @@ class WalletScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Available Balance',
+                l.balance,
                 style: GoogleFonts.poppins(
                   color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 14,
@@ -95,12 +102,31 @@ class WalletScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '\$${walletProvider.balance.toStringAsFixed(2)}',
+            l.notAvailable,
             style: GoogleFonts.poppins(
               color: Colors.white,
-              fontSize: 40,
+              fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l.noCashBalance,
+            style: GoogleFonts.poppins(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: 13,
+            ),
+          ),
+          if (!AppFeatures.withdrawalsEnabled) ...[
+            const SizedBox(height: 4),
+            Text(
+              l.withdrawalsUnavailable,
+              style: GoogleFonts.poppins(
+                color: Colors.white.withValues(alpha: 0.85),
+                fontSize: 13,
+              ),
+            ),
+          ],
           ),
         ],
       ),
@@ -110,16 +136,18 @@ class WalletScreen extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: GradientButton(
-            text: 'Withdraw',
-            icon: Icons.arrow_upward,
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.withdrawal);
-            },
+        if (AppFeatures.withdrawalsEnabled) ...[
+          Expanded(
+            child: GradientButton(
+              text: 'Withdraw',
+              icon: Icons.arrow_upward,
+              onPressed: () {
+                Navigator.pushNamed(context, AppRoutes.withdrawal);
+              },
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
+          const SizedBox(width: 12),
+        ],
         Expanded(
           child: SizedBox(
             height: 56,
@@ -139,8 +167,10 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEarningsOverview(WalletProvider walletProvider, bool isDark) {
-    final wallet = walletProvider.wallet;
+  // Simulated phone-ownership progress (no cash earnings or withdrawals).
+  Widget _buildEarningsOverview(BuildContext context, bool isDark) {
+    final l = AppLocalizations.of(context)!;
+    final ownership = context.watch<OwnershipProvider>();
     return Row(
       children: [
         Expanded(
@@ -166,14 +196,14 @@ class WalletScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${wallet?.totalEarnings.toStringAsFixed(2) ?? "0.00"}',
+                  formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
                   style: GoogleFonts.poppins(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  'Total Earnings',
+                  l.appliedToPhone,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: Colors.grey,
@@ -207,14 +237,14 @@ class WalletScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${wallet?.totalWithdrawn.toStringAsFixed(2) ?? "0.00"}',
+                  formatKsh(ownership.remainingAmount),
                   style: GoogleFonts.poppins(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  'Withdrawn',
+                  l.remaining,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: Colors.grey,
@@ -351,7 +381,7 @@ class WalletScreen extends StatelessWidget {
             ),
           ),
           Text(
-            '${isPositive ? "+" : ""}\$${tx.amount.abs().toStringAsFixed(2)}',
+            '${isPositive ? "+" : "-"}${formatKsh(tx.amount.abs())}',
             style: GoogleFonts.poppins(
               fontSize: 15,
               fontWeight: FontWeight.w600,

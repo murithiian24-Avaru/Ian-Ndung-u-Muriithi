@@ -71,5 +71,14 @@
   "rejected": "Imekataliwa",
   "approved": "Imeidhinishwa",
   "showPassword": "Onyesha nywila",
-  "hidePassword": "Ficha nywila"
+  "hidePassword": "Ficha nywila",
+  "withdrawalsUnavailable": "Kutoa pesa bado hakupatikani.",
+  "noCashBalance": "Onyesho hili halina salio la pesa. Zawadi za matangazo zinahesabiwa kwa simu yako pekee.",
+  "phoneProgressDemo": "Maendeleo ya simu (onyesho)",
+  "appliedToPhone": "Imetumika kwa simu",
+  "notAvailable": "Haipatikani",
+  "choosePhoneFirst": "Chagua simu kwanza. Katika onyesho hili, zawadi za matangazo zinahesabiwa kwa simu yako pekee.",
+  "demoAmountsNotice": "Viwango vya onyesho tu. Hakuna pesa halisi inayohifadhiwa au kulipwa.",
+  "rewardAddedToPhone": "{amount} imeongezwa kwenye maendeleo ya simu yako (kuigwa)",
+  "watchSampleAdHint": "Tazama tangazo la mfano la sekunde 60 ili kuongeza {amount} kwenye maendeleo ya simu yako (kuigwa)"
 }

@@ -5,9 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/ad_provider.dart';
-import 'package:adlease/providers/wallet_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
+import 'package:adlease/config/routes.dart';
+import 'package:adlease/l10n/app_localizations.dart';
+import 'package:adlease/services/ad_reward_service.dart';
 import 'package:adlease/services/ad_service.dart';
+import 'package:adlease/utils/currency.dart';
 import 'package:adlease/widgets/gradient_button.dart';
 
 class WatchAdScreen extends StatefulWidget {
@@ -26,6 +29,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
   bool _rewardClaimed = false;
   bool _isClaiming = false;
   Timer? _timer;
+  final AdRewardService _rewards = AdRewardService();
   late AnimationController _pulseController;
   // ignore: unused_field
   int _focusCheckCount = 0;
@@ -104,52 +108,42 @@ class _WatchAdScreenState extends State<WatchAdScreen>
     if (user == null) return;
 
     final adProvider = context.read<AdProvider>();
+    final ownershipProvider = context.read<OwnershipProvider>();
     final ads = adProvider.availableAds;
     if (ads.isEmpty) return;
 
     setState(() => _isClaiming = true);
     try {
-      final record = await adProvider.recordAdView(
+      // The simulated reward goes to phone-ownership progress ONLY; it is
+      // never added to a cash wallet (no double counting, no "money").
+      final result = await _rewards.claim(
         userId: user.uid,
         adId: ads.first.id,
-        completedFully: true,
         deviceId: user.deviceId,
       );
+      await adProvider.loadAds(user.uid);
+      await ownershipProvider.loadOwnership(user.uid);
       if (!mounted) return;
 
-      if (record == null) {
-        // recordAdView returns null when the service rejects the view,
-        // for example because today's limit has been reached.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'This reward could not be recorded. You may have reached today\'s limit.',
+      switch (result.outcome) {
+        case AdRewardOutcome.credited:
+          setState(() => _rewardClaimed = true);
+        case AdRewardOutcome.noActivePhone:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.choosePhoneFirst),
+              backgroundColor: AdLeaseTheme.errorRed,
             ),
-            backgroundColor: AdLeaseTheme.errorRed,
-          ),
-        );
-        return;
-      }
-
-      await context.read<WalletProvider>().addEarning(
-            user.uid,
-            AdService.rewardPerAd,
-            'Ad reward: ${ads.first.title}',
           );
-
-      if (!mounted) return;
-      // NOTE: the same reward is also applied to the phone payment below,
-      // so it is counted twice (audit finding H3). Left unchanged pending a
-      // product decision on where rewards should go.
-      final ownershipProvider = context.read<OwnershipProvider>();
-      if (ownershipProvider.hasActiveOwnership) {
-        await ownershipProvider.addPayment(user.uid, AdService.rewardPerAd);
-      }
-
-      if (mounted) {
-        setState(() {
-          _rewardClaimed = true;
-        });
+        case AdRewardOutcome.rejected:
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'This reward could not be recorded. You may have reached today\'s limit.',
+              ),
+              backgroundColor: AdLeaseTheme.errorRed,
+            ),
+          );
       }
     } finally {
       if (mounted) setState(() => _isClaiming = false);
@@ -192,8 +186,34 @@ class _WatchAdScreenState extends State<WatchAdScreen>
   }
 
   Widget _buildStartView() {
-    return Consumer<AdProvider>(
-      builder: (_, adProvider, __) {
+    final l = AppLocalizations.of(context)!;
+    return Consumer2<AdProvider, OwnershipProvider>(
+      builder: (_, adProvider, ownershipProvider, __) {
+        if (!ownershipProvider.hasActiveOwnership) {
+          // Rewards only count toward a phone, so a phone must be chosen first.
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.phone_android, size: 80, color: Colors.grey.shade400),
+                const SizedBox(height: 24),
+                Text(
+                  l.choosePhoneFirst,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
+                GradientButton(
+                  text: l.selectPhone,
+                  icon: Icons.phone_android,
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppRoutes.selectPhone),
+                ),
+              ],
+            ),
+          );
+        }
+
         if (!adProvider.canWatchAd) {
           return Center(
             child: Column(
@@ -273,7 +293,8 @@ class _WatchAdScreenState extends State<WatchAdScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Watch a 60-second ad to earn \$${AdService.rewardPerAd.toStringAsFixed(2)}',
+              l.watchSampleAdHint(formatKsh(AdService.rewardPerAd)),
+              textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 color: Colors.grey,
@@ -422,7 +443,8 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          'You\'ve earned \$${AdService.rewardPerAd.toStringAsFixed(2)}',
+          '${formatKsh(AdService.rewardPerAd)} · ${AppLocalizations.of(context)!.phoneProgressDemo}',
+          textAlign: TextAlign.center,
           style: GoogleFonts.poppins(
             fontSize: 18,
             color: AdLeaseTheme.successGreen,
@@ -467,7 +489,9 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          '\$${AdService.rewardPerAd.toStringAsFixed(2)} added to your balance',
+          AppLocalizations.of(context)!
+              .rewardAddedToPhone(formatKsh(AdService.rewardPerAd)),
+          textAlign: TextAlign.center,
           style: GoogleFonts.poppins(
             fontSize: 16,
             color: Colors.grey,

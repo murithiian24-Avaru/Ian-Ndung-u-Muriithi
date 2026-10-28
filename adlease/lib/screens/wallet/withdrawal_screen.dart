@@ -6,6 +6,7 @@ import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/wallet_provider.dart';
 import 'package:adlease/widgets/gradient_button.dart';
 import 'package:adlease/widgets/custom_text_field.dart';
+import 'package:adlease/utils/currency.dart';
 
 class WithdrawalScreen extends StatefulWidget {
   const WithdrawalScreen({super.key});
@@ -115,7 +116,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                             ),
                           ),
                           Text(
-                            '\$${wallet.balance.toStringAsFixed(2)}',
+                            formatKsh(wallet.balance),
                             style: GoogleFonts.poppins(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -136,30 +137,36 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ..._paymentMethods.map(
-                  (method) => RadioListTile<String>(
-                    title: Row(
-                      children: [
-                        Icon(method['icon'] as IconData, size: 22),
-                        const SizedBox(width: 12),
-                        Text(
-                          method['name'] as String,
-                          style: GoogleFonts.poppins(),
-                        ),
-                      ],
-                    ),
-                    value: method['name'] as String,
-                    groupValue: _paymentMethod,
-                    onChanged: (value) {
-                      setState(() => _paymentMethod = value!);
-                    },
-                    contentPadding: EdgeInsets.zero,
+                RadioGroup<String>(
+                  groupValue: _paymentMethod,
+                  onChanged: (value) {
+                    if (value != null) setState(() => _paymentMethod = value);
+                  },
+                  child: Column(
+                    children: _paymentMethods
+                        .map(
+                          (method) => RadioListTile<String>(
+                            title: Row(
+                              children: [
+                                Icon(method['icon'] as IconData, size: 22),
+                                const SizedBox(width: 12),
+                                Text(
+                                  method['name'] as String,
+                                  style: GoogleFonts.poppins(),
+                                ),
+                              ],
+                            ),
+                            value: method['name'] as String,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        )
+                        .toList(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 CustomTextField(
                   controller: _amountController,
-                  label: 'Amount (\$)',
+                  label: 'Amount (KSh)',
                   hint: 'Enter amount to withdraw',
                   prefixIcon: Icons.attach_money,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -172,7 +179,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                       return 'Please enter a valid amount';
                     }
                     if (amount < 1) {
-                      return 'Minimum withdrawal is \$1.00';
+                      return 'Minimum withdrawal is ${formatKsh(1)}';
                     }
                     return null;
                   },

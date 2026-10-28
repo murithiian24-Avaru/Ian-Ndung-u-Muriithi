@@ -5,6 +5,8 @@ import 'package:adlease/config/routes.dart';
 import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/ad_provider.dart';
 import 'package:adlease/models/ad_model.dart';
+import 'package:adlease/services/ad_service.dart';
+import 'package:adlease/utils/currency.dart';
 
 class AdsScreen extends StatelessWidget {
   const AdsScreen({super.key});
@@ -76,7 +78,7 @@ class AdsScreen extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.3),
               ),
               _buildStatColumn(
-                '\$2.50',
+                formatKsh(AdService.rewardPerAd),
                 'Per Ad\nReward',
               ),
             ],
@@ -218,7 +220,7 @@ class AdsScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${ad.durationSeconds}s • \$${ad.rewardAmount.toStringAsFixed(2)} reward',
+                  '${ad.durationSeconds}s • ${formatKsh(ad.rewardAmount)} reward',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: AdLeaseTheme.successGreen,
@@ -294,7 +296,7 @@ class AdsScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '+\$${record.rewardEarned.toStringAsFixed(2)}',
+                          '+${formatKsh(record.rewardEarned)}',
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,

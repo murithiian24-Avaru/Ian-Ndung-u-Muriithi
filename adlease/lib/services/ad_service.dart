@@ -6,7 +6,9 @@ import 'package:adlease/services/storage_service.dart';
 
 class AdService {
   final StorageService _storage = StorageService();
-  static const _adsKey = 'adlease_ads';
+  // 'adlease_ads' held the earlier samples that used real company names. They
+  // are no longer read (and not deleted); generic samples use this key.
+  static const _adsKey = 'adlease_ads_v2';
   static const _viewRecordsKey = 'adlease_ad_views';
   static const int maxAdsPerDay = 3;
   static const double rewardPerAd = 2.50;
@@ -26,64 +28,23 @@ class AdService {
     return sampleAds;
   }
 
+  /// Generic, clearly labelled sample ads for the demo. They must not use real
+  /// company names, products or logos: no advertiser has agreed to appear.
   List<AdModel> _generateSampleAds() {
-    return [
-      AdModel(
+    return List.generate(5, (i) {
+      final n = i + 1;
+      return AdModel(
         id: const Uuid().v4(),
-        title: 'Safaricom M-Pesa Go',
-        advertiserName: 'Safaricom',
-        videoUrl: 'https://example.com/ads/safaricom.mp4',
+        title: 'Sample Ad $n',
+        advertiserName: 'Sample Advertiser',
+        videoUrl: 'https://example.com/sample-ads/sample-ad-$n.mp4',
         thumbnailUrl: '',
         durationSeconds: 60,
         rewardAmount: rewardPerAd,
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(days: 30)),
-      ),
-      AdModel(
-        id: const Uuid().v4(),
-        title: 'Samsung Galaxy S24 Launch',
-        advertiserName: 'Samsung',
-        videoUrl: 'https://example.com/ads/samsung.mp4',
-        thumbnailUrl: '',
-        durationSeconds: 60,
-        rewardAmount: rewardPerAd,
-        createdAt: DateTime.now(),
-        expiresAt: DateTime.now().add(const Duration(days: 30)),
-      ),
-      AdModel(
-        id: const Uuid().v4(),
-        title: 'Equity Bank Digital Account',
-        advertiserName: 'Equity Bank',
-        videoUrl: 'https://example.com/ads/equity.mp4',
-        thumbnailUrl: '',
-        durationSeconds: 60,
-        rewardAmount: rewardPerAd,
-        createdAt: DateTime.now(),
-        expiresAt: DateTime.now().add(const Duration(days: 30)),
-      ),
-      AdModel(
-        id: const Uuid().v4(),
-        title: 'Tecno Camon 20 Pro',
-        advertiserName: 'Tecno Mobile',
-        videoUrl: 'https://example.com/ads/tecno.mp4',
-        thumbnailUrl: '',
-        durationSeconds: 60,
-        rewardAmount: rewardPerAd,
-        createdAt: DateTime.now(),
-        expiresAt: DateTime.now().add(const Duration(days: 30)),
-      ),
-      AdModel(
-        id: const Uuid().v4(),
-        title: 'KCB M-Shwari Savings',
-        advertiserName: 'KCB Bank',
-        videoUrl: 'https://example.com/ads/kcb.mp4',
-        thumbnailUrl: '',
-        durationSeconds: 60,
-        rewardAmount: rewardPerAd,
-        createdAt: DateTime.now(),
-        expiresAt: DateTime.now().add(const Duration(days: 30)),
-      ),
-    ];
+      );
+    });
   }
 
   Future<int> getAdsWatchedToday(String userId) async {

@@ -6,6 +6,7 @@ import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/models/phone_model.dart';
 import 'package:adlease/widgets/gradient_button.dart';
+import 'package:adlease/utils/currency.dart';
 
 class SelectPhoneScreen extends StatelessWidget {
   const SelectPhoneScreen({super.key});
@@ -139,7 +140,7 @@ class SelectPhoneScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '\$${phone.price.toStringAsFixed(0)}',
+                    formatKsh(phone.price, decimals: 0),
                     style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -171,7 +172,7 @@ class SelectPhoneScreen extends StatelessWidget {
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Start your ownership journey for ${phone.fullName} at \$${phone.price.toStringAsFixed(0)}?',
+          'Start your ownership journey for ${phone.fullName} at ${formatKsh(phone.price, decimals: 0)}?',
           style: GoogleFonts.poppins(),
         ),
         actions: [

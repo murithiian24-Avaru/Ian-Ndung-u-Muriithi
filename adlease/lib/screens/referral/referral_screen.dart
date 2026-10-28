@@ -6,6 +6,7 @@ import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/services/referral_service.dart';
 import 'package:adlease/widgets/gradient_button.dart';
+import 'package:adlease/utils/currency.dart';
 
 class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});
@@ -93,7 +94,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Share your referral code and earn \$5.00\nfor each friend who joins!',
+            'Share your referral code and earn ${formatKsh(ReferralService.referralReward)} (demo)\nfor each friend who joins!',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -261,7 +262,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${_referralEarnings.toStringAsFixed(2)}',
+                  formatKsh(_referralEarnings),
                   style: GoogleFonts.poppins(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -309,7 +310,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           const SizedBox(height: 16),
           _buildStep('1', 'Share your referral code with friends'),
           _buildStep('2', 'Friends sign up using your code'),
-          _buildStep('3', 'You both earn \$5.00 bonus!'),
+          _buildStep('3', 'You both earn a ${formatKsh(ReferralService.referralReward)} bonus (demo)!'),
           _buildStep('4', 'No limit on referrals!'),
         ],
       ),
