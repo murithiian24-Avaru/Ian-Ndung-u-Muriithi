@@ -68,7 +68,14 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          flutter pub get 2>&1 | tee ../pub.txt
+          if [ "${{ matrix.flutter }}" = stable ]; then
+            # The committed pubspec.lock is resolved for Flutter 3.27.4. On current
+            # Flutter, re-resolve within pubspec.yaml's constraints (this runner
+            # only; the committed lock is not changed) to measure upgrade readiness.
+            flutter pub upgrade 2>&1 | tee ../pub.txt
+          else
+            flutter pub get --enforce-lockfile 2>&1 | tee ../pub.txt
+          fi
           # Generate lib/l10n/app_localizations*.dart. Current Flutter does this in
           # pub get; Flutter 3.27 only does it during a build, so do it explicitly.
           flutter gen-l10n 2>&1 | tee -a ../pub.txt
