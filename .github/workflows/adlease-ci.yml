@@ -1,0 +1,125 @@
+# AdLease validation: dependency resolution, static analysis, unit/widget tests
+# and an Android DEBUG build. It never deploys, signs a release, or uses secrets.
+# Results are reported as annotations on the run (visible on the commit and PR).
+name: AdLease CI
+
+on:
+  push:
+    branches: [fix/adlease-validation]
+    paths: ['adlease/**', '.github/workflows/adlease-ci.yml']
+  pull_request:
+    paths: ['adlease/**', '.github/workflows/adlease-ci.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adlease-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Flutter ${{ matrix.flutter }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.27.4: the version the project was created with (README, Dart ^3.6.2).
+        # stable: today's Flutter, to catch upgrade breakage early.
+        flutter: ['3.27.4', 'stable']
+    defaults:
+      run:
+        working-directory: adlease
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ matrix.flutter == 'stable' && '' || matrix.flutter }}
+          cache: true
+
+      - name: Versions
+        run: |
+          flutter --version
+          echo "::notice title=Flutter ${{ matrix.flutter }}::$(flutter --version | head -1) | $(java -version 2>&1 | head -1)"
+
+      - name: flutter pub get
+        id: pub
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter pub get 2>&1 | tee ../pub.txt
+
+      - name: flutter analyze
+        id: analyze
+        if: steps.pub.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-infos 2>&1 | tee ../analyze.txt
+
+      - name: flutter test
+        id: test
+        if: steps.pub.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter test --reporter expanded 2>&1 | tee ../test.txt
+
+      - name: flutter build apk --debug
+        id: build
+        if: steps.pub.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter build apk --debug 2>&1 | tee ../build.txt
+
+      - name: Upload debug APK
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: adlease-debug-apk-flutter-${{ matrix.flutter }}
+          path: adlease/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+
+      - name: Report results
+        if: always()
+        working-directory: .
+        run: |
+          enc() { sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\r/%0D/g;s/\n/%0A/g'; }
+          v="${{ matrix.flutter }}"
+          # Analyzer findings -> one annotation each (file and line linked).
+          if [ -f analyze.txt ]; then
+            grep ' • ' analyze.txt | head -45 | while IFS= read -r line; do
+              sev=$(echo "$line" | awk -F ' • ' '{gsub(/^ +/,"",$1); print $1}')
+              msg=$(echo "$line" | awk -F ' • ' '{print $2}')
+              loc=$(echo "$line" | awk -F ' • ' '{print $3}')
+              code=$(echo "$line" | awk -F ' • ' '{print $4}')
+              f=$(echo "$loc" | cut -d: -f1); l=$(echo "$loc" | cut -d: -f2); c=$(echo "$loc" | cut -d: -f3)
+              lvl=warning; [ "$sev" = "error" ] && lvl=error; [ "$sev" = "info" ] && lvl=notice
+              echo "::$lvl file=adlease/$f,line=$l,col=$c,title=analyze [$v] $sev ($code)::$msg"
+            done
+            echo "::notice title=analyze [$v] summary::$(grep -E 'issues? found|No issues found' analyze.txt | tail -1)"
+          fi
+          for s in pub test build; do
+            case $s in pub) o="${{ steps.pub.outcome }}";; test) o="${{ steps.test.outcome }}";; build) o="${{ steps.build.outcome }}";; esac
+            if [ "$o" = "failure" ] && [ -f $s.txt ]; then
+              echo "::error title=$s [$v] FAILED (last 60 lines)::$(tail -60 $s.txt | enc)"
+            fi
+          done
+          [ -f test.txt ] && echo "::notice title=test [$v] summary::$(grep -E '^[0-9:]+ \+[0-9]+' test.txt | tail -1 | enc)"
+          echo "::notice title=RESULT [$v]::pub=${{ steps.pub.outcome }} analyze=${{ steps.analyze.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }}"
+          if [ "${{ steps.pub.outcome }}" != success ] || [ "${{ steps.analyze.outcome }}" != success ] || \
+             [ "${{ steps.test.outcome }}" != success ] || [ "${{ steps.build.outcome }}" != success ]; then
+            exit 1
+          fi
