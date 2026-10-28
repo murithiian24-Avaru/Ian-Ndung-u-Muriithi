@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:adlease/l10n/app_localizations.dart';
 
 class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -48,6 +49,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 icon: Icon(
                   _obscureText ? Icons.visibility_off : Icons.visibility,
                 ),
+                tooltip: _obscureText
+                    ? (AppLocalizations.of(context)?.showPassword ?? 'Show password')
+                    : (AppLocalizations.of(context)?.hidePassword ?? 'Hide password'),
                 onPressed: () {
                   setState(() {
                     _obscureText = !_obscureText;

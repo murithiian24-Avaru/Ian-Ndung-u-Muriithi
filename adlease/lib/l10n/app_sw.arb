@@ -69,5 +69,7 @@
   "pending": "Inasubiri",
   "completed": "Imekamilika",
   "rejected": "Imekataliwa",
-  "approved": "Imeidhinishwa"
+  "approved": "Imeidhinishwa",
+  "showPassword": "Onyesha nywila",
+  "hidePassword": "Ficha nywila"
 }

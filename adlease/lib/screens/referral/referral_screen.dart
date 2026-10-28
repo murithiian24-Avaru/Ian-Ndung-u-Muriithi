@@ -48,6 +48,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.pop(context),
         ),
       ),

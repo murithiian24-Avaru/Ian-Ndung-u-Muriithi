@@ -69,5 +69,7 @@
   "pending": "Pending",
   "completed": "Completed",
   "rejected": "Rejected",
-  "approved": "Approved"
+  "approved": "Approved",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password"
 }

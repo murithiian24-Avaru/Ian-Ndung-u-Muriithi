@@ -166,6 +166,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         ),
         leading: IconButton(
           icon: const Icon(Icons.close),
+          tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
           onPressed: () {
             if (_isPlaying) {
               _showExitDialog();
