@@ -24,7 +24,8 @@ android {
         applicationId = "com.adlease.adlease"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        // Flutter 3.47 supports Android API 24 and newer (API 23 is unsupported).
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

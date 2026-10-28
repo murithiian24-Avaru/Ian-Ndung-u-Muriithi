@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:adlease/config/features.dart';
 import 'package:adlease/config/routes.dart';
 import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/wallet_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/providers/ad_provider.dart';
+import 'package:adlease/l10n/app_localizations.dart';
+import 'package:adlease/utils/currency.dart';
 import 'package:adlease/widgets/stats_card.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -73,10 +76,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 Text(
                   'Watch. Earn. Own.',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),
@@ -101,9 +101,12 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // Shows simulated phone-ownership progress. There is no cash balance:
+  // ad rewards count only toward the phone, and withdrawals are hidden.
   Widget _buildBalanceCard(BuildContext context, bool isDark) {
-    return Consumer<WalletProvider>(
-      builder: (_, wallet, __) {
+    final l = AppLocalizations.of(context)!;
+    return Consumer<OwnershipProvider>(
+      builder: (_, ownership, __) {
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
@@ -124,7 +127,7 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'AdLease Balance',
+                l.phoneProgressDemo,
                 style: GoogleFonts.poppins(
                   color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 14,
@@ -132,7 +135,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '\$${wallet.balance.toStringAsFixed(2)}',
+                formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
                 style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 36,
@@ -144,13 +147,10 @@ class HomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildBalanceStat(
-                    'Total Earned',
-                    '\$${wallet.wallet?.totalEarnings.toStringAsFixed(2) ?? "0.00"}',
+                    l.remaining,
+                    formatKsh(ownership.remainingAmount),
                   ),
-                  _buildBalanceStat(
-                    'Withdrawn',
-                    '\$${wallet.wallet?.totalWithdrawn.toStringAsFixed(2) ?? "0.00"}',
-                  ),
+                  _buildBalanceStat(l.balance, l.notAvailable),
                 ],
               ),
             ],
@@ -187,7 +187,8 @@ class HomeScreen extends StatelessWidget {
     return Consumer<OwnershipProvider>(
       builder: (_, ownership, __) {
         final progress = ownership.progressPercentage / 100;
-        final phoneName = ownership.currentOwnership?.phoneName ?? 'No phone selected';
+        final phoneName =
+            ownership.currentOwnership?.phoneName ?? 'No phone selected';
         final phonePrice = ownership.currentOwnership?.phonePrice ?? 0;
         final amountPaid = ownership.currentOwnership?.amountPaid ?? 0;
 
@@ -230,7 +231,9 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     progressColor: AdLeaseTheme.primaryBlue,
-                    backgroundColor: AdLeaseTheme.primaryBlue.withValues(alpha: 0.1),
+                    backgroundColor: AdLeaseTheme.primaryBlue.withValues(
+                      alpha: 0.1,
+                    ),
                     circularStrokeCap: CircularStrokeCap.round,
                   ),
                   const SizedBox(width: 24),
@@ -246,11 +249,16 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        _buildProgressRow('Phone Value', '\$${phonePrice.toStringAsFixed(0)}'),
-                        _buildProgressRow('Paid', '\$${amountPaid.toStringAsFixed(2)}'),
+                        _buildProgressRow(
+                          'Phone Value',
+                          formatKsh(phonePrice, decimals: 0),
+                        ),
+                        _buildProgressRow('Paid', formatKsh(amountPaid)),
                         _buildProgressRow(
                           'Remaining',
-                          '\$${(phonePrice - amountPaid).clamp(0, phonePrice).toStringAsFixed(2)}',
+                          formatKsh(
+                            (phonePrice - amountPaid).clamp(0, phonePrice),
+                          ),
                         ),
                       ],
                     ),
@@ -329,10 +337,10 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.visibility,
               color: AdLeaseTheme.successGreen,
             ),
-            Consumer<WalletProvider>(
-              builder: (_, wallet, __) => StatsCard(
-                title: 'Total Earned',
-                value: '\$${wallet.wallet?.totalEarnings.toStringAsFixed(2) ?? "0.00"}',
+            Consumer<OwnershipProvider>(
+              builder: (_, ownership, __) => StatsCard(
+                title: AppLocalizations.of(context)!.appliedToPhone,
+                value: formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
                 icon: Icons.monetization_on,
                 color: AdLeaseTheme.warningOrange,
               ),
@@ -349,10 +357,7 @@ class HomeScreen extends StatelessWidget {
       children: [
         Text(
           'Quick Actions',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         Row(
@@ -367,17 +372,19 @@ class HomeScreen extends StatelessWidget {
                 isDark,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                context,
-                'Withdraw',
-                Icons.account_balance,
-                AdLeaseTheme.successGreen,
-                () => Navigator.pushNamed(context, AppRoutes.withdrawal),
-                isDark,
+            if (AppFeatures.withdrawalsEnabled) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionButton(
+                  context,
+                  'Withdraw',
+                  Icons.account_balance,
+                  AdLeaseTheme.successGreen,
+                  () => Navigator.pushNamed(context, AppRoutes.withdrawal),
+                  isDark,
+                ),
               ),
-            ),
+            ],
             const SizedBox(width: 12),
             Expanded(
               child: _buildActionButton(

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Users, DollarSign, PlayCircle, Smartphone, TrendingUp, Eye } from 'lucide-react'
+import { Users, Banknote, PlayCircle, Smartphone, TrendingUp, Eye } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import StatCard from '../components/StatCard'
 
@@ -19,11 +19,10 @@ const distributionData = [
 ]
 
 const recentActivity = [
-  { user: 'John Kamau', action: 'Watched ad', amount: '+$2.50', time: '2 min ago' },
-  { user: 'Mary Wanjiku', action: 'Withdrawal request', amount: '-$15.00', time: '5 min ago' },
+  { user: 'John Kamau', action: 'Watched sample ad (phone progress)', amount: '+KSh 2.50', time: '2 min ago' },
   { user: 'Peter Ochieng', action: 'New registration', amount: '', time: '12 min ago' },
-  { user: 'Sarah Muthoni', action: 'Phone ownership complete', amount: '$300.00', time: '1 hr ago' },
-  { user: 'James Njoroge', action: 'Referral bonus', amount: '+$5.00', time: '2 hr ago' },
+  { user: 'Sarah Muthoni', action: 'Phone ownership complete', amount: 'KSh 300', time: '1 hr ago' },
+  { user: 'James Njoroge', action: 'Referral bonus', amount: '+KSh 5.00', time: '2 hr ago' },
 ]
 
 export default function Dashboard() {
@@ -36,7 +35,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="Total Users" value="1,247" icon={Users} color="blue" change={12.5} />
-        <StatCard title="Revenue" value="$45,200" icon={DollarSign} color="green" change={8.3} />
+        <StatCard title="Revenue (demo)" value="KSh 45,200" icon={Banknote} color="green" change={8.3} />
         <StatCard title="Ads Watched" value="3,842" icon={PlayCircle} color="orange" change={15.2} />
         <StatCard title="Phones Owned" value="89" icon={Smartphone} color="purple" change={5.7} />
       </div>

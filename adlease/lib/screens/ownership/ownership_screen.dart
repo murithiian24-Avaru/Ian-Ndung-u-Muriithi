@@ -6,6 +6,7 @@ import 'package:adlease/config/routes.dart';
 import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/widgets/gradient_button.dart';
+import 'package:adlease/utils/currency.dart';
 
 class OwnershipScreen extends StatelessWidget {
   const OwnershipScreen({super.key});
@@ -86,10 +87,7 @@ class OwnershipScreen extends StatelessWidget {
                 Text(
                   'Choose a phone to start your\nownership journey',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 24),
                 GradientButton(
@@ -166,7 +164,9 @@ class OwnershipScreen extends StatelessWidget {
               LinearPercentIndicator(
                 lineHeight: 16,
                 percent: progress.clamp(0.0, 1.0),
-                backgroundColor: AdLeaseTheme.primaryBlue.withValues(alpha: 0.1),
+                backgroundColor: AdLeaseTheme.primaryBlue.withValues(
+                  alpha: 0.1,
+                ),
                 progressColor: AdLeaseTheme.primaryBlue,
                 barRadius: const Radius.circular(10),
                 padding: EdgeInsets.zero,
@@ -184,7 +184,7 @@ class OwnershipScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '\$${current.remainingAmount.toStringAsFixed(2)} remaining',
+                    '${formatKsh(current.remainingAmount)} remaining',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: Colors.grey,
@@ -198,7 +198,7 @@ class OwnershipScreen extends StatelessWidget {
                   Expanded(
                     child: _buildInfoCard(
                       'Phone Value',
-                      '\$${current.phonePrice.toStringAsFixed(0)}',
+                      formatKsh(current.phonePrice, decimals: 0),
                       Icons.phone_android,
                       AdLeaseTheme.primaryBlue,
                       isDark,
@@ -208,7 +208,7 @@ class OwnershipScreen extends StatelessWidget {
                   Expanded(
                     child: _buildInfoCard(
                       'Amount Paid',
-                      '\$${current.amountPaid.toStringAsFixed(2)}',
+                      formatKsh(current.amountPaid),
                       Icons.payments,
                       AdLeaseTheme.successGreen,
                       isDark,
@@ -281,10 +281,7 @@ class OwnershipScreen extends StatelessWidget {
           ),
           Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
+            style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
           ),
         ],
       ),
@@ -346,10 +343,8 @@ class OwnershipScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '\$${o.phonePrice.toStringAsFixed(0)}',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      formatKsh(o.phonePrice, decimals: 0),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),

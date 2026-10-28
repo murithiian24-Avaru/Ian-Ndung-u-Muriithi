@@ -10,7 +10,7 @@ import 'package:adlease/providers/locale_provider.dart';
 import 'package:adlease/providers/ad_provider.dart';
 import 'package:adlease/providers/wallet_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:adlease/l10n/app_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

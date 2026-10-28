@@ -3,17 +3,17 @@ import { CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react'
 
 const withdrawals = [
   { id: 1, user: 'John Kamau', amount: 15.00, method: 'M-Pesa', details: '+254711222333', status: 'pending', date: '2024-02-15' },
-  { id: 2, user: 'Mary Wanjiku', amount: 25.00, method: 'Bank Transfer', details: 'Equity 012345678', status: 'pending', date: '2024-02-14' },
+  { id: 2, user: 'Mary Wanjiku', amount: 25.00, method: 'Bank Transfer', details: 'Bank 012345678', status: 'pending', date: '2024-02-14' },
   { id: 3, user: 'David Otieno', amount: 10.00, method: 'M-Pesa', details: '+254755666777', status: 'approved', date: '2024-02-13' },
   { id: 4, user: 'Amina Hassan', amount: 50.00, method: 'PayPal', details: 'amina@email.com', status: 'completed', date: '2024-02-12' },
   { id: 5, user: 'Grace Akinyi', amount: 8.00, method: 'Airtel Money', details: '+254766777888', status: 'rejected', date: '2024-02-11' },
 ]
 
 const stats = [
-  { label: 'Pending', value: 2, amount: '$40.00', color: 'yellow' },
-  { label: 'Approved', value: 1, amount: '$10.00', color: 'blue' },
-  { label: 'Completed', value: 1, amount: '$50.00', color: 'green' },
-  { label: 'Rejected', value: 1, amount: '$8.00', color: 'red' },
+  { label: 'Pending', value: 2, amount: 'KSh 40.00', color: 'yellow' },
+  { label: 'Approved', value: 1, amount: 'KSh 10.00', color: 'blue' },
+  { label: 'Completed', value: 1, amount: 'KSh 50.00', color: 'green' },
+  { label: 'Rejected', value: 1, amount: 'KSh 8.00', color: 'red' },
 ]
 
 export default function WithdrawalsPage() {
@@ -67,7 +67,7 @@ export default function WithdrawalsPage() {
               {withdrawals.map((w) => (
                 <tr key={w.id} className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="p-4 font-medium text-sm">{w.user}</td>
-                  <td className="p-4 text-sm font-semibold">${w.amount.toFixed(2)}</td>
+                  <td className="p-4 text-sm font-semibold">KSh {w.amount.toFixed(2)}</td>
                   <td className="p-4 text-sm text-gray-600">{w.method}</td>
                   <td className="p-4 text-sm text-gray-500 font-mono">{w.details}</td>
                   <td className="p-4 text-sm text-gray-600">{w.date}</td>

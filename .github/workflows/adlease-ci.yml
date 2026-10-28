@@ -1,0 +1,231 @@
+# AdLease validation: lockfile, static analysis, tests, formatting, an Android
+# DEBUG build, and the admin dashboard build. It never deploys, signs a
+# release, or uses repository secrets. Each job posts a plain-text report as a
+# separate check ("AdLease report ...") on the commit. The debug APK is kept as
+# a run artifact for 14 days.
+name: AdLease CI
+
+on:
+  push:
+    branches: [fix/adlease-validation, feature/adlease-phase2]
+    paths: ['adlease/**', '.github/workflows/adlease-ci.yml']
+  pull_request:
+    paths: ['adlease/**', '.github/workflows/adlease-ci.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write   # only to post the text reports as checks on the commit
+
+concurrency:
+  group: adlease-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Flutter ${{ matrix.flutter }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # Flutter 3.27.4 was removed after 3.47.8 passed analyze, test and build.
+        flutter: ['3.47.8']
+    defaults:
+      run:
+        working-directory: adlease
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # needed to find files changed compared with main
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ matrix.flutter }}
+          cache: true
+
+      - name: Versions
+        run: |
+          set -o pipefail
+          { flutter --version; java -version 2>&1 | head -1; } | tee ../versions.txt
+
+      - name: Committed lockfile (flutter pub get --enforce-lockfile)
+        id: lock
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter pub get --enforce-lockfile 2>&1 | tee ../lock.txt
+
+      - name: Dependencies
+        id: pub
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          if [ "${{ steps.lock.outcome }}" != success ]; then
+            # The committed lock does not match pubspec.yaml for this Flutter:
+            # re-resolve here (this runner only) so the remaining checks still
+            # run; the new lock is posted in a separate check for review.
+            flutter pub upgrade 2>&1 | tee ../pub.txt
+          else
+            echo "Using the committed pubspec.lock" | tee ../pub.txt
+          fi
+          flutter gen-l10n 2>&1 | tee -a ../pub.txt
+
+      - name: flutter analyze
+        id: analyze
+        if: steps.pub.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-infos 2>&1 | tee ../analyze.txt
+
+      - name: flutter test
+        id: test
+        if: steps.pub.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter test --reporter expanded 2>&1 | tee ../test.txt
+
+      - name: flutter build apk --debug
+        id: build
+        if: steps.pub.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          flutter build apk --debug 2>&1 | tee ../build.txt
+          apk=build/app/outputs/flutter-apk/app-debug.apk
+          ls -l "$apk" | tee -a ../build.txt
+          bt=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+          "$ANDROID_HOME/build-tools/$bt/aapt2" dump badging "$apk" \
+            | grep -iE "^package:|sdkVersion|^application-label:" | tee ../sdk.txt
+
+      - name: Upload debug APK
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: adlease-debug-apk-flutter-${{ matrix.flutter }}
+          path: adlease/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+
+      - name: dart format (files changed compared with main)
+        id: format
+        if: steps.pub.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          # Existing files that this branch does not touch are not reformatted
+          # here; that is left to a separate formatting-only change.
+          git fetch -q origin main
+          files=$(git diff --name-only --diff-filter=ACMR origin/main...HEAD -- '*.dart' | sed 's#^adlease/##')
+          echo "Checked files:" | tee ../format.txt
+          echo "$files" | tee -a ../format.txt
+          [ -n "$files" ] || exit 0
+          dart format $files 2>&1 | tail -2 | tee -a ../format.txt
+          git diff --stat -- . | tee -a ../format.txt
+          git diff -- . > ../format.diff
+          git diff --quiet -- .
+
+      - name: Post reports
+        if: always()
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ matrix.flutter }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          LOCK: ${{ steps.lock.outcome }}
+          PUB: ${{ steps.pub.outcome }}
+          ANALYZE: ${{ steps.analyze.outcome }}
+          TEST: ${{ steps.test.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+          FORMAT: ${{ steps.format.outcome }}
+        run: |
+          section() { echo "## $1"; echo '```'; if [ -f "$2" ]; then tail -n "$3" "$2"; else echo "(not run)"; fi; echo '```'; }
+          summary="lock=$LOCK pub=$PUB analyze=$ANALYZE test=$TEST build=$BUILD format=$FORMAT"
+          {
+            echo "RESULT $summary"
+            section versions versions.txt 10
+            section "apk sdk levels (aapt2 dump badging)" sdk.txt 10
+            section "committed lockfile" lock.txt 30
+            section "dependencies" pub.txt 60
+            section "flutter analyze" analyze.txt 150
+            section "flutter test" test.txt 120
+            section "flutter build apk --debug" build.txt 40
+            section "dart format" format.txt 40
+          } > report.md
+          post() {  # name conclusion title summary-file
+            head -c 65000 "$4" > "$4.trim"
+            gh api "repos/$GITHUB_REPOSITORY/check-runs" -f name="$1" -f head_sha="$SHA" \
+              -f status=completed -f conclusion="$2" -f "output[title]=$3" \
+              -F "output[summary]=@$4.trim" > /dev/null
+          }
+          conclusion=success
+          for o in "$LOCK" "$PUB" "$ANALYZE" "$TEST" "$BUILD" "$FORMAT"; do [ "$o" = success ] || conclusion=failure; done
+          post "AdLease report (Flutter $V)" "$conclusion" "$summary" report.md
+          if [ "$LOCK" != success ] && [ "$PUB" = success ]; then
+            { echo '```yaml'; cat adlease/pubspec.lock; echo '```'; } > lock.md
+            post "AdLease resolved pubspec.lock (Flutter $V)" neutral "pubspec.lock resolved by Flutter $V" lock.md
+          fi
+          if [ "$FORMAT" = failure ] && [ -s format.diff ]; then
+            # gzip + base64 so the whole patch fits in one check report.
+            { echo '```'; gzip -9c format.diff | base64 -w 120; echo '```'; } > fmt.md
+            post "AdLease dart format changes (Flutter $V)" neutral "dart format changes needed" fmt.md
+          fi
+          [ "$conclusion" = success ]
+
+  admin-dashboard:
+    name: Admin dashboard build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: adlease/admin-dashboard
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: npm ci
+        id: ci
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          { node --version; npm --version; } | tee "$GITHUB_WORKSPACE/admin.txt"
+          npm ci --no-audit --no-fund 2>&1 | tee -a "$GITHUB_WORKSPACE/admin.txt"
+      - name: npm run build
+        id: build
+        if: steps.ci.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee -a "$GITHUB_WORKSPACE/admin.txt"
+      - name: Post report
+        if: always()
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          CI_OUT: ${{ steps.ci.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          conclusion=success
+          if [ "$CI_OUT" != success ] || [ "$BUILD" != success ]; then conclusion=failure; fi
+          { echo "RESULT npm_ci=$CI_OUT build=$BUILD"; echo '```'; tail -n 60 "$GITHUB_WORKSPACE/admin.txt" || true; echo '```'; } > admin.md
+          if ! gh api "repos/$GITHUB_REPOSITORY/check-runs" -f name="AdLease report (admin dashboard)" -f head_sha="$SHA" \
+              -f status=completed -f conclusion="$conclusion" -f "output[title]=npm ci=$CI_OUT build=$BUILD" \
+              -F "output[summary]=@admin.md" > post.log 2>&1; then
+            echo "::error title=admin report post failed::$(head -c 800 post.log | tr '\n' ' ')"
+          fi
+          if [ "$conclusion" != success ]; then
+            echo "::error title=admin build [npm ci=$CI_OUT build=$BUILD]::$(tail -c 1500 "$GITHUB_WORKSPACE/admin.txt" | tr '\n' ' ')"
+            exit 1
+          fi

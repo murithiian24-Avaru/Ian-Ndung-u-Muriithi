@@ -6,6 +6,7 @@ import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/services/referral_service.dart';
 import 'package:adlease/widgets/gradient_button.dart';
+import 'package:adlease/utils/currency.dart';
 
 class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});
@@ -29,7 +30,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
     final user = context.read<AuthProvider>().user;
     if (user != null) {
       final count = await _referralService.getReferralCount(user.uid);
-      final earnings = await _referralService.getTotalReferralEarnings(user.uid);
+      final earnings = await _referralService.getTotalReferralEarnings(
+        user.uid,
+      );
       setState(() {
         _referralCount = count;
         _referralEarnings = earnings;
@@ -48,6 +51,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -92,7 +96,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Share your referral code and earn \$5.00\nfor each friend who joins!',
+            'Share your referral code and earn ${formatKsh(ReferralService.referralReward)} (demo)\nfor each friend who joins!',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -125,10 +129,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
             children: [
               Text(
                 'Your Referral Code',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 8),
               Container(
@@ -181,7 +182,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         icon: const Icon(Icons.share),
                         label: Text(
                           'Share',
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -213,11 +216,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.people,
-                  color: AdLeaseTheme.primaryBlue,
-                  size: 32,
-                ),
+                Icon(Icons.people, color: AdLeaseTheme.primaryBlue, size: 32),
                 const SizedBox(height: 8),
                 Text(
                   '$_referralCount',
@@ -228,10 +227,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 ),
                 Text(
                   'Friends Invited',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -260,7 +256,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$${_referralEarnings.toStringAsFixed(2)}',
+                  formatKsh(_referralEarnings),
                   style: GoogleFonts.poppins(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -268,10 +264,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 ),
                 Text(
                   'Referral Earnings',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -308,7 +301,10 @@ class _ReferralScreenState extends State<ReferralScreen> {
           const SizedBox(height: 16),
           _buildStep('1', 'Share your referral code with friends'),
           _buildStep('2', 'Friends sign up using your code'),
-          _buildStep('3', 'You both earn \$5.00 bonus!'),
+          _buildStep(
+            '3',
+            'You both earn a ${formatKsh(ReferralService.referralReward)} bonus (demo)!',
+          ),
           _buildStep('4', 'No limit on referrals!'),
         ],
       ),
@@ -338,12 +334,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: GoogleFonts.poppins(fontSize: 14),
-            ),
-          ),
+          Expanded(child: Text(text, style: GoogleFonts.poppins(fontSize: 14))),
         ],
       ),
     );

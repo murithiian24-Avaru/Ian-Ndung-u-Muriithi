@@ -50,6 +50,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -78,10 +79,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 8),
           Text(
             'Enter your email address and we\'ll send you a link to reset your password.',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 40),
           CustomTextField(
@@ -94,7 +92,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               if (value == null || value.isEmpty) {
                 return 'Please enter your email';
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                  .hasMatch(value)) {
                 return 'Please enter a valid email';
               }
               return null;
@@ -133,19 +132,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 32),
         Text(
           'Check Your Email',
-          style: GoogleFonts.poppins(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Text(
           'We\'ve sent a password reset link to\n${_emailController.text}',
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: Colors.grey,
-          ),
+          style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
         ),
         const SizedBox(height: 40),
         GradientButton(

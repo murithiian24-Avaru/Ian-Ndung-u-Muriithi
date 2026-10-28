@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required in release builds: Flutter only adds INTERNET to the debug and
+         profile manifests. Without it, network calls (Google Fonts, Firebase,
+         ads) fail in a release build. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="adlease"
         android:name="${applicationName}"

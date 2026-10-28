@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:uuid/uuid.dart';
 import 'package:adlease/models/wallet_model.dart';
 import 'package:adlease/models/transaction_model.dart';
@@ -29,7 +30,11 @@ class WalletService {
     return wallet;
   }
 
-  Future<WalletModel> addEarning(String userId, double amount, String description) async {
+  Future<WalletModel> addEarning(
+    String userId,
+    double amount,
+    String description,
+  ) async {
     final wallets = await _getWallets();
     final index = wallets.indexWhere((w) => w['userId'] == userId);
 
@@ -59,15 +64,17 @@ class WalletService {
     }
     await _saveWallets(wallets);
 
-    await _addTransaction(TransactionModel(
-      id: const Uuid().v4(),
-      userId: userId,
-      type: TransactionType.adReward,
-      amount: amount,
-      status: TransactionStatus.completed,
-      description: description,
-      createdAt: DateTime.now(),
-    ));
+    await _addTransaction(
+      TransactionModel(
+        id: const Uuid().v4(),
+        userId: userId,
+        type: TransactionType.adReward,
+        amount: amount,
+        status: TransactionStatus.completed,
+        description: description,
+        createdAt: DateTime.now(),
+      ),
+    );
 
     return wallet;
   }
@@ -78,9 +85,27 @@ class WalletService {
     required String paymentMethod,
     required String paymentDetails,
   }) async {
+    if (amount <= 0) {
+      throw Exception('Enter an amount greater than zero');
+    }
     final wallet = await getWallet(userId);
     if (wallet.balance < amount) {
       throw Exception('Insufficient balance');
+    }
+
+    // Reserve the amount immediately so the same balance cannot be requested
+    // twice. The request stays "pending"; totalWithdrawn is only updated once
+    // a payout is actually made.
+    final wallets = await _getWallets();
+    final walletIndex = wallets.indexWhere((w) => w['userId'] == userId);
+    if (walletIndex != -1) {
+      wallets[walletIndex] = wallet
+          .copyWith(
+            balance: wallet.balance - amount,
+            lastUpdated: DateTime.now(),
+          )
+          .toMap();
+      await _saveWallets(wallets);
     }
 
     final request = WithdrawalRequest(
@@ -97,16 +122,18 @@ class WalletService {
     withdrawals.add(request.toMap());
     await _storage.saveString(_withdrawalsKey, jsonEncode(withdrawals));
 
-    await _addTransaction(TransactionModel(
-      id: const Uuid().v4(),
-      userId: userId,
-      type: TransactionType.withdrawal,
-      amount: -amount,
-      status: TransactionStatus.pending,
-      description: 'Withdrawal via $paymentMethod',
-      createdAt: DateTime.now(),
-      referenceId: request.id,
-    ));
+    await _addTransaction(
+      TransactionModel(
+        id: const Uuid().v4(),
+        userId: userId,
+        type: TransactionType.withdrawal,
+        amount: -amount,
+        status: TransactionStatus.pending,
+        description: 'Withdrawal via $paymentMethod',
+        createdAt: DateTime.now(),
+        referenceId: request.id,
+      ),
+    );
 
     return request;
   }

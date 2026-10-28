@@ -2,11 +2,12 @@ import React, { useState } from 'react'
 import { Plus, Search, Building2, DollarSign, Eye } from 'lucide-react'
 
 const sampleAdvertisers = [
-  { id: 1, name: 'Safaricom', contact: 'ads@safaricom.co.ke', adsCount: 12, totalSpend: 15000, status: 'active' },
-  { id: 2, name: 'Samsung East Africa', contact: 'marketing@samsung.co.ke', adsCount: 8, totalSpend: 22000, status: 'active' },
-  { id: 3, name: 'Equity Bank', contact: 'digital@equity.co.ke', adsCount: 5, totalSpend: 8000, status: 'active' },
-  { id: 4, name: 'Tecno Mobile', contact: 'brand@tecno.com', adsCount: 15, totalSpend: 18000, status: 'active' },
-  { id: 5, name: 'KCB Bank', contact: 'ads@kcb.co.ke', adsCount: 3, totalSpend: 5000, status: 'paused' },
+  // Generic samples only: no real company has agreed to appear.
+  { id: 1, name: 'Sample Advertiser A', contact: 'sample-a@example.com', adsCount: 12, totalSpend: 15000, status: 'active' },
+  { id: 2, name: 'Sample Advertiser B', contact: 'sample-b@example.com', adsCount: 8, totalSpend: 22000, status: 'active' },
+  { id: 3, name: 'Sample Advertiser C', contact: 'sample-c@example.com', adsCount: 5, totalSpend: 8000, status: 'active' },
+  { id: 4, name: 'Sample Advertiser D', contact: 'sample-d@example.com', adsCount: 15, totalSpend: 18000, status: 'active' },
+  { id: 5, name: 'Sample Advertiser E', contact: 'sample-e@example.com', adsCount: 3, totalSpend: 5000, status: 'paused' },
 ]
 
 export default function AdvertisersPage() {
@@ -34,7 +35,7 @@ export default function AdvertisersPage() {
             <input placeholder="Company Name" className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
             <input placeholder="Contact Email" className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
             <input placeholder="Phone" className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
-            <input placeholder="Budget ($)" className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            <input placeholder="Budget (KSh)" className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
           </div>
           <div className="flex gap-3 mt-4">
             <button className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 font-medium">Save</button>
@@ -69,7 +70,7 @@ export default function AdvertisersPage() {
               </div>
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-xs text-gray-500">Total Spend</p>
-                <p className="text-xl font-bold">${advertiser.totalSpend.toLocaleString()}</p>
+                <p className="text-xl font-bold">KSh {advertiser.totalSpend.toLocaleString()}</p>
               </div>
             </div>
           </div>

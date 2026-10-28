@@ -69,5 +69,30 @@
   "pending": "Pending",
   "completed": "Completed",
   "rejected": "Rejected",
-  "approved": "Approved"
+  "approved": "Approved",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "withdrawalsUnavailable": "Withdrawals are not available yet.",
+  "noCashBalance": "This demo has no cash balance. Ad rewards count only toward your phone.",
+  "phoneProgressDemo": "Phone progress (demo)",
+  "appliedToPhone": "Applied to phone",
+  "notAvailable": "Not available",
+  "choosePhoneFirst": "Choose a phone first. In this demo, ad rewards count only toward your phone.",
+  "demoAmountsNotice": "Demo amounts only. No real money is held or paid out.",
+  "rewardAddedToPhone": "{amount} added to your phone progress (simulated)",
+  "@rewardAddedToPhone": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "watchSampleAdHint": "Watch a 60-second sample ad to add {amount} to your phone progress (simulated)",
+  "@watchSampleAdHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

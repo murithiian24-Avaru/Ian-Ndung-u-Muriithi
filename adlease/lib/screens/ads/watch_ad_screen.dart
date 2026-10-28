@@ -1,13 +1,17 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/ad_provider.dart';
-import 'package:adlease/providers/wallet_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
+import 'package:adlease/config/routes.dart';
+import 'package:adlease/l10n/app_localizations.dart';
+import 'package:adlease/services/ad_reward_service.dart';
 import 'package:adlease/services/ad_service.dart';
+import 'package:adlease/utils/currency.dart';
 import 'package:adlease/widgets/gradient_button.dart';
 
 class WatchAdScreen extends StatefulWidget {
@@ -18,13 +22,15 @@ class WatchAdScreen extends StatefulWidget {
 }
 
 class _WatchAdScreenState extends State<WatchAdScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const int adDuration = 60;
   int _secondsRemaining = adDuration;
   bool _isPlaying = false;
   bool _isCompleted = false;
   bool _rewardClaimed = false;
+  bool _isClaiming = false;
   Timer? _timer;
+  final AdRewardService _rewards = AdRewardService();
   late AnimationController _pulseController;
   // ignore: unused_field
   int _focusCheckCount = 0;
@@ -32,6 +38,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -40,9 +47,33 @@ class _WatchAdScreenState extends State<WatchAdScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _pulseController.dispose();
     super.dispose();
+  }
+
+  // The countdown used to keep running while the app was in the background,
+  // so a reward could be earned without watching. If the app leaves the
+  // foreground mid-ad, stop and reset the ad.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final leftForeground =
+        state == AppLifecycleState.paused || state == AppLifecycleState.hidden;
+    if (_isPlaying && leftForeground) {
+      _timer?.cancel();
+      setState(() {
+        _isPlaying = false;
+        _secondsRemaining = adDuration;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'The ad was stopped because you left the app. Start it again to earn the reward.',
+          ),
+        ),
+      );
+    }
   }
 
   void _startAd() {
@@ -72,36 +103,51 @@ class _WatchAdScreenState extends State<WatchAdScreen>
   }
 
   Future<void> _claimReward() async {
+    // Guard against a double tap claiming the same reward twice.
+    if (_isClaiming || _rewardClaimed || !_isCompleted) return;
     final user = context.read<AuthProvider>().user;
     if (user == null) return;
 
     final adProvider = context.read<AdProvider>();
+    final ownershipProvider = context.read<OwnershipProvider>();
     final ads = adProvider.availableAds;
     if (ads.isEmpty) return;
 
-    final record = await adProvider.recordAdView(
-      userId: user.uid,
-      adId: ads.first.id,
-      completedFully: true,
-      deviceId: user.deviceId,
-    );
-
-    if (record != null && mounted) {
-      await context.read<WalletProvider>().addEarning(
-            user.uid,
-            AdService.rewardPerAd,
-            'Ad reward: ${ads.first.title}',
-          );
-
+    setState(() => _isClaiming = true);
+    try {
+      // The simulated reward goes to phone-ownership progress ONLY; it is
+      // never added to a cash wallet (no double counting, no "money").
+      final result = await _rewards.claim(
+        userId: user.uid,
+        adId: ads.first.id,
+        deviceId: user.deviceId,
+      );
+      await adProvider.loadAds(user.uid);
+      await ownershipProvider.loadOwnership(user.uid);
       if (!mounted) return;
-      final ownershipProvider = context.read<OwnershipProvider>();
-      if (ownershipProvider.hasActiveOwnership) {
-        await ownershipProvider.addPayment(user.uid, AdService.rewardPerAd);
-      }
 
-      setState(() {
-        _rewardClaimed = true;
-      });
+      switch (result.outcome) {
+        case AdRewardOutcome.credited:
+          setState(() => _rewardClaimed = true);
+        case AdRewardOutcome.noActivePhone:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.choosePhoneFirst),
+              backgroundColor: AdLeaseTheme.errorRed,
+            ),
+          );
+        case AdRewardOutcome.rejected:
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'This reward could not be recorded. You may have reached today\'s limit.',
+              ),
+              backgroundColor: AdLeaseTheme.errorRed,
+            ),
+          );
+      }
+    } finally {
+      if (mounted) setState(() => _isClaiming = false);
     }
   }
 
@@ -115,6 +161,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         ),
         leading: IconButton(
           icon: const Icon(Icons.close),
+          tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
           onPressed: () {
             if (_isPlaying) {
               _showExitDialog();
@@ -130,28 +177,54 @@ class _WatchAdScreenState extends State<WatchAdScreen>
           child: _rewardClaimed
               ? _buildRewardClaimedView()
               : _isCompleted
-                  ? _buildCompletedView()
-                  : _isPlaying
-                      ? _buildPlayingView()
-                      : _buildStartView(),
+              ? _buildCompletedView()
+              : _isPlaying
+              ? _buildPlayingView()
+              : _buildStartView(),
         ),
       ),
     );
   }
 
   Widget _buildStartView() {
-    return Consumer<AdProvider>(
-      builder: (_, adProvider, __) {
-        if (!adProvider.canWatchAd) {
+    final l = AppLocalizations.of(context)!;
+    return Consumer2<AdProvider, OwnershipProvider>(
+      builder: (_, adProvider, ownershipProvider, __) {
+        if (!ownershipProvider.hasActiveOwnership) {
+          // Rewards only count toward a phone, so a phone must be chosen first.
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.timer_off,
+                  Icons.phone_android,
                   size: 80,
                   color: Colors.grey.shade400,
                 ),
+                const SizedBox(height: 24),
+                Text(
+                  l.choosePhoneFirst,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
+                GradientButton(
+                  text: l.selectPhone,
+                  icon: Icons.phone_android,
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppRoutes.selectPhone),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (!adProvider.canWatchAd) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.timer_off, size: 80, color: Colors.grey.shade400),
                 const SizedBox(height: 24),
                 Text(
                   'Daily Limit Reached',
@@ -164,10 +237,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
                 Text(
                   'You\'ve watched all 3 ads today.\nCome back tomorrow!',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
                 GradientButton(
@@ -221,11 +291,9 @@ class _WatchAdScreenState extends State<WatchAdScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Watch a 60-second ad to earn \$${AdService.rewardPerAd.toStringAsFixed(2)}',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              l.watchSampleAdHint(formatKsh(AdService.rewardPerAd)),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             Container(
@@ -325,10 +393,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         const SizedBox(height: 16),
         Text(
           '${(progress * 100).toStringAsFixed(0)}% complete',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: Colors.grey,
-          ),
+          style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
         ),
         const SizedBox(height: 8),
         Text(
@@ -363,14 +428,12 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         const SizedBox(height: 32),
         Text(
           'Ad Completed!',
-          style: GoogleFonts.poppins(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
-          'You\'ve earned \$${AdService.rewardPerAd.toStringAsFixed(2)}',
+          '${formatKsh(AdService.rewardPerAd)} · ${AppLocalizations.of(context)!.phoneProgressDemo}',
+          textAlign: TextAlign.center,
           style: GoogleFonts.poppins(
             fontSize: 18,
             color: AdLeaseTheme.successGreen,
@@ -381,7 +444,8 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         GradientButton(
           text: 'Claim Reward',
           icon: Icons.card_giftcard,
-          onPressed: _claimReward,
+          isLoading: _isClaiming,
+          onPressed: _isClaiming ? null : _claimReward,
         ),
       ],
     );
@@ -407,24 +471,17 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         const SizedBox(height: 32),
         Text(
           'Reward Claimed!',
-          style: GoogleFonts.poppins(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
-          '\$${AdService.rewardPerAd.toStringAsFixed(2)} added to your balance',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: Colors.grey,
-          ),
+          AppLocalizations.of(context)!
+              .rewardAddedToPhone(formatKsh(AdService.rewardPerAd)),
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
         ),
         const SizedBox(height: 40),
-        GradientButton(
-          text: 'Done',
-          onPressed: () => Navigator.pop(context),
-        ),
+        GradientButton(text: 'Done', onPressed: () => Navigator.pop(context)),
       ],
     );
   }

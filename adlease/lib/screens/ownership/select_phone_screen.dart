@@ -6,6 +6,7 @@ import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/models/phone_model.dart';
 import 'package:adlease/widgets/gradient_button.dart';
+import 'package:adlease/utils/currency.dart';
 
 class SelectPhoneScreen extends StatelessWidget {
   const SelectPhoneScreen({super.key});
@@ -21,6 +22,7 @@ class SelectPhoneScreen extends StatelessWidget {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -42,11 +44,7 @@ class SelectPhoneScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPhoneCard(
-    BuildContext context,
-    PhoneModel phone,
-    bool isDark,
-  ) {
+  Widget _buildPhoneCard(BuildContext context, PhoneModel phone, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -109,7 +107,10 @@ class SelectPhoneScreen extends StatelessWidget {
             runSpacing: 8,
             children: phone.specs.entries.map((entry) {
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.05)
@@ -138,7 +139,7 @@ class SelectPhoneScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '\$${phone.price.toStringAsFixed(0)}',
+                    formatKsh(phone.price, decimals: 0),
                     style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -170,7 +171,7 @@ class SelectPhoneScreen extends StatelessWidget {
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Start your ownership journey for ${phone.fullName} at \$${phone.price.toStringAsFixed(0)}?',
+          'Start your ownership journey for ${phone.fullName} at ${formatKsh(phone.price, decimals: 0)}?',
           style: GoogleFonts.poppins(),
         ),
         actions: [

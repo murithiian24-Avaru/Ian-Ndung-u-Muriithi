@@ -21,9 +21,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _isSaving = false;
 
   final List<String> _countries = [
-    'Kenya', 'Nigeria', 'South Africa', 'Ghana', 'Tanzania',
-    'Uganda', 'Rwanda', 'Ethiopia', 'Egypt', 'Morocco',
-    'Senegal', 'Cameroon', 'Other',
+    'Kenya',
+    'Nigeria',
+    'South Africa',
+    'Ghana',
+    'Tanzania',
+    'Uganda',
+    'Rwanda',
+    'Ethiopia',
+    'Egypt',
+    'Morocco',
+    'Senegal',
+    'Cameroon',
+    'Other',
   ];
 
   @override
@@ -80,6 +90,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -142,7 +153,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedCountry,
+                  initialValue: _selectedCountry,
                   decoration: const InputDecoration(
                     labelText: 'Country',
                     prefixIcon: Icon(Icons.public),

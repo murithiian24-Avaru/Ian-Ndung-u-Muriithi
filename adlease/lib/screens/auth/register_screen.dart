@@ -25,9 +25,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _selectedCountry = 'Kenya';
 
   final List<String> _countries = [
-    'Kenya', 'Nigeria', 'South Africa', 'Ghana', 'Tanzania',
-    'Uganda', 'Rwanda', 'Ethiopia', 'Egypt', 'Morocco',
-    'Senegal', 'Cameroon', 'Other',
+    'Kenya',
+    'Nigeria',
+    'South Africa',
+    'Ghana',
+    'Tanzania',
+    'Uganda',
+    'Rwanda',
+    'Ethiopia',
+    'Egypt',
+    'Morocco',
+    'Senegal',
+    'Cameroon',
+    'Other',
   ];
 
   @override
@@ -78,6 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -99,10 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Start your phone ownership journey',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
                 CustomTextField(
@@ -128,7 +136,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                     return null;
@@ -150,7 +159,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedCountry,
+                  initialValue: _selectedCountry,
                   decoration: const InputDecoration(
                     labelText: 'Country',
                     prefixIcon: Icon(Icons.public),
