@@ -26,18 +26,18 @@ class AppRoutes {
   static const String referral = '/referral';
 
   static Map<String, WidgetBuilder> get routes => {
-        splash: (_) => const SplashScreen(),
-        welcome: (_) => const WelcomeScreen(),
-        login: (_) => const LoginScreen(),
-        register: (_) => const RegisterScreen(),
-        forgotPassword: (_) => const ForgotPasswordScreen(),
-        main: (_) => const MainNavigation(),
-        watchAd: (_) => const WatchAdScreen(),
-        selectPhone: (_) => const SelectPhoneScreen(),
-        editProfile: (_) => const EditProfileScreen(),
-        // Hidden until a secure payout system exists (AppFeatures).
-        if (AppFeatures.withdrawalsEnabled)
-          withdrawal: (_) => const WithdrawalScreen(),
-        referral: (_) => const ReferralScreen(),
-      };
+    splash: (_) => const SplashScreen(),
+    welcome: (_) => const WelcomeScreen(),
+    login: (_) => const LoginScreen(),
+    register: (_) => const RegisterScreen(),
+    forgotPassword: (_) => const ForgotPasswordScreen(),
+    main: (_) => const MainNavigation(),
+    watchAd: (_) => const WatchAdScreen(),
+    selectPhone: (_) => const SelectPhoneScreen(),
+    editProfile: (_) => const EditProfileScreen(),
+    // Hidden until a secure payout system exists (AppFeatures).
+    if (AppFeatures.withdrawalsEnabled)
+      withdrawal: (_) => const WithdrawalScreen(),
+    referral: (_) => const ReferralScreen(),
+  };
 }

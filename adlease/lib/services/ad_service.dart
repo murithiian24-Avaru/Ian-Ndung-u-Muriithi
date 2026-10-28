@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:adlease/models/ad_model.dart';
@@ -51,11 +52,13 @@ class AdService {
     final records = await _getViewRecords();
     final today = DateTime.now();
     return records
-        .where((r) =>
-            r.userId == userId &&
-            r.viewedAt.year == today.year &&
-            r.viewedAt.month == today.month &&
-            r.viewedAt.day == today.day)
+        .where(
+          (r) =>
+              r.userId == userId &&
+              r.viewedAt.year == today.year &&
+              r.viewedAt.month == today.month &&
+              r.viewedAt.day == today.day,
+        )
         .length;
   }
 
@@ -69,7 +72,11 @@ class AdService {
     return remaining > 0;
   }
 
-  String _generateVerificationHash(String userId, String adId, DateTime timestamp) {
+  String _generateVerificationHash(
+    String userId,
+    String adId,
+    DateTime timestamp,
+  ) {
     final data = '$userId:$adId:${timestamp.toIso8601String()}:adlease_secret';
     return sha256.convert(utf8.encode(data)).toString();
   }
@@ -125,14 +132,17 @@ class AdService {
   Future<DateTime?> getNextRewardTime(String userId) async {
     final records = await _getViewRecords();
     final today = DateTime.now();
-    final todayRecords = records
-        .where((r) =>
-            r.userId == userId &&
-            r.viewedAt.year == today.year &&
-            r.viewedAt.month == today.month &&
-            r.viewedAt.day == today.day)
-        .toList()
-      ..sort((a, b) => b.viewedAt.compareTo(a.viewedAt));
+    final todayRecords =
+        records
+            .where(
+              (r) =>
+                  r.userId == userId &&
+                  r.viewedAt.year == today.year &&
+                  r.viewedAt.month == today.month &&
+                  r.viewedAt.day == today.day,
+            )
+            .toList()
+          ..sort((a, b) => b.viewedAt.compareTo(a.viewedAt));
 
     if (todayRecords.isEmpty) return null;
     return todayRecords.first.viewedAt.add(const Duration(hours: 4));

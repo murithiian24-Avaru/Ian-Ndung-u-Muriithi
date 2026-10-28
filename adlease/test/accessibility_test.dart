@@ -6,26 +6,27 @@ import 'package:adlease/l10n/app_localizations.dart';
 import 'package:adlease/widgets/custom_text_field.dart';
 
 Widget _app(Locale locale) => MaterialApp(
-      locale: locale,
-      supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: Scaffold(
-        body: CustomTextField(
-          controller: TextEditingController(),
-          label: 'Password',
-          isPassword: true,
-        ),
-      ),
-    );
+  locale: locale,
+  supportedLocales: AppLocalizations.supportedLocales,
+  localizationsDelegates: const [
+    AppLocalizations.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ],
+  home: Scaffold(
+    body: CustomTextField(
+      controller: TextEditingController(),
+      label: 'Password',
+      isPassword: true,
+    ),
+  ),
+);
 
 void main() {
-  testWidgets('password toggle is labelled in English and changes on tap',
-      (tester) async {
+  testWidgets('password toggle is labelled in English and changes on tap', (
+    tester,
+  ) async {
     await tester.pumpWidget(_app(const Locale('en')));
     await tester.pumpAndSettle();
     expect(find.byTooltip('Show password'), findsOneWidget);

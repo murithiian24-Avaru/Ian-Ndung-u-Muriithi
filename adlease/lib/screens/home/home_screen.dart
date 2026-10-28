@@ -76,10 +76,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 Text(
                   'Watch. Earn. Own.',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),
@@ -190,7 +187,8 @@ class HomeScreen extends StatelessWidget {
     return Consumer<OwnershipProvider>(
       builder: (_, ownership, __) {
         final progress = ownership.progressPercentage / 100;
-        final phoneName = ownership.currentOwnership?.phoneName ?? 'No phone selected';
+        final phoneName =
+            ownership.currentOwnership?.phoneName ?? 'No phone selected';
         final phonePrice = ownership.currentOwnership?.phonePrice ?? 0;
         final amountPaid = ownership.currentOwnership?.amountPaid ?? 0;
 
@@ -233,7 +231,9 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     progressColor: AdLeaseTheme.primaryBlue,
-                    backgroundColor: AdLeaseTheme.primaryBlue.withValues(alpha: 0.1),
+                    backgroundColor: AdLeaseTheme.primaryBlue.withValues(
+                      alpha: 0.1,
+                    ),
                     circularStrokeCap: CircularStrokeCap.round,
                   ),
                   const SizedBox(width: 24),
@@ -249,11 +249,16 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        _buildProgressRow('Phone Value', formatKsh(phonePrice, decimals: 0)),
+                        _buildProgressRow(
+                          'Phone Value',
+                          formatKsh(phonePrice, decimals: 0),
+                        ),
                         _buildProgressRow('Paid', formatKsh(amountPaid)),
                         _buildProgressRow(
                           'Remaining',
-                          formatKsh((phonePrice - amountPaid).clamp(0, phonePrice)),
+                          formatKsh(
+                            (phonePrice - amountPaid).clamp(0, phonePrice),
+                          ),
                         ),
                       ],
                     ),
@@ -352,10 +357,7 @@ class HomeScreen extends StatelessWidget {
       children: [
         Text(
           'Quick Actions',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         Row(

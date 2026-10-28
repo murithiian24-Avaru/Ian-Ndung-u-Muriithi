@@ -87,10 +87,7 @@ class OwnershipScreen extends StatelessWidget {
                 Text(
                   'Choose a phone to start your\nownership journey',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 24),
                 GradientButton(
@@ -167,7 +164,9 @@ class OwnershipScreen extends StatelessWidget {
               LinearPercentIndicator(
                 lineHeight: 16,
                 percent: progress.clamp(0.0, 1.0),
-                backgroundColor: AdLeaseTheme.primaryBlue.withValues(alpha: 0.1),
+                backgroundColor: AdLeaseTheme.primaryBlue.withValues(
+                  alpha: 0.1,
+                ),
                 progressColor: AdLeaseTheme.primaryBlue,
                 barRadius: const Radius.circular(10),
                 padding: EdgeInsets.zero,
@@ -282,10 +281,7 @@ class OwnershipScreen extends StatelessWidget {
           ),
           Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
+            style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
           ),
         ],
       ),
@@ -348,9 +344,7 @@ class OwnershipScreen extends StatelessWidget {
                     ),
                     Text(
                       formatKsh(o.phonePrice, decimals: 0),
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),

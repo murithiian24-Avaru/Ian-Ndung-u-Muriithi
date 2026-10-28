@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:adlease/models/user_model.dart';
@@ -17,7 +18,10 @@ class AuthService {
   String _generateReferralCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final random = DateTime.now().millisecondsSinceEpoch;
-    final code = List.generate(8, (i) => chars[(random + i * 7) % chars.length]).join();
+    final code = List.generate(
+      8,
+      (i) => chars[(random + i * 7) % chars.length],
+    ).join();
     return 'ADL-$code';
   }
 
@@ -77,9 +81,9 @@ class AuthService {
     final users = await _getUsers();
     final passwordHash = _hashPassword(password);
 
-    final matching = users.where(
-      (u) => u['email'] == email && u['passwordHash'] == passwordHash,
-    ).toList();
+    final matching = users
+        .where((u) => u['email'] == email && u['passwordHash'] == passwordHash)
+        .toList();
 
     if (matching.isEmpty) {
       throw Exception('Invalid email or password');

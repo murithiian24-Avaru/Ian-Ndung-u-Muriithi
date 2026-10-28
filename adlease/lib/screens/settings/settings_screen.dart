@@ -5,7 +5,6 @@ import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/theme_provider.dart';
 import 'package:adlease/providers/locale_provider.dart';
 
-
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -51,10 +50,7 @@ class SettingsScreen extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: GoogleFonts.poppins(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
+        style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -80,13 +76,13 @@ class SettingsScreen extends StatelessWidget {
               style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
             ),
             subtitle: Text(
-              themeProvider.isDarkMode ? 'Dark theme enabled' : 'Light theme enabled',
+              themeProvider.isDarkMode
+                  ? 'Dark theme enabled'
+                  : 'Light theme enabled',
               style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
             ),
             secondary: Icon(
-              themeProvider.isDarkMode
-                  ? Icons.dark_mode
-                  : Icons.light_mode,
+              themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
               color: AdLeaseTheme.primaryBlue,
             ),
             value: themeProvider.isDarkMode,
@@ -157,7 +153,10 @@ class SettingsScreen extends StatelessWidget {
               'Push Notifications',
               style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
             ),
-            secondary: const Icon(Icons.notifications, color: AdLeaseTheme.primaryBlue),
+            secondary: const Icon(
+              Icons.notifications,
+              color: AdLeaseTheme.primaryBlue,
+            ),
             value: true,
             onChanged: (_) {},
           ),
@@ -175,7 +174,10 @@ class SettingsScreen extends StatelessWidget {
               'Reward Alerts',
               style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
             ),
-            secondary: const Icon(Icons.card_giftcard, color: AdLeaseTheme.successGreen),
+            secondary: const Icon(
+              Icons.card_giftcard,
+              color: AdLeaseTheme.successGreen,
+            ),
             value: true,
             onChanged: (_) {},
           ),
@@ -209,7 +211,10 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.fingerprint, color: AdLeaseTheme.primaryBlue),
+            leading: const Icon(
+              Icons.fingerprint,
+              color: AdLeaseTheme.primaryBlue,
+            ),
             title: Text(
               'Biometric Login',
               style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
@@ -218,7 +223,10 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.verified_user, color: AdLeaseTheme.primaryBlue),
+            leading: const Icon(
+              Icons.verified_user,
+              color: AdLeaseTheme.primaryBlue,
+            ),
             title: Text(
               'Two-Factor Authentication',
               style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
@@ -260,7 +268,10 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.description, color: AdLeaseTheme.primaryBlue),
+            leading: const Icon(
+              Icons.description,
+              color: AdLeaseTheme.primaryBlue,
+            ),
             title: Text(
               'Terms of Service',
               style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
@@ -269,7 +280,10 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {},
           ),
           ListTile(
-            leading: const Icon(Icons.privacy_tip, color: AdLeaseTheme.primaryBlue),
+            leading: const Icon(
+              Icons.privacy_tip,
+              color: AdLeaseTheme.primaryBlue,
+            ),
             title: Text(
               'Privacy Policy',
               style: GoogleFonts.poppins(fontWeight: FontWeight.w500),

@@ -127,9 +127,9 @@ class AdsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             if (adProvider.canWatchAd)
-              ...adProvider.availableAds.take(3).map(
-                    (ad) => _buildAdCard(context, ad, isDark),
-                  )
+              ...adProvider.availableAds
+                  .take(3)
+                  .map((ad) => _buildAdCard(context, ad, isDark))
             else
               Container(
                 width: double.infinity,
@@ -214,10 +214,7 @@ class AdsScreen extends StatelessWidget {
                 ),
                 Text(
                   'by ${ad.advertiserName}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                 ),
                 Text(
                   '${ad.durationSeconds}s • ${formatKsh(ad.rewardAmount)} reward',
@@ -269,12 +266,16 @@ class AdsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ...adProvider.viewHistory.take(5).map(
+            ...adProvider.viewHistory
+                .take(5)
+                .map(
                   (record) => Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E2E) : Colors.grey.shade50,
+                      color: isDark
+                          ? const Color(0xFF1E1E2E)
+                          : Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(

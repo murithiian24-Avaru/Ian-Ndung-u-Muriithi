@@ -21,7 +21,13 @@ import 'package:adlease/services/wallet_service.dart';
 import 'package:adlease/utils/currency.dart';
 
 const _realBrands = [
-  'safaricom', 'samsung', 'equity', 'kcb', 'tecno', 'm-pesa', 'm-shwari',
+  'safaricom',
+  'samsung',
+  'equity',
+  'kcb',
+  'tecno',
+  'm-pesa',
+  'm-shwari',
 ];
 
 final _phone = PhoneModel(
@@ -56,37 +62,42 @@ void main() {
   });
 
   group('B. sample ads are generic', () {
-    test('every sample ad is labelled "Sample Ad" with a generic advertiser',
-        () async {
-      final ads = await AdService().getAvailableAds();
-      expect(ads, isNotEmpty);
-      for (final ad in ads) {
-        expect(ad.title, startsWith('Sample Ad'));
-        expect(ad.advertiserName, 'Sample Advertiser');
-      }
-    });
+    test(
+      'every sample ad is labelled "Sample Ad" with a generic advertiser',
+      () async {
+        final ads = await AdService().getAvailableAds();
+        expect(ads, isNotEmpty);
+        for (final ad in ads) {
+          expect(ad.title, startsWith('Sample Ad'));
+          expect(ad.advertiserName, 'Sample Advertiser');
+        }
+      },
+    );
 
     test('no sample ad mentions a real company', () async {
       final ads = await AdService().getAvailableAds();
       for (final ad in ads) {
-        final text = '${ad.title} ${ad.advertiserName} ${ad.videoUrl}'.toLowerCase();
+        final text = '${ad.title} ${ad.advertiserName} ${ad.videoUrl}'
+            .toLowerCase();
         for (final brand in _realBrands) {
           expect(text, isNot(contains(brand)), reason: 'found "$brand"');
         }
       }
     });
 
-    test('old branded samples stored by earlier versions are not shown',
-        () async {
-      SharedPreferences.setMockInitialValues({
-        'adlease_ads':
-            '[{"id":"x","title":"Safaricom M-Pesa Go","advertiserName":"Safaricom",'
-                '"videoUrl":"","thumbnailUrl":"","durationSeconds":60,"rewardAmount":2.5,'
-                '"createdAt":"2026-01-01T00:00:00.000","expiresAt":"2026-12-01T00:00:00.000"}]',
-      });
-      final ads = await AdService().getAvailableAds();
-      expect(ads.map((a) => a.title), everyElement(startsWith('Sample Ad')));
-    });
+    test(
+      'old branded samples stored by earlier versions are not shown',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'adlease_ads':
+              '[{"id":"x","title":"Safaricom M-Pesa Go","advertiserName":"Safaricom",'
+              '"videoUrl":"","thumbnailUrl":"","durationSeconds":60,"rewardAmount":2.5,'
+              '"createdAt":"2026-01-01T00:00:00.000","expiresAt":"2026-12-01T00:00:00.000"}]',
+        });
+        final ads = await AdService().getAvailableAds();
+        expect(ads.map((a) => a.title), everyElement(startsWith('Sample Ad')));
+      },
+    );
   });
 
   group('A. withdrawals are hidden', () {
@@ -95,8 +106,9 @@ void main() {
       expect(AppRoutes.routes.containsKey(AppRoutes.withdrawal), isFalse);
     });
 
-    testWidgets('the Wallet tab has no Withdraw button and says why',
-        (tester) async {
+    testWidgets('the Wallet tab has no Withdraw button and says why', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
@@ -129,8 +141,11 @@ void main() {
     test('credits the phone and leaves the cash wallet untouched', () async {
       await OwnershipService().selectPhone(userId: 'u1', phone: _phone);
 
-      final result = await AdRewardService()
-          .claim(userId: 'u1', adId: 'ad1', deviceId: '');
+      final result = await AdRewardService().claim(
+        userId: 'u1',
+        adId: 'ad1',
+        deviceId: '',
+      );
 
       expect(result.outcome, AdRewardOutcome.credited);
       final ownership = await OwnershipService().getUserOwnership('u1');
@@ -143,8 +158,11 @@ void main() {
     });
 
     test('credits nothing, anywhere, when no phone has been chosen', () async {
-      final result = await AdRewardService()
-          .claim(userId: 'u1', adId: 'ad1', deviceId: '');
+      final result = await AdRewardService().claim(
+        userId: 'u1',
+        adId: 'ad1',
+        deviceId: '',
+      );
 
       expect(result.outcome, AdRewardOutcome.noActivePhone);
       expect(await AdService().getAdsWatchedToday('u1'), 0);
@@ -159,8 +177,11 @@ void main() {
         expect(r.outcome, AdRewardOutcome.credited);
       }
 
-      final extra =
-          await rewards.claim(userId: 'u1', adId: 'extra', deviceId: '');
+      final extra = await rewards.claim(
+        userId: 'u1',
+        adId: 'extra',
+        deviceId: '',
+      );
       expect(extra.outcome, AdRewardOutcome.rejected);
 
       final ownership = await OwnershipService().getUserOwnership('u1');

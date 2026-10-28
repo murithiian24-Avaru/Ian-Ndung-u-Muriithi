@@ -31,8 +31,8 @@ class AdRewardService {
   final OwnershipService _ownership;
 
   AdRewardService({AdService? ads, OwnershipService? ownership})
-      : _ads = ads ?? AdService(),
-        _ownership = ownership ?? OwnershipService();
+    : _ads = ads ?? AdService(),
+      _ownership = ownership ?? OwnershipService();
 
   Future<AdRewardResult> claim({
     required String userId,

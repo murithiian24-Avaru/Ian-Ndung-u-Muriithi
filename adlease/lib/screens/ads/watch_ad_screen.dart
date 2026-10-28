@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -176,10 +177,10 @@ class _WatchAdScreenState extends State<WatchAdScreen>
           child: _rewardClaimed
               ? _buildRewardClaimedView()
               : _isCompleted
-                  ? _buildCompletedView()
-                  : _isPlaying
-                      ? _buildPlayingView()
-                      : _buildStartView(),
+              ? _buildCompletedView()
+              : _isPlaying
+              ? _buildPlayingView()
+              : _buildStartView(),
         ),
       ),
     );
@@ -195,7 +196,11 @@ class _WatchAdScreenState extends State<WatchAdScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.phone_android, size: 80, color: Colors.grey.shade400),
+                Icon(
+                  Icons.phone_android,
+                  size: 80,
+                  color: Colors.grey.shade400,
+                ),
                 const SizedBox(height: 24),
                 Text(
                   l.choosePhoneFirst,
@@ -219,11 +224,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.timer_off,
-                  size: 80,
-                  color: Colors.grey.shade400,
-                ),
+                Icon(Icons.timer_off, size: 80, color: Colors.grey.shade400),
                 const SizedBox(height: 24),
                 Text(
                   'Daily Limit Reached',
@@ -236,10 +237,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
                 Text(
                   'You\'ve watched all 3 ads today.\nCome back tomorrow!',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 32),
                 GradientButton(
@@ -295,10 +293,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
             Text(
               l.watchSampleAdHint(formatKsh(AdService.rewardPerAd)),
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             Container(
@@ -398,10 +393,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         const SizedBox(height: 16),
         Text(
           '${(progress * 100).toStringAsFixed(0)}% complete',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: Colors.grey,
-          ),
+          style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
         ),
         const SizedBox(height: 8),
         Text(
@@ -436,10 +428,7 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         const SizedBox(height: 32),
         Text(
           'Ad Completed!',
-          style: GoogleFonts.poppins(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
@@ -482,26 +471,17 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         const SizedBox(height: 32),
         Text(
           'Reward Claimed!',
-          style: GoogleFonts.poppins(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context)!
               .rewardAddedToPhone(formatKsh(AdService.rewardPerAd)),
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: Colors.grey,
-          ),
+          style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
         ),
         const SizedBox(height: 40),
-        GradientButton(
-          text: 'Done',
-          onPressed: () => Navigator.pop(context),
-        ),
+        GradientButton(text: 'Done', onPressed: () => Navigator.pop(context)),
       ],
     );
   }

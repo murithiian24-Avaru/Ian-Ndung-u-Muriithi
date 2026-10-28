@@ -21,9 +21,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _isSaving = false;
 
   final List<String> _countries = [
-    'Kenya', 'Nigeria', 'South Africa', 'Ghana', 'Tanzania',
-    'Uganda', 'Rwanda', 'Ethiopia', 'Egypt', 'Morocco',
-    'Senegal', 'Cameroon', 'Other',
+    'Kenya',
+    'Nigeria',
+    'South Africa',
+    'Ghana',
+    'Tanzania',
+    'Uganda',
+    'Rwanda',
+    'Ethiopia',
+    'Egypt',
+    'Morocco',
+    'Senegal',
+    'Cameroon',
+    'Other',
   ];
 
   @override

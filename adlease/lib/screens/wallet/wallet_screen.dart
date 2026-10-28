@@ -203,10 +203,7 @@ class WalletScreen extends StatelessWidget {
                 ),
                 Text(
                   l.appliedToPhone,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -244,10 +241,7 @@ class WalletScreen extends StatelessWidget {
                 ),
                 Text(
                   l.remaining,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -263,10 +257,7 @@ class WalletScreen extends StatelessWidget {
       children: [
         Text(
           'Transaction History',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         if (walletProvider.transactions.isEmpty)
@@ -287,10 +278,7 @@ class WalletScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'No transactions yet',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                 ),
                 Text(
                   'Watch ads to start earning!',
@@ -341,10 +329,7 @@ class WalletScreen extends StatelessWidget {
         color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8),
         ],
       ),
       child: Row(
@@ -371,10 +356,7 @@ class WalletScreen extends StatelessWidget {
                 ),
                 Text(
                   _formatDate(tx.createdAt),
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -384,7 +366,9 @@ class WalletScreen extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: isPositive ? AdLeaseTheme.successGreen : AdLeaseTheme.errorRed,
+              color: isPositive
+                  ? AdLeaseTheme.successGreen
+                  : AdLeaseTheme.errorRed,
             ),
           ),
         ],

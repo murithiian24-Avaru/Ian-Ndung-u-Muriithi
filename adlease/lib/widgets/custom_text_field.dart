@@ -41,17 +41,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
-        prefixIcon: widget.prefixIcon != null
-            ? Icon(widget.prefixIcon)
-            : null,
+        prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
         suffixIcon: widget.isPassword
             ? IconButton(
                 icon: Icon(
                   _obscureText ? Icons.visibility_off : Icons.visibility,
                 ),
                 tooltip: _obscureText
-                    ? (AppLocalizations.of(context)?.showPassword ?? 'Show password')
-                    : (AppLocalizations.of(context)?.hidePassword ?? 'Hide password'),
+                    ? (AppLocalizations.of(context)?.showPassword ??
+                          'Show password')
+                    : (AppLocalizations.of(context)?.hidePassword ??
+                          'Hide password'),
                 onPressed: () {
                   setState(() {
                     _obscureText = !_obscureText;

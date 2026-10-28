@@ -44,11 +44,7 @@ class SelectPhoneScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPhoneCard(
-    BuildContext context,
-    PhoneModel phone,
-    bool isDark,
-  ) {
+  Widget _buildPhoneCard(BuildContext context, PhoneModel phone, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
@@ -111,7 +107,10 @@ class SelectPhoneScreen extends StatelessWidget {
             runSpacing: 8,
             children: phone.specs.entries.map((entry) {
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.05)

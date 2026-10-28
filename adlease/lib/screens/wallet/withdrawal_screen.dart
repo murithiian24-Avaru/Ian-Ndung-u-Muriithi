@@ -24,7 +24,11 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
 
   final List<Map<String, dynamic>> _paymentMethods = [
     {'name': 'M-Pesa', 'icon': Icons.phone_android, 'hint': 'Phone number'},
-    {'name': 'Bank Transfer', 'icon': Icons.account_balance, 'hint': 'Account number'},
+    {
+      'name': 'Bank Transfer',
+      'icon': Icons.account_balance,
+      'hint': 'Account number',
+    },
     {'name': 'PayPal', 'icon': Icons.payment, 'hint': 'PayPal email'},
     {'name': 'Airtel Money', 'icon': Icons.phone, 'hint': 'Phone number'},
   ];
@@ -45,11 +49,11 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
     if (user == null) return;
 
     final success = await context.read<WalletProvider>().requestWithdrawal(
-          userId: user.uid,
-          amount: double.parse(_amountController.text),
-          paymentMethod: _paymentMethod,
-          paymentDetails: _detailsController.text.trim(),
-        );
+      userId: user.uid,
+      amount: double.parse(_amountController.text),
+      paymentMethod: _paymentMethod,
+      paymentDetails: _detailsController.text.trim(),
+    );
 
     setState(() => _isProcessing = false);
 
@@ -103,7 +107,9 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                         color: AdLeaseTheme.primaryBlue.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AdLeaseTheme.primaryBlue.withValues(alpha: 0.2),
+                          color: AdLeaseTheme.primaryBlue.withValues(
+                            alpha: 0.2,
+                          ),
                         ),
                       ),
                       child: Column(
@@ -169,7 +175,9 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                   label: 'Amount (KSh)',
                   hint: 'Enter amount to withdraw',
                   prefixIcon: Icons.attach_money,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter an amount';
@@ -188,8 +196,11 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                 CustomTextField(
                   controller: _detailsController,
                   label: 'Payment Details',
-                  hint: _paymentMethods
-                      .firstWhere((m) => m['name'] == _paymentMethod)['hint'] as String,
+                  hint:
+                      _paymentMethods.firstWhere(
+                            (m) => m['name'] == _paymentMethod,
+                          )['hint']
+                          as String,
                   prefixIcon: Icons.info_outline,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
