@@ -180,7 +180,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: npm ci
@@ -188,14 +188,15 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          npm ci --no-audit --no-fund 2>&1 | tee ../../admin.txt
+          { node --version; npm --version; } | tee "$GITHUB_WORKSPACE/admin.txt"
+          npm ci --no-audit --no-fund 2>&1 | tee -a "$GITHUB_WORKSPACE/admin.txt"
       - name: npm run build
         id: build
         if: steps.ci.outcome == 'success'
         continue-on-error: true
         run: |
           set -o pipefail
-          npm run build 2>&1 | tee -a ../../admin.txt
+          npm run build 2>&1 | tee -a "$GITHUB_WORKSPACE/admin.txt"
       - name: Post report
         if: always()
         working-directory: .
@@ -206,9 +207,14 @@ jobs:
           BUILD: ${{ steps.build.outcome }}
         run: |
           conclusion=success
-          [ "$CI_OUT" = success ] && [ "$BUILD" = success ] || conclusion=failure
-          { echo "RESULT npm_ci=$CI_OUT build=$BUILD"; echo '```'; tail -n 60 adlease/admin.txt 2>/dev/null; echo '```'; } > admin.md
-          gh api "repos/$GITHUB_REPOSITORY/check-runs" -f name="AdLease report (admin dashboard)" -f head_sha="$SHA" \
-            -f status=completed -f conclusion="$conclusion" -f "output[title]=npm ci=$CI_OUT build=$BUILD" \
-            -F "output[summary]=@admin.md" > /dev/null
-          [ "$conclusion" = success ]
+          if [ "$CI_OUT" != success ] || [ "$BUILD" != success ]; then conclusion=failure; fi
+          { echo "RESULT npm_ci=$CI_OUT build=$BUILD"; echo '```'; tail -n 60 "$GITHUB_WORKSPACE/admin.txt" || true; echo '```'; } > admin.md
+          if ! gh api "repos/$GITHUB_REPOSITORY/check-runs" -f name="AdLease report (admin dashboard)" -f head_sha="$SHA" \
+              -f status=completed -f conclusion="$conclusion" -f "output[title]=npm ci=$CI_OUT build=$BUILD" \
+              -F "output[summary]=@admin.md" > post.log 2>&1; then
+            echo "::error title=admin report post failed::$(head -c 800 post.log | tr '\n' ' ')"
+          fi
+          if [ "$conclusion" != success ]; then
+            echo "::error title=admin build [npm ci=$CI_OUT build=$BUILD]::$(tail -c 1500 "$GITHUB_WORKSPACE/admin.txt" | tr '\n' ' ')"
+            exit 1
+          fi

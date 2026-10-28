@@ -127,7 +127,6 @@ class WalletScreen extends StatelessWidget {
               ),
             ),
           ],
-          ),
         ],
       ),
     );
