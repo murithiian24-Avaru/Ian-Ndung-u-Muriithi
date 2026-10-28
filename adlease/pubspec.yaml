@@ -19,7 +19,8 @@ dependencies:
   firebase_storage: ^12.4.1
   google_sign_in: ^6.2.2
   shared_preferences: ^2.3.4
-  intl: ^0.19.0
+  # 0.19 for Flutter 3.27 (pinned by flutter_localizations), 0.20 for current Flutter.
+  intl: '>=0.19.0 <0.21.0'
   uuid: ^4.5.1
   crypto: ^3.0.6
   percent_indicator: ^4.2.4
