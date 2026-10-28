@@ -1,6 +1,7 @@
 # AdLease validation: dependency resolution, static analysis, unit/widget tests
-# and an Android DEBUG build. It never deploys, signs a release, or uses secrets.
-# Results are reported as annotations on the run (visible on the commit and PR).
+# and an Android DEBUG build. It never deploys, signs a release, or uses
+# repository secrets. Each run posts a plain-text report as a separate check
+# ("AdLease report ...") on the commit, and keeps the debug APK as an artifact.
 name: AdLease CI
 
 on:
@@ -13,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  checks: write   # only to post the text report as a check on the commit
 
 concurrency:
   group: adlease-ci-${{ github.ref }}
@@ -34,24 +36,32 @@ jobs:
         working-directory: adlease
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Flutter
+      - name: Set up Flutter (pinned)
+        if: matrix.flutter != 'stable'
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: ${{ matrix.flutter == 'stable' && '' || matrix.flutter }}
+          flutter-version: ${{ matrix.flutter }}
+          cache: true
+
+      - name: Set up Flutter (latest stable)
+        if: matrix.flutter == 'stable'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
           cache: true
 
       - name: Versions
         run: |
-          flutter --version
-          echo "::notice title=Flutter ${{ matrix.flutter }}::$(flutter --version | head -1) | $(java -version 2>&1 | head -1)"
+          set -o pipefail
+          { flutter --version; java -version 2>&1 | head -1; } | tee ../versions.txt
 
       - name: flutter pub get
         id: pub
@@ -83,6 +93,7 @@ jobs:
         run: |
           set -o pipefail
           flutter build apk --debug 2>&1 | tee ../build.txt
+          ls -l build/app/outputs/flutter-apk/app-debug.apk | tee -a ../build.txt
 
       - name: Upload debug APK
         if: steps.build.outcome == 'success'
@@ -92,34 +103,33 @@ jobs:
           path: adlease/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 14
 
-      - name: Report results
+      - name: Post report
         if: always()
         working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ matrix.flutter }}
+          PUB: ${{ steps.pub.outcome }}
+          ANALYZE: ${{ steps.analyze.outcome }}
+          TEST: ${{ steps.test.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          enc() { sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\r/%0D/g;s/\n/%0A/g'; }
-          v="${{ matrix.flutter }}"
-          # Analyzer findings -> one annotation each (file and line linked).
-          if [ -f analyze.txt ]; then
-            grep ' • ' analyze.txt | head -45 | while IFS= read -r line; do
-              sev=$(echo "$line" | awk -F ' • ' '{gsub(/^ +/,"",$1); print $1}')
-              msg=$(echo "$line" | awk -F ' • ' '{print $2}')
-              loc=$(echo "$line" | awk -F ' • ' '{print $3}')
-              code=$(echo "$line" | awk -F ' • ' '{print $4}')
-              f=$(echo "$loc" | cut -d: -f1); l=$(echo "$loc" | cut -d: -f2); c=$(echo "$loc" | cut -d: -f3)
-              lvl=warning; [ "$sev" = "error" ] && lvl=error; [ "$sev" = "info" ] && lvl=notice
-              echo "::$lvl file=adlease/$f,line=$l,col=$c,title=analyze [$v] $sev ($code)::$msg"
-            done
-            echo "::notice title=analyze [$v] summary::$(grep -E 'issues? found|No issues found' analyze.txt | tail -1)"
-          fi
-          for s in pub test build; do
-            case $s in pub) o="${{ steps.pub.outcome }}";; test) o="${{ steps.test.outcome }}";; build) o="${{ steps.build.outcome }}";; esac
-            if [ "$o" = "failure" ] && [ -f $s.txt ]; then
-              echo "::error title=$s [$v] FAILED (last 60 lines)::$(tail -60 $s.txt | enc)"
-            fi
-          done
-          [ -f test.txt ] && echo "::notice title=test [$v] summary::$(grep -E '^[0-9:]+ \+[0-9]+' test.txt | tail -1 | enc)"
-          echo "::notice title=RESULT [$v]::pub=${{ steps.pub.outcome }} analyze=${{ steps.analyze.outcome }} test=${{ steps.test.outcome }} build=${{ steps.build.outcome }}"
-          if [ "${{ steps.pub.outcome }}" != success ] || [ "${{ steps.analyze.outcome }}" != success ] || \
-             [ "${{ steps.test.outcome }}" != success ] || [ "${{ steps.build.outcome }}" != success ]; then
-            exit 1
-          fi
+          section() { echo "## $1"; echo '```'; if [ -f "$2" ]; then tail -n "$3" "$2"; else echo "(not run)"; fi; echo '```'; }
+          {
+            echo "RESULT pub=$PUB analyze=$ANALYZE test=$TEST build=$BUILD"
+            section versions versions.txt 10
+            section "flutter pub get" pub.txt 40
+            section "flutter analyze" analyze.txt 150
+            section "flutter test" test.txt 120
+            section "flutter build apk --debug" build.txt 60
+          } > report.md
+          head -c 60000 report.md > report-trim.md
+          conclusion=success
+          for o in "$PUB" "$ANALYZE" "$TEST" "$BUILD"; do [ "$o" = success ] || conclusion=failure; done
+          gh api "repos/$GITHUB_REPOSITORY/check-runs" \
+            -f name="AdLease report (Flutter $V)" -f head_sha="$SHA" \
+            -f status=completed -f conclusion="$conclusion" \
+            -f "output[title]=pub=$PUB analyze=$ANALYZE test=$TEST build=$BUILD" \
+            -F "output[summary]=@report-trim.md" > /dev/null
+          [ "$conclusion" = success ]
