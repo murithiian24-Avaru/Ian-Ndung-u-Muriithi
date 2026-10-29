@@ -23,7 +23,17 @@ final _dir = Platform.environment['ADLEASE_SCREENSHOT_DIR'];
 const _redmiTall = PhoneSize('redmi full page', Size(392.7, 1500), 2);
 const _smallTall = PhoneSize('small full page', Size(320, 1500), 2);
 
+/// Advances time in small steps so animations run as on a device (one large
+/// pump would jump timers but leave animations at their first frame).
+Future<void> _frames(WidgetTester tester, Duration total) async {
+  const step = Duration(milliseconds: 50);
+  for (var t = Duration.zero; t < total; t += step) {
+    await tester.pump(step);
+  }
+}
+
 Future<void> _capture(WidgetTester tester, Key key, String name) async {
+  await _frames(tester, const Duration(milliseconds: 800));
   // Decode images (the Avaru logo) before capturing.
   await tester.runAsync(() async {
     for (final e in find.byType(Image).evaluate()) {
@@ -102,7 +112,7 @@ void main() {
     await tester.pumpWidget(
       buildTestApp(p, home: const SplashScreen(), boundaryKey: key),
     );
-    await tester.pump(const Duration(milliseconds: 2000));
+    await _frames(tester, const Duration(milliseconds: 1600));
     await _capture(tester, key, '11-splash');
     await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(seconds: 1));

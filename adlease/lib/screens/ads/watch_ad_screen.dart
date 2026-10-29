@@ -172,15 +172,24 @@ class _WatchAdScreenState extends State<WatchAdScreen>
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: _rewardClaimed
-              ? _buildRewardClaimedView()
-              : _isCompleted
-              ? _buildCompletedView()
-              : _isPlaying
-              ? _buildPlayingView()
-              : _buildStartView(),
+        // Centred as before when it fits; scrolls on small screens or with a
+        // large system font instead of overflowing.
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: (constraints.maxHeight - 48).clamp(0, double.infinity),
+              ),
+              child: _rewardClaimed
+                  ? _buildRewardClaimedView()
+                  : _isCompleted
+                  ? _buildCompletedView()
+                  : _isPlaying
+                  ? _buildPlayingView()
+                  : _buildStartView(),
+            ),
+          ),
         ),
       ),
     );

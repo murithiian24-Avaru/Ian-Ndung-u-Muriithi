@@ -124,13 +124,14 @@ class SettingsScreen extends StatelessWidget {
   // to work.
   Widget _buildNotificationSettings(BuildContext context, bool isDark) {
     final l = AppLocalizations.of(context)!;
-    Widget tile(String title, IconData icon, Color color) => SwitchListTile(
+    // No icon colour: disabled tiles then use the theme's disabled colour.
+    Widget tile(String title, IconData icon) => SwitchListTile(
       title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
       subtitle: Text(
         l.notAvailableYet,
         style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
       ),
-      secondary: Icon(icon, color: color),
+      secondary: Icon(icon),
       value: false,
       onChanged: null,
     );
@@ -145,9 +146,9 @@ class SettingsScreen extends StatelessWidget {
               style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
             ),
           ),
-          tile('Push Notifications', Icons.notifications, AdLeaseTheme.primaryBlue),
-          tile('Ad Reminders', Icons.alarm, AdLeaseTheme.accentGold),
-          tile('Reward Alerts', Icons.card_giftcard, AdLeaseTheme.successGreen),
+          tile('Push Notifications', Icons.notifications),
+          tile('Ad Reminders', Icons.alarm),
+          tile('Reward Alerts', Icons.card_giftcard),
         ],
       ),
     );

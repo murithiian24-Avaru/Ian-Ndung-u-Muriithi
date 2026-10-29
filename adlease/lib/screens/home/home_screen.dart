@@ -158,19 +158,18 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Side by side when they fit, otherwise one above the other
+              // (never split mid-word).
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 24,
+                runSpacing: 12,
                 children: [
-                  Expanded(
-                    child: _buildBalanceStat(
-                      l.remaining,
-                      formatKsh(ownership.remainingAmount),
-                    ),
+                  _buildBalanceStat(
+                    l.remaining,
+                    formatKsh(ownership.remainingAmount),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildBalanceStat(l.balance, l.notAvailable),
-                  ),
+                  _buildBalanceStat(l.balance, l.notAvailable),
                 ],
               ),
             ],
@@ -334,16 +333,16 @@ class HomeScreen extends StatelessWidget {
   Widget _buildProgressRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      // Label and value on one line when they fit, otherwise the value
+      // moves under the label.
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        spacing: 8,
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
-            ),
+          Text(
+            label,
+            style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
           ),
-          const SizedBox(width: 8),
           Text(
             value,
             style: GoogleFonts.poppins(

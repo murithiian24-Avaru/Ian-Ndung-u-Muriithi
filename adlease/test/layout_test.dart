@@ -29,7 +29,7 @@ final _required = <String, Widget Function()>{
   'Profile': () => const ProfileScreen(),
 };
 
-/// Other screens: surveyed and reported, not yet required to pass.
+/// Other screens: checked at fewer sizes (see the loop at the end).
 final _surveyed = <String, Widget Function()>{
   'Watch (ads list)': () => const AdsScreen(),
   'Watch Ad': () => const WatchAdScreen(),
@@ -127,13 +127,14 @@ void main() {
     }
   });
 
-  // Not a pass/fail check: reports overflows on screens outside this change
-  // so they can be planned. See README "Known layout issues".
-  testWidgets('survey: other screens', (tester) async {
-    final report = <String>[];
-    for (final entry in _surveyed.entries) {
-      for (final phone in [PhoneSize.small, PhoneSize.redmi]) {
-        for (final scale in [1.0, 1.3, 2.0]) {
+  // Every other screen: small phone and Redmi size, at 100%, 130% and 200%
+  // system font. Any Flutter error (overflow or otherwise) fails the test.
+  for (final entry in _surveyed.entries) {
+    for (final phone in [PhoneSize.small, PhoneSize.redmi]) {
+      for (final scale in [1.0, 1.3, 2.0]) {
+        testWidgets('${entry.key} fits: ${phone.name}, font x$scale', (
+          tester,
+        ) async {
           final p = await seedDemoData();
           final errors = await layoutErrorsFor(
             tester,
@@ -144,18 +145,9 @@ void main() {
             allErrors: true,
           );
           await tester.pumpWidget(const SizedBox());
-          if (errors.isNotEmpty) {
-            report.add(
-              '${entry.key} | ${phone.name} | x$scale | ${errors.toSet().join(' ; ')}',
-            );
-          }
-        }
+          expect(errors, isEmpty, reason: errors.toSet().join('\n'));
+        });
       }
     }
-    // ignore: avoid_print
-    print(
-      'LAYOUT SURVEY (fonts $fontsStatus): '
-      '${report.isEmpty ? 'no overflow found' : '\n${report.join('\n')}'}',
-    );
-  });
+  }
 }

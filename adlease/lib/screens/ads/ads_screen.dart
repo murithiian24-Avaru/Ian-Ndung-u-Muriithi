@@ -89,14 +89,18 @@ class AdsScreen extends StatelessWidget {
   }
 
   Widget _buildStatColumn(String value, String label) {
-    return Column(
+    return Expanded(
+      child: Column(
       children: [
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         const SizedBox(height: 4),
@@ -108,7 +112,8 @@ class AdsScreen extends StatelessWidget {
             fontSize: 11,
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -296,6 +301,7 @@ class AdsScreen extends StatelessWidget {
                             style: GoogleFonts.poppins(fontSize: 13),
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           '+${formatKsh(record.rewardEarned)}',
                           style: GoogleFonts.poppins(

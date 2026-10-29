@@ -20,7 +20,11 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _initialize();
+    // Start after the first frame: the providers notify listeners as soon as
+    // loading starts, which is not allowed while the tree is being built.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _initialize();
+    });
   }
 
   Future<void> _initialize() async {

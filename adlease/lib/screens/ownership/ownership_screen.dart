@@ -172,8 +172,10 @@ class OwnershipScreen extends StatelessWidget {
                 padding: EdgeInsets.zero,
               ),
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 12,
+                runSpacing: 4,
                 children: [
                   Text(
                     '${current.progressPercentage.toStringAsFixed(1)}% Complete',

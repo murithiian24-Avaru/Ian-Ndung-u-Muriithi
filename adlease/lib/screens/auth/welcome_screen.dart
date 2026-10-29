@@ -18,7 +18,14 @@ class WelcomeScreen extends StatelessWidget {
           gradient: AdLeaseTheme.primaryGradient,
         ),
         child: SafeArea(
-          child: Padding(
+          // Same layout as before when it fits; scrolls on small screens or
+          // with a large system font instead of overflowing.
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
               children: [
@@ -102,6 +109,10 @@ class WelcomeScreen extends StatelessWidget {
                 ).animate().fadeIn(delay: 1100.ms),
                 const SizedBox(height: 32),
               ],
+            ),
+          ),
+                ),
+              ),
             ),
           ),
         ),
