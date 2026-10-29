@@ -1,5 +1,9 @@
 # AdLease Database Schema
 
+> **Draft. Not deployed.** No Firebase project exists; the app stores all data
+> on the phone. The proposed architecture and corrected security model are in
+> [`docs/architecture/`](docs/architecture/README.md).
+
 ## Firestore Collections
 
 ### `users`
@@ -91,7 +95,7 @@
 | completedFully | boolean | Whether ad was fully watched |
 | rewardEarned | number | Reward earned |
 | deviceId | string | Device that viewed |
-| verificationHash | string | SHA-256 anti-cheat hash |
+| verificationHash | string | Hash computed on the phone. **Not an anti-cheat control**; replaced by the verified ad network `transaction_id` (see [`docs/architecture/reward-rules.md`](docs/architecture/reward-rules.md)) |
 
 ### `withdrawals`
 | Field | Type | Description |
@@ -116,6 +120,14 @@
 | rewardAmount | number | Referral reward ($5.00) |
 
 ## Security Rules
+
+> **WARNING: these draft rules are unsafe and MUST NOT be deployed.** The
+> `users` rule lets a signed-in user create, change or delete their own user
+> document with any fields, including setting `isVerified` and `isActive` to
+> `true`, choosing their own `referralCode` and `referredBy`, and changing
+> `deviceId`. The required correction, and other problems found, are in
+> [`docs/architecture/firestore-rules-review.md`](docs/architecture/firestore-rules-review.md).
+> The text below is kept unchanged only as a record of the original draft.
 
 ```
 rules_version = '2';

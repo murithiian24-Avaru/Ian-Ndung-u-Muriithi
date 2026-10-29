@@ -41,7 +41,9 @@ adlease/
 - **i18n**: English + Kiswahili
 - **Theme**: Light + Dark mode with blue gradient branding
 
-### Backend (Firebase-ready)
+### Backend (proposed, not built)
+No backend exists yet: the app stores everything on the phone. The proposed
+design is in [`docs/architecture/`](docs/architecture/README.md).
 - Firebase Authentication
 - Cloud Firestore
 - Firebase Cloud Functions
@@ -106,7 +108,8 @@ npm run build   # Production
 3. Download `google-services.json` to `android/app/`
 4. Enable Authentication (Email/Password, Google)
 5. Create Firestore database
-6. Deploy security rules from `DATABASE_SCHEMA.md`
+6. Do **not** deploy the draft rules in `DATABASE_SCHEMA.md`: they are unsafe.
+   See [`docs/architecture/firestore-rules-review.md`](docs/architecture/firestore-rules-review.md).
 
 ## Testing
 ```bash
