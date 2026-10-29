@@ -7,7 +7,7 @@ name: AdLease CI
 
 on:
   push:
-    branches: ['feature/**', 'fix/**']
+    branches: [main, 'feature/**', 'fix/**']
     paths: ['adlease/**', '.github/workflows/adlease-ci.yml']
   pull_request:
     paths: ['adlease/**', '.github/workflows/adlease-ci.yml']
@@ -19,7 +19,9 @@ permissions:
 
 concurrency:
   group: adlease-ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Every commit on main keeps its own result; on other branches a newer push
+  # replaces a run still in progress.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   validate:
@@ -37,8 +39,6 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0   # needed to find files changed compared with main
 
       - uses: actions/setup-java@v5
         with:
@@ -191,19 +191,17 @@ jobs:
             done
           done
 
-      - name: dart format (files changed compared with main)
+      - name: dart format (every committed Dart file in the app)
         id: format
         if: steps.pub.outcome == 'success'
         continue-on-error: true
         run: |
           set -o pipefail
-          # Existing files that this branch does not touch are not reformatted
-          # here; that is left to a separate formatting-only change.
-          git fetch -q origin main
-          files=$(git diff --name-only --diff-filter=ACMR origin/main...HEAD -- '*.dart' | sed 's#^adlease/##')
-          echo "Checked files:" | tee ../format.txt
-          echo "$files" | tee -a ../format.txt
-          [ -n "$files" ] || exit 0
+          # All tracked .dart files under adlease/ (lib and test). Files made by
+          # flutter gen-l10n are git-ignored, so they are not included.
+          files=$(git ls-files -- '*.dart')
+          echo "Checked $(echo "$files" | wc -l) files" | tee ../format.txt
+          [ -n "$files" ] || { echo "no Dart files found" | tee -a ../format.txt; exit 1; }
           dart format $files 2>&1 | tail -2 | tee -a ../format.txt
           git diff --stat -- . | tee -a ../format.txt
           git diff -- . > ../format.diff
