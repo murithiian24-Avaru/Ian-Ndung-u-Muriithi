@@ -29,7 +29,9 @@ class WalletModel {
       balance: (map['balance'] ?? 0).toDouble(),
       totalEarnings: (map['totalEarnings'] ?? 0).toDouble(),
       totalWithdrawn: (map['totalWithdrawn'] ?? 0).toDouble(),
-      lastUpdated: DateTime.parse(map['lastUpdated'] ?? DateTime.now().toIso8601String()),
+      lastUpdated: DateTime.parse(
+        map['lastUpdated'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 
@@ -94,7 +96,9 @@ class WithdrawalRequest {
       paymentMethod: map['paymentMethod'] ?? '',
       paymentDetails: map['paymentDetails'] ?? '',
       status: map['status'] ?? 'pending',
-      requestedAt: DateTime.parse(map['requestedAt'] ?? DateTime.now().toIso8601String()),
+      requestedAt: DateTime.parse(
+        map['requestedAt'] ?? DateTime.now().toIso8601String(),
+      ),
       processedAt: map['processedAt'] != null
           ? DateTime.parse(map['processedAt'])
           : null,

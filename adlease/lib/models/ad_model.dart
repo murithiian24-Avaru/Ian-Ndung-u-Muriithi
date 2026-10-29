@@ -51,8 +51,12 @@ class AdModel {
       durationSeconds: map['durationSeconds'] ?? 60,
       rewardAmount: (map['rewardAmount'] ?? 0).toDouble(),
       isActive: map['isActive'] ?? true,
-      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
-      expiresAt: DateTime.parse(map['expiresAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        map['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      expiresAt: DateTime.parse(
+        map['expiresAt'] ?? DateTime.now().toIso8601String(),
+      ),
       totalViews: map['totalViews'] ?? 0,
     );
   }
@@ -97,7 +101,9 @@ class AdViewRecord {
       id: map['id'] ?? '',
       userId: map['userId'] ?? '',
       adId: map['adId'] ?? '',
-      viewedAt: DateTime.parse(map['viewedAt'] ?? DateTime.now().toIso8601String()),
+      viewedAt: DateTime.parse(
+        map['viewedAt'] ?? DateTime.now().toIso8601String(),
+      ),
       completedFully: map['completedFully'] ?? false,
       rewardEarned: (map['rewardEarned'] ?? 0).toDouble(),
       deviceId: map['deviceId'] ?? '',

@@ -30,7 +30,11 @@ class WalletProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addEarning(String userId, double amount, String description) async {
+  Future<void> addEarning(
+    String userId,
+    double amount,
+    String description,
+  ) async {
     _wallet = await _walletService.addEarning(userId, amount, description);
     _transactions = await _walletService.getTransactions(userId);
     notifyListeners();

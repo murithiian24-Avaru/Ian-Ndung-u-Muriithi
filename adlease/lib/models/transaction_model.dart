@@ -50,7 +50,9 @@ class TransactionModel {
         orElse: () => TransactionStatus.pending,
       ),
       description: map['description'] ?? '',
-      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        map['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
       referenceId: map['referenceId'],
     );
   }

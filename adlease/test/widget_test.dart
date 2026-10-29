@@ -159,7 +159,9 @@ void main() {
         'durationSeconds': 60,
         'rewardAmount': 2.50,
         'createdAt': DateTime.now().toIso8601String(),
-        'expiresAt': DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+        'expiresAt': DateTime.now()
+            .add(const Duration(days: 30))
+            .toIso8601String(),
       };
       final ad = AdModel.fromMap(map);
       expect(ad.title, 'Test Ad');

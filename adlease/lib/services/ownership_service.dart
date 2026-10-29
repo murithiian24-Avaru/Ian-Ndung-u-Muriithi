@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:uuid/uuid.dart';
 import 'package:adlease/models/ownership_model.dart';
 import 'package:adlease/models/phone_model.dart';
@@ -123,7 +124,9 @@ class OwnershipService {
     final data = await _storage.getString(_ownershipsKey);
     if (data == null) return null;
     final list = List<Map<String, dynamic>>.from(jsonDecode(data));
-    final match = list.where((o) => o['userId'] == userId && o['isCompleted'] == false).toList();
+    final match = list
+        .where((o) => o['userId'] == userId && o['isCompleted'] == false)
+        .toList();
     if (match.isEmpty) return null;
     return OwnershipModel.fromMap(match.first);
   }
