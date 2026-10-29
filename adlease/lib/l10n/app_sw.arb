@@ -82,6 +82,7 @@
   "rewardAddedToPhone": "{amount} imeongezwa kwenye maendeleo ya simu yako (kuigwa)",
   "watchSampleAdHint": "Tazama tangazo la mfano la sekunde 60 ili kuongeza {amount} kwenye maendeleo ya simu yako (kuigwa)",
   "notAvailableYet": "Bado haipatikani",
+  "referralRewardsNotAvailable": "Zawadi za rufaa bado hazipatikani. Hakuna bonasi inayolipwa kwa rufaa.",
   "notificationsNotAvailable": "AdLease bado haitumi arifa.",
   "demoVersionNotice": "AdLease bado inatengenezwa. Katika toleo hili, matangazo na zawadi ni za kuigwa, na hakuna pesa halisi inayohifadhiwa au kulipwa."
 }

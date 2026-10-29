@@ -114,9 +114,8 @@ owner is the signed-in user, and allow no writes to them.
 
 Referral relationships are recorded only by server code, when a new account is
 created with a referral code. No referral reward is promised or credited until
-the referral reward rules are decided (**decision needed**). The app currently
-mentions a referral bonus that nothing pays; that text should be removed in a
-separate pull request.
+the referral reward rules are decided (**decision needed**). The app's
+Referral and Wallet screens say referral rewards are not available yet.
 
 ## Out of scope
 
