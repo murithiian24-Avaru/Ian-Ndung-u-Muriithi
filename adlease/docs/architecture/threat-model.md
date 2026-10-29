@@ -34,7 +34,36 @@
 | T15 | Runaway costs from abuse or a bug | Not applicable yet | Budget alerts, quotas and rate limits on functions; alerts do not cap spending, so they must be watched |
 | T16 | Ad-network policy violation (rewards with monetary value) | Not applicable yet | Policy confirmation before integrating real ads (**decision needed**) |
 | T17 | Data-protection breach not reported on time | No process | Breach-response process: report to the ODPC within 72 hours and inform affected users |
-| T18 | Supply-chain risk from unused dependencies | Ten declared packages are unused | Remove unused packages (separate PR); keep the lockfile committed |
+| T18 | Supply-chain risk from unused dependencies | 16 of the 25 hosted packages declared in `pubspec.yaml` are never imported (see [Unused packages](#unused-packages)) | Remove unused packages (separate PR); keep the lockfile committed |
+
+## Unused packages
+
+Counted on `main` at commit `45e248a` (29 October 2026).
+
+**Method.** Take every entry under `dependencies:` in `adlease/pubspec.yaml`
+(27 entries). Exclude the two that come with the Flutter SDK (`flutter` and
+`flutter_localizations`), leaving **25 hosted packages**. A package counts as
+unused if no file under `lib/` or `test/` contains `package:<name>/`. Each
+package is counted once, under exactly one group below.
+
+**Result: 16 unused.**
+
+| Group | Packages | Count |
+|---|---|---|
+| Firebase and Google sign-in | `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage`, `google_sign_in` | 5 |
+| Other Dart packages | `fl_chart`, `shimmer`, `cached_network_image`, `device_info_plus`, `url_launcher`, `share_plus`, `image_picker`, `path_provider`, `connectivity_plus`, `flutter_secure_storage` | 10 |
+| Icon font | `cupertino_icons` (an asset-only package that is never imported by design; it is used only through `CupertinoIcons`, which appears nowhere in `lib/`) | 1 |
+
+The other 9 are imported: `provider`, `shared_preferences`, `intl`, `uuid`,
+`crypto`, `percent_indicator`, `flutter_animate`, `google_fonts` and
+`package_info_plus`.
+
+Several of the unused packages are plugins with native code. Flutter still
+registers them in the generated platform plugin registrants and builds their
+native code into the app, even though the Dart code never imports them. For
+example, the committed `macos/Flutter/GeneratedPluginRegistrant.swift`
+registers `cloud_firestore`, `firebase_auth` and `connectivity_plus`. Removing them is a separate change. The Firebase packages may
+be reintroduced deliberately when the backend is approved.
 
 ## Assumptions
 

@@ -1,7 +1,7 @@
 # AdLease Database Schema
 
-> **Draft. Not deployed.** No Firebase project exists; the app stores all data
-> on the phone. The proposed architecture and corrected security model are in
+> **Draft. Not deployed.** No Firebase project is configured for the app in
+> this repository; the app stores all data on the phone. The proposed architecture and corrected security model are in
 > [`docs/architecture/`](docs/architecture/README.md).
 
 ## Firestore Collections
