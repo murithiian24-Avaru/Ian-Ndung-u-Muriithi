@@ -120,7 +120,9 @@ jobs:
               f.write(f"tests: {len(done)}  passed: {len(done) - len(failed) - len(skipped)}  failed: {len(failed)}  skipped: {len(skipped)}\n")
               for d in failed[:40]:
                   f.write(f"\nFAILED: {d['name']}\n")
-                  for m in d['msgs'][:2]: f.write('\n'.join(m.splitlines()[:25]) + '\n')
+                  for m in d['msgs'][:2]:
+                      lines = [l for l in m.splitlines() if l.strip() and not l.startswith('══')]
+                      f.write('\n'.join(lines[:12]) + '\n')
           with open('layout-survey.txt', 'w') as f:
               f.write('\n'.join(prints) or '(survey not run)')
           PY
@@ -157,7 +159,7 @@ jobs:
           ls -l build/screenshots | tee -a ../shots.txt
 
       - name: Upload screenshots
-        if: steps.shots.outcome == 'success'
+        if: always() && steps.shots.outcome != 'skipped' && steps.shots.outcome != ''
         uses: actions/upload-artifact@v4
         with:
           name: adlease-screenshots
@@ -165,7 +167,7 @@ jobs:
           retention-days: 14
 
       - name: Post screenshots as checks
-        if: steps.shots.outcome == 'success'
+        if: always() && steps.shots.outcome != 'skipped' && steps.shots.outcome != ''
         working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
@@ -174,6 +176,7 @@ jobs:
           command -v convert >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick; }
           mkdir -p shots
           for f in adlease/build/screenshots/*.png; do
+            [ -f "$f" ] || continue
             n=$(basename "$f" .png)
             convert "$f" -quality 72 "shots/$n.jpg"
             base64 -w 0 "shots/$n.jpg" > "shots/$n.b64"

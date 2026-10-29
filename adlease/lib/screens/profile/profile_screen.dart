@@ -207,7 +207,10 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
+      // Transparent Material so the menu tiles' tap ripples are visible.
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
         children: [
           _buildMenuItem(
             Icons.edit,
@@ -236,6 +239,7 @@ class ProfileScreen extends StatelessWidget {
             color: AdLeaseTheme.errorRed,
           ),
         ],
+        ),
       ),
     );
   }

@@ -141,6 +141,7 @@ void main() {
             entry.value(),
             phone,
             scale,
+            allErrors: true,
           );
           await tester.pumpWidget(const SizedBox());
           if (errors.isNotEmpty) {

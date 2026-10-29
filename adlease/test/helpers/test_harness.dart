@@ -52,17 +52,30 @@ String fontsStatus = 'not loaded';
 /// Poppins and whose line height differs, which gives misleading layouts.
 ///
 /// - Poppins (the app's font, via google_fonts): test/fonts/poppins, SIL OFL.
-///   google_fonts names families like "Poppins_600" with "Poppins" as the
-///   fallback, so registering "Poppins" covers every weight it asks for.
+///   google_fonts asks for one family per weight ("Poppins_regular",
+///   "Poppins_600", ...). The test engine resolves any unregistered family to
+///   its test font before trying fallbacks, so each name is registered here.
 /// - Roboto and Material Icons: from the Flutter SDK's material_fonts.
 Future<void> loadRealFonts() async {
   if (_fontsLoaded) return;
+  const poppinsFamilies = {
+    'Poppins_300': 'Light',
+    'Poppins_regular': 'Regular',
+    'Poppins_500': 'Medium',
+    'Poppins_600': 'SemiBold',
+    'Poppins_700': 'Bold',
+  };
+  for (final MapEntry(key: family, value: file) in poppinsFamilies.entries) {
+    await (FontLoader(family)
+          ..addFont(_read('test/fonts/poppins/Poppins-$file.ttf')))
+        .load();
+  }
   final poppins = FontLoader('Poppins');
-  for (final w in ['Light', 'Regular', 'Medium', 'SemiBold', 'Bold']) {
-    poppins.addFont(_read('test/fonts/poppins/Poppins-$w.ttf'));
+  for (final file in poppinsFamilies.values) {
+    poppins.addFont(_read('test/fonts/poppins/Poppins-$file.ttf'));
   }
   await poppins.load();
-  final loaded = <String>['Poppins (5 weights)'];
+  final loaded = <String>['Poppins (${poppinsFamilies.keys.join(', ')})'];
 
   final dir = _materialFontsDir();
   if (dir != null) {
@@ -199,12 +212,17 @@ void setPhone(WidgetTester tester, PhoneSize phone, double textScale) {
 
 /// Runs [body] and returns every layout error reported meanwhile (for
 /// example "A RenderFlex overflowed by 20 pixels on the bottom"), with the
-/// widget location Flutter gives. Other errors are passed on unchanged.
-Future<List<String>> collectLayoutErrors(Future<void> Function() body) async {
+/// widget location Flutter gives. Other errors are passed on unchanged
+/// (so they fail the test), unless [all] is true, when they are returned too.
+Future<List<String>> collectLayoutErrors(
+  Future<void> Function() body, {
+  bool all = false,
+}) async {
   final errors = <String>[];
   final previous = FlutterError.onError;
   FlutterError.onError = (details) {
-    if (details.library == 'rendering library' ||
+    if (all ||
+        details.library == 'rendering library' ||
         details.exceptionAsString().contains('overflowed')) {
       final text = details.toString();
       final where = RegExp(r'lib/[\w/]+\.dart:\d+:\d+')
@@ -239,13 +257,14 @@ Future<List<String>> layoutErrorsFor(
   double textScale, {
   ThemeMode themeMode = ThemeMode.light,
   Duration settle = const Duration(milliseconds: 500),
+  bool allErrors = false,
 }) async {
   setPhone(tester, phone, textScale);
   return collectLayoutErrors(() async {
     await tester.pumpWidget(buildTestApp(p, home: home, themeMode: themeMode));
     await tester.pump(settle);
     await scrollAllToEnd(tester);
-  });
+  }, all: allErrors);
 }
 
 /// Scrolls each vertical scrollable on screen to its end, in steps, so

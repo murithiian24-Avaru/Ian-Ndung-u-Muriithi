@@ -62,19 +62,9 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildThemeToggle(BuildContext context, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Consumer<ThemeProvider>(
+    return _card(
+      isDark,
+      Consumer<ThemeProvider>(
         builder: (_, themeProvider, __) {
           return SwitchListTile(
             title: Text(
@@ -100,19 +90,9 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildLanguageSelector(BuildContext context, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Consumer<LocaleProvider>(
+    return _card(
+      isDark,
+      Consumer<LocaleProvider>(
         builder: (_, localeProvider, __) {
           return RadioGroup<String>(
             groupValue: localeProvider.locale.languageCode,
@@ -187,9 +167,11 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  /// A settings card. The transparent Material keeps list-tile tap ripples
+  /// visible above the card colour (Flutter warns when a ListTile's nearest
+  /// Material is underneath a coloured box).
   Widget _card(bool isDark, Widget child) {
     return Container(
-      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -197,7 +179,10 @@ class SettingsScreen extends StatelessWidget {
           BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
         ],
       ),
-      child: child,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Padding(padding: const EdgeInsets.all(4), child: child),
+      ),
     );
   }
 
