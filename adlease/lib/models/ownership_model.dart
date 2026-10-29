@@ -48,7 +48,9 @@ class OwnershipModel {
       phoneName: map['phoneName'] ?? '',
       phonePrice: (map['phonePrice'] ?? 0).toDouble(),
       amountPaid: (map['amountPaid'] ?? 0).toDouble(),
-      startDate: DateTime.parse(map['startDate'] ?? DateTime.now().toIso8601String()),
+      startDate: DateTime.parse(
+        map['startDate'] ?? DateTime.now().toIso8601String(),
+      ),
       completionDate: map['completionDate'] != null
           ? DateTime.parse(map['completionDate'])
           : null,

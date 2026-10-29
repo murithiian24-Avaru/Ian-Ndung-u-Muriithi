@@ -62,8 +62,12 @@ class UserModel {
       referredBy: map['referredBy'],
       deviceModel: map['deviceModel'] ?? '',
       deviceId: map['deviceId'] ?? '',
-      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
-      lastLoginAt: DateTime.parse(map['lastLoginAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: DateTime.parse(
+        map['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      lastLoginAt: DateTime.parse(
+        map['lastLoginAt'] ?? DateTime.now().toIso8601String(),
+      ),
       isVerified: map['isVerified'] ?? false,
       isActive: map['isActive'] ?? true,
     );
