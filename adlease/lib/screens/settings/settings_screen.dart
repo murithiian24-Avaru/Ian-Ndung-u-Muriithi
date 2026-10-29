@@ -126,7 +126,10 @@ class SettingsScreen extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     // No icon colour: disabled tiles then use the theme's disabled colour.
     Widget tile(String title, IconData icon) => SwitchListTile(
-      title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+      ),
       subtitle: Text(
         l.notAvailableYet,
         style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
@@ -160,7 +163,10 @@ class SettingsScreen extends StatelessWidget {
     return ListTile(
       enabled: false,
       leading: Icon(icon),
-      title: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+      ),
       subtitle: Text(
         AppLocalizations.of(context)!.notAvailableYet,
         style: GoogleFonts.poppins(fontSize: 12),
@@ -177,7 +183,10 @@ class SettingsScreen extends StatelessWidget {
         color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+          ),
         ],
       ),
       child: Material(
@@ -219,7 +228,10 @@ class SettingsScreen extends StatelessWidget {
                   ? null
                   : '${info.version} (${info.buildNumber})';
               return ListTile(
-                leading: const Icon(Icons.info, color: AdLeaseTheme.primaryBlue),
+                leading: const Icon(
+                  Icons.info,
+                  color: AdLeaseTheme.primaryBlue,
+                ),
                 title: Text(
                   'About AdLease',
                   style: GoogleFonts.poppins(fontWeight: FontWeight.w500),

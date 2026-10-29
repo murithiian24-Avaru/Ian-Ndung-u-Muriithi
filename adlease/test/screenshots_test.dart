@@ -42,7 +42,9 @@ Future<void> _capture(WidgetTester tester, Key key, String name) async {
   });
   await tester.pump(const Duration(milliseconds: 100));
   await tester.runAsync(() async {
-    final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.byKey(key),
+    );
     final image = await boundary.toImage(pixelRatio: 2);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     File('$_dir/$name.png')
@@ -65,17 +67,81 @@ void main() {
     );
   });
 
-  final scenarios = <(String, PhoneSize, double, ThemeMode, bool, Widget Function())>[
-    ('01-home-redmi-x1.0', _redmiTall, 1.0, ThemeMode.light, true, () => const MainNavigation()),
-    ('02-home-redmi-x1.3', _redmiTall, 1.3, ThemeMode.light, true, () => const MainNavigation()),
-    ('03-home-small-x1.0', _smallTall, 1.0, ThemeMode.light, true, () => const MainNavigation()),
-    ('04-home-small-x2.0', _smallTall, 2.0, ThemeMode.light, true, () => const MainNavigation()),
-    ('05-home-redmi-dark', _redmiTall, 1.0, ThemeMode.dark, true, () => const MainNavigation()),
-    ('06-home-no-phone', _redmiTall, 1.0, ThemeMode.light, false, () => const MainNavigation()),
-    ('07-settings-redmi-x1.0', _redmiTall, 1.0, ThemeMode.light, true, () => const SettingsScreen()),
-    ('08-settings-small-x1.6', _smallTall, 1.6, ThemeMode.light, true, () => const SettingsScreen()),
-    ('09-profile-redmi', _redmiTall, 1.0, ThemeMode.light, true, () => const ProfileScreen()),
-  ];
+  final scenarios =
+      <(String, PhoneSize, double, ThemeMode, bool, Widget Function())>[
+        (
+          '01-home-redmi-x1.0',
+          _redmiTall,
+          1.0,
+          ThemeMode.light,
+          true,
+          () => const MainNavigation(),
+        ),
+        (
+          '02-home-redmi-x1.3',
+          _redmiTall,
+          1.3,
+          ThemeMode.light,
+          true,
+          () => const MainNavigation(),
+        ),
+        (
+          '03-home-small-x1.0',
+          _smallTall,
+          1.0,
+          ThemeMode.light,
+          true,
+          () => const MainNavigation(),
+        ),
+        (
+          '04-home-small-x2.0',
+          _smallTall,
+          2.0,
+          ThemeMode.light,
+          true,
+          () => const MainNavigation(),
+        ),
+        (
+          '05-home-redmi-dark',
+          _redmiTall,
+          1.0,
+          ThemeMode.dark,
+          true,
+          () => const MainNavigation(),
+        ),
+        (
+          '06-home-no-phone',
+          _redmiTall,
+          1.0,
+          ThemeMode.light,
+          false,
+          () => const MainNavigation(),
+        ),
+        (
+          '07-settings-redmi-x1.0',
+          _redmiTall,
+          1.0,
+          ThemeMode.light,
+          true,
+          () => const SettingsScreen(),
+        ),
+        (
+          '08-settings-small-x1.6',
+          _smallTall,
+          1.6,
+          ThemeMode.light,
+          true,
+          () => const SettingsScreen(),
+        ),
+        (
+          '09-profile-redmi',
+          _redmiTall,
+          1.0,
+          ThemeMode.light,
+          true,
+          () => const ProfileScreen(),
+        ),
+      ];
 
   for (final (name, phone, scale, mode, withPhone, build) in scenarios) {
     testWidgets('screenshot $name', (tester) async {

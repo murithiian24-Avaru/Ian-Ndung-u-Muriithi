@@ -66,9 +66,9 @@ Future<void> loadRealFonts() async {
     'Poppins_700': 'Bold',
   };
   for (final MapEntry(key: family, value: file) in poppinsFamilies.entries) {
-    await (FontLoader(family)
-          ..addFont(_read('test/fonts/poppins/Poppins-$file.ttf')))
-        .load();
+    await (FontLoader(
+      family,
+    )..addFont(_read('test/fonts/poppins/Poppins-$file.ttf'))).load();
   }
   final poppins = FontLoader('Poppins');
   for (final file in poppinsFamilies.values) {
@@ -80,10 +80,9 @@ Future<void> loadRealFonts() async {
   final dir = _materialFontsDir();
   if (dir != null) {
     final roboto = FontLoader('Roboto');
-    final files = dir
-        .listSync()
-        .whereType<File>()
-        .where((f) => RegExp(r'Roboto-[A-Za-z]+\.ttf$').hasMatch(f.path));
+    final files = dir.listSync().whereType<File>().where(
+      (f) => RegExp(r'Roboto-[A-Za-z]+\.ttf$').hasMatch(f.path),
+    );
     for (final f in files) {
       roboto.addFont(_read(f.path));
     }
@@ -275,10 +274,16 @@ Future<void> scrollAllToEnd(WidgetTester tester) async {
     final state = tester.state<ScrollableState>(scrollables.at(i));
     final position = state.position;
     if (position.axis != Axis.vertical) continue;
-    for (var step = 0; step < 20 && position.pixels < position.maxScrollExtent; step++) {
+    for (
+      var step = 0;
+      step < 20 && position.pixels < position.maxScrollExtent;
+      step++
+    ) {
       position.jumpTo(
-        (position.pixels + position.viewportDimension * 0.8)
-            .clamp(0, position.maxScrollExtent),
+        (position.pixels + position.viewportDimension * 0.8).clamp(
+          0,
+          position.maxScrollExtent,
+        ),
       );
       await tester.pump(const Duration(milliseconds: 50));
     }

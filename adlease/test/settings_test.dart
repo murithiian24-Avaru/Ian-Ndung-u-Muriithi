@@ -82,7 +82,11 @@ void main() {
       find.text('AdLease does not send notifications yet.'),
       findsOneWidget,
     );
-    for (final title in ['Push Notifications', 'Ad Reminders', 'Reward Alerts']) {
+    for (final title in [
+      'Push Notifications',
+      'Ad Reminders',
+      'Reward Alerts',
+    ]) {
       final tile = tester.widget<SwitchListTile>(
         find.widgetWithText(SwitchListTile, title),
       );
@@ -130,7 +134,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('1.2.3 (45)'), findsOneWidget);
     expect(find.text('© Avaru Tech Company Limited'), findsOneWidget);
-    expect(find.textContaining('ads and rewards are simulated'), findsOneWidget);
+    expect(
+      find.textContaining('ads and rewards are simulated'),
+      findsOneWidget,
+    );
     expect(find.bySemanticsLabel('Powered by Avaru'), findsWidgets);
     // Flutter's own licence page is reachable from the dialog.
     expect(find.text('View licenses'), findsOneWidget);
@@ -141,7 +148,10 @@ void main() {
   ) async {
     final p = await seedDemoData();
     await _openSettings(tester, p);
-    await tester.scrollUntilVisible(find.bySemanticsLabel('Powered by Avaru'), 200);
+    await tester.scrollUntilVisible(
+      find.bySemanticsLabel('Powered by Avaru'),
+      200,
+    );
     expect(find.bySemanticsLabel('Powered by Avaru'), findsOneWidget);
   });
 }

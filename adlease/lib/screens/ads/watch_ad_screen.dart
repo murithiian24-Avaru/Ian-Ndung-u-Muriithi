@@ -179,7 +179,10 @@ class _WatchAdScreenState extends State<WatchAdScreen>
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: (constraints.maxHeight - 48).clamp(0, double.infinity),
+                minHeight: (constraints.maxHeight - 48).clamp(
+                  0,
+                  double.infinity,
+                ),
               ),
               child: _rewardClaimed
                   ? _buildRewardClaimedView()

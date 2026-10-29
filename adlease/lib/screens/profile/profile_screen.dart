@@ -176,10 +176,7 @@ class ProfileScreen extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
+                style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
               ),
               Text(
                 value,
@@ -211,34 +208,32 @@ class ProfileScreen extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: Column(
-        children: [
-          _buildMenuItem(
-            Icons.edit,
-            'Edit Profile',
-            () => Navigator.pushNamed(context, AppRoutes.editProfile),
-          ),
-          _buildMenuItem(
-            Icons.people,
-            'Referral Program',
-            () => Navigator.pushNamed(context, AppRoutes.referral),
-          ),
-          _buildMenuItem(
-            Icons.settings,
-            'Settings',
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const SettingsScreen(),
+          children: [
+            _buildMenuItem(
+              Icons.edit,
+              'Edit Profile',
+              () => Navigator.pushNamed(context, AppRoutes.editProfile),
+            ),
+            _buildMenuItem(
+              Icons.people,
+              'Referral Program',
+              () => Navigator.pushNamed(context, AppRoutes.referral),
+            ),
+            _buildMenuItem(
+              Icons.settings,
+              'Settings',
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
               ),
             ),
-          ),
-          _buildMenuItem(
-            Icons.logout,
-            'Logout',
-            () => _showLogoutDialog(context),
-            color: AdLeaseTheme.errorRed,
-          ),
-        ],
+            _buildMenuItem(
+              Icons.logout,
+              'Logout',
+              () => _showLogoutDialog(context),
+              color: AdLeaseTheme.errorRed,
+            ),
+          ],
         ),
       ),
     );
@@ -254,15 +249,9 @@ class ProfileScreen extends StatelessWidget {
       leading: Icon(icon, color: color ?? AdLeaseTheme.primaryBlue),
       title: Text(
         title,
-        style: GoogleFonts.poppins(
-          fontWeight: FontWeight.w500,
-          color: color,
-        ),
+        style: GoogleFonts.poppins(fontWeight: FontWeight.w500, color: color),
       ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: color ?? Colors.grey,
-      ),
+      trailing: Icon(Icons.chevron_right, color: color ?? Colors.grey),
       onTap: onTap,
     );
   }

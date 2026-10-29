@@ -24,10 +24,9 @@ void main() {
 
   test('no other Avaru logo files are bundled', () {
     final files = Directory('assets/brand').listSync().whereType<File>();
-    expect(
-      files.map((f) => f.uri.pathSegments.last),
-      ['avaru-logo-official.png'],
-    );
+    expect(files.map((f) => f.uri.pathSegments.last), [
+      'avaru-logo-official.png',
+    ]);
   });
 
   testWidgets('splash shows AdLease first and Powered by Avaru below', (
@@ -36,19 +35,30 @@ void main() {
     await loadRealFonts();
     final p = await seedDemoData();
     setPhone(tester, PhoneSize.small, 1.6);
+    final semantics = tester.ensureSemantics();
     final errors = await collectLayoutErrors(() async {
       await tester.pumpWidget(buildTestApp(p, home: const SplashScreen()));
-      await tester.pump(const Duration(milliseconds: 1800));
+      // Step through the fade-in like a device would.
+      for (var i = 0; i < 36; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
 
       expect(find.text('AdLease'), findsOneWidget);
       final attribution = find.bySemanticsLabel('Powered by Avaru');
       expect(attribution, findsOneWidget);
       final image = tester.widget<Image>(
-        find.descendant(of: find.byType(PoweredByAvaru), matching: find.byType(Image)),
+        find.descendant(
+          of: find.byType(PoweredByAvaru),
+          matching: find.byType(Image),
+        ),
       );
       expect(
         (image.image as ResizeImage).imageProvider,
-        isA<AssetImage>().having((a) => a.assetName, 'asset', PoweredByAvaru.logoAsset),
+        isA<AssetImage>().having(
+          (a) => a.assetName,
+          'asset',
+          PoweredByAvaru.logoAsset,
+        ),
       );
       // The product name sits above the attribution.
       expect(
@@ -60,6 +70,7 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
       await tester.pump(const Duration(seconds: 1));
     });
+    semantics.dispose();
     expect(errors, isEmpty, reason: errors.join('\n'));
   });
 }

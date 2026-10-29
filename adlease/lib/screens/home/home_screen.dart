@@ -90,21 +90,22 @@ class HomeScreen extends StatelessWidget {
               label: 'Edit Profile',
               excludeSemantics: true,
               child: GestureDetector(
-              onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
-              child: CircleAvatar(
-                // Tapping the avatar opens Edit Profile.
-                radius: 24,
-                backgroundColor: AdLeaseTheme.primaryBlue,
-                child: Text(
-                  firstName.isNotEmpty ? firstName[0].toUpperCase() : 'U',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                onTap: () =>
+                    Navigator.pushNamed(context, AppRoutes.editProfile),
+                child: CircleAvatar(
+                  // Tapping the avatar opens Edit Profile.
+                  radius: 24,
+                  backgroundColor: AdLeaseTheme.primaryBlue,
+                  child: Text(
+                    firstName.isNotEmpty ? firstName[0].toUpperCase() : 'U',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
             ),
           ],
         );
@@ -442,43 +443,43 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(height: 12),
         IntrinsicHeight(
           child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                context,
-                'Watch Ad',
-                Icons.play_arrow,
-                AdLeaseTheme.primaryBlue,
-                () => Navigator.pushNamed(context, AppRoutes.watchAd),
-                isDark,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildActionButton(
+                  context,
+                  'Watch Ad',
+                  Icons.play_arrow,
+                  AdLeaseTheme.primaryBlue,
+                  () => Navigator.pushNamed(context, AppRoutes.watchAd),
+                  isDark,
+                ),
               ),
-            ),
-            if (AppFeatures.withdrawalsEnabled) ...[
+              if (AppFeatures.withdrawalsEnabled) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildActionButton(
+                    context,
+                    'Withdraw',
+                    Icons.account_balance,
+                    AdLeaseTheme.successGreen,
+                    () => Navigator.pushNamed(context, AppRoutes.withdrawal),
+                    isDark,
+                  ),
+                ),
+              ],
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionButton(
                   context,
-                  'Withdraw',
-                  Icons.account_balance,
-                  AdLeaseTheme.successGreen,
-                  () => Navigator.pushNamed(context, AppRoutes.withdrawal),
+                  'Refer',
+                  Icons.share,
+                  AdLeaseTheme.accentGold,
+                  () => Navigator.pushNamed(context, AppRoutes.referral),
                   isDark,
                 ),
               ),
             ],
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                context,
-                'Refer',
-                Icons.share,
-                AdLeaseTheme.accentGold,
-                () => Navigator.pushNamed(context, AppRoutes.referral),
-                isDark,
-              ),
-            ),
-          ],
           ),
         ),
       ],

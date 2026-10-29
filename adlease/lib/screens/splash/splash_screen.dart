@@ -51,9 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: AdLeaseTheme.primaryGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AdLeaseTheme.primaryGradient),
         child: SafeArea(
           child: Column(
             children: [
@@ -64,66 +62,64 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.phone_android,
-                  size: 60,
-                  color: AdLeaseTheme.primaryBlue,
-                ),
-              ),
-            )
-                .animate()
-                .fadeIn(duration: 800.ms)
-                .scale(delay: 200.ms, duration: 600.ms),
-            const SizedBox(height: 32),
-            Text(
-              'AdLease',
-              style: GoogleFonts.poppins(
-                fontSize: 42,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 2,
-              ),
-            )
-                .animate()
-                .fadeIn(delay: 400.ms, duration: 800.ms)
-                .slideY(begin: 0.3, end: 0),
-            const SizedBox(height: 8),
-            Text(
-              'Watch. Earn. Own.',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w300,
-                color: Colors.white.withValues(alpha: 0.9),
-                letterSpacing: 4,
-              ),
-              textAlign: TextAlign.center,
-            )
-                .animate()
-                .fadeIn(delay: 800.ms, duration: 800.ms),
-            const SizedBox(height: 60),
-            const SizedBox(
-              width: 40,
-              height: 40,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 3,
-              ),
-            ).animate().fadeIn(delay: 1200.ms, duration: 600.ms),
+                        Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.phone_android,
+                                  size: 60,
+                                  color: AdLeaseTheme.primaryBlue,
+                                ),
+                              ),
+                            )
+                            .animate()
+                            .fadeIn(duration: 800.ms)
+                            .scale(delay: 200.ms, duration: 600.ms),
+                        const SizedBox(height: 32),
+                        Text(
+                              'AdLease',
+                              style: GoogleFonts.poppins(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 2,
+                              ),
+                            )
+                            .animate()
+                            .fadeIn(delay: 400.ms, duration: 800.ms)
+                            .slideY(begin: 0.3, end: 0),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Watch. Earn. Own.',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            letterSpacing: 4,
+                          ),
+                          textAlign: TextAlign.center,
+                        ).animate().fadeIn(delay: 800.ms, duration: 800.ms),
+                        const SizedBox(height: 60),
+                        const SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        ).animate().fadeIn(delay: 1200.ms, duration: 600.ms),
                       ],
                     ),
                   ),
