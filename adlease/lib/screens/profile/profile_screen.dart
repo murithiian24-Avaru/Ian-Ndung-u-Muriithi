@@ -6,6 +6,7 @@ import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/screens/settings/settings_screen.dart';
+import 'package:adlease/widgets/powered_by_avaru.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -24,6 +25,8 @@ class ProfileScreen extends StatelessWidget {
               _buildProfileInfo(context, isDark),
               const SizedBox(height: 16),
               _buildMenuItems(context, isDark),
+              const SizedBox(height: 28),
+              const PoweredByAvaru(),
             ],
           ),
         ),

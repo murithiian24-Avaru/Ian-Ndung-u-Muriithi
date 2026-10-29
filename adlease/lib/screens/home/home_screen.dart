@@ -62,27 +62,37 @@ class HomeScreen extends StatelessWidget {
         final name = auth.user?.fullName ?? 'User';
         final firstName = name.split(' ').first;
         return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hello, $firstName! 👋',
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hello, $firstName! 👋',
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                Text(
-                  'Watch. Earn. Own.',
-                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
-                ),
-              ],
+                  Text(
+                    'Watch. Earn. Own.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            GestureDetector(
+            const SizedBox(width: 12),
+            Semantics(
+              button: true,
+              label: 'Edit Profile',
+              excludeSemantics: true,
+              child: GestureDetector(
               onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
               child: CircleAvatar(
+                // Tapping the avatar opens Edit Profile.
                 radius: 24,
                 backgroundColor: AdLeaseTheme.primaryBlue,
                 child: Text(
@@ -94,6 +104,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
             ),
           ],
         );
@@ -134,23 +145,32 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildBalanceStat(
-                    l.remaining,
-                    formatKsh(ownership.remainingAmount),
+                  Expanded(
+                    child: _buildBalanceStat(
+                      l.remaining,
+                      formatKsh(ownership.remainingAmount),
+                    ),
                   ),
-                  _buildBalanceStat(l.balance, l.notAvailable),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildBalanceStat(l.balance, l.notAvailable),
+                  ),
                 ],
               ),
             ],
@@ -216,18 +236,26 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  CircularPercentIndicator(
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final textScale =
+                      MediaQuery.textScalerOf(context).scale(16) / 16;
+                  final indicator = CircularPercentIndicator(
                     radius: 50,
                     lineWidth: 10,
                     percent: progress.clamp(0.0, 1.0),
-                    center: Text(
-                      '${(progress * 100).toStringAsFixed(0)}%',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AdLeaseTheme.primaryBlue,
+                    center: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${(progress * 100).toStringAsFixed(0)}%',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AdLeaseTheme.primaryBlue,
+                          ),
+                        ),
                       ),
                     ),
                     progressColor: AdLeaseTheme.primaryBlue,
@@ -235,35 +263,53 @@ class HomeScreen extends StatelessWidget {
                       alpha: 0.1,
                     ),
                     circularStrokeCap: CircularStrokeCap.round,
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  );
+                  final details = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        phoneName,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildProgressRow(
+                        'Phone Value',
+                        formatKsh(phonePrice, decimals: 0),
+                      ),
+                      _buildProgressRow('Paid', formatKsh(amountPaid)),
+                      _buildProgressRow(
+                        'Remaining',
+                        formatKsh(
+                          (phonePrice - amountPaid).clamp(0, phonePrice),
+                        ),
+                      ),
+                    ],
+                  );
+                  // Ring (100) + gap (24) beside the details needs room for
+                  // about 140 logical pixels of text at the current scale.
+                  final sideBySide =
+                      constraints.maxWidth - 124 >= 140 * textScale;
+                  if (!sideBySide) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          phoneName,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _buildProgressRow(
-                          'Phone Value',
-                          formatKsh(phonePrice, decimals: 0),
-                        ),
-                        _buildProgressRow('Paid', formatKsh(amountPaid)),
-                        _buildProgressRow(
-                          'Remaining',
-                          formatKsh(
-                            (phonePrice - amountPaid).clamp(0, phonePrice),
-                          ),
-                        ),
+                        Center(child: indicator),
+                        const SizedBox(height: 16),
+                        details,
                       ],
-                    ),
-                  ),
-                ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      indicator,
+                      const SizedBox(width: 24),
+                      Expanded(child: details),
+                    ],
+                  );
+                },
               ),
               if (!ownership.hasActiveOwnership) ...[
                 const SizedBox(height: 16),
@@ -289,12 +335,15 @@ class HomeScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
+            ),
           ),
+          const SizedBox(width: 8),
           Text(
             value,
             style: GoogleFonts.poppins(
@@ -307,47 +356,79 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // The four statistic cards. They used to sit in a GridView with a fixed
+  // aspect ratio, which cut their height below what the content needs
+  // (visible as "BOTTOM OVERFLOWED BY 20 / 5.3 PIXELS" on phones). Each row
+  // now takes the height of its tallest card, and the cards stack in one
+  // column when the screen is narrow or the system font is very large.
   Widget _buildStatsGrid(BuildContext context) {
-    return Consumer<AdProvider>(
-      builder: (_, adProvider, __) {
-        return GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.4,
-          children: [
-            StatsCard(
-              title: 'Ads Watched Today',
-              value: '${adProvider.adsWatchedToday}',
-              icon: Icons.play_circle,
-              color: AdLeaseTheme.primaryBlue,
-              subtitle: '${adProvider.adsRemainingToday} remaining',
-            ),
-            StatsCard(
-              title: 'Ads Remaining',
-              value: '${adProvider.adsRemainingToday}',
-              icon: Icons.timer,
-              color: AdLeaseTheme.accentGold,
-            ),
-            StatsCard(
-              title: 'Total Views',
-              value: '${adProvider.viewHistory.length}',
-              icon: Icons.visibility,
-              color: AdLeaseTheme.successGreen,
-            ),
-            Consumer<OwnershipProvider>(
-              builder: (_, ownership, __) => StatsCard(
-                title: AppLocalizations.of(context)!.appliedToPhone,
-                value: formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
-                icon: Icons.monetization_on,
-                color: AdLeaseTheme.warningOrange,
-              ),
-            ),
-          ],
+    return Consumer2<AdProvider, OwnershipProvider>(
+      builder: (_, adProvider, ownership, __) {
+        final cards = <Widget>[
+          StatsCard(
+            title: 'Ads Watched Today',
+            value: '${adProvider.adsWatchedToday}',
+            icon: Icons.play_circle,
+            color: AdLeaseTheme.primaryBlue,
+            subtitle: '${adProvider.adsRemainingToday} remaining',
+          ),
+          StatsCard(
+            title: 'Ads Remaining',
+            value: '${adProvider.adsRemainingToday}',
+            icon: Icons.timer,
+            color: AdLeaseTheme.accentGold,
+          ),
+          StatsCard(
+            title: 'Total Views',
+            value: '${adProvider.viewHistory.length}',
+            icon: Icons.visibility,
+            color: AdLeaseTheme.successGreen,
+          ),
+          StatsCard(
+            title: AppLocalizations.of(context)!.appliedToPhone,
+            value: formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
+            icon: Icons.monetization_on,
+            color: AdLeaseTheme.warningOrange,
+          ),
+        ];
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+            final twoColumns = constraints.maxWidth / textScale >= 240;
+            if (!twoColumns) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < cards.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 12),
+                    cards[i],
+                  ],
+                ],
+              );
+            }
+            return Column(
+              children: [
+                _buildStatsRow(cards[0], cards[1]),
+                const SizedBox(height: 12),
+                _buildStatsRow(cards[2], cards[3]),
+              ],
+            );
+          },
         );
       },
+    );
+  }
+
+  Widget _buildStatsRow(Widget left, Widget right) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: left),
+          const SizedBox(width: 12),
+          Expanded(child: right),
+        ],
+      ),
     );
   }
 
@@ -360,7 +441,9 @@ class HomeScreen extends StatelessWidget {
           style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
-        Row(
+        IntrinsicHeight(
+          child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: _buildActionButton(
@@ -397,6 +480,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ],
     );
@@ -410,40 +494,49 @@ class HomeScreen extends StatelessWidget {
     VoidCallback onTap,
     bool isDark,
   ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+    final cardColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

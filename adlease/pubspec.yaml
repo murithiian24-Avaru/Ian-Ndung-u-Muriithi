@@ -51,3 +51,5 @@ flutter:
 
   assets:
     - assets/images/
+    # Official Avaru logo master, byte-for-byte (see README, Brand). Never edit.
+    - assets/brand/

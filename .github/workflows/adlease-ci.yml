@@ -7,7 +7,7 @@ name: AdLease CI
 
 on:
   push:
-    branches: [fix/adlease-validation, feature/adlease-phase2]
+    branches: ['feature/**', 'fix/**']
     paths: ['adlease/**', '.github/workflows/adlease-ci.yml']
   pull_request:
     paths: ['adlease/**', '.github/workflows/adlease-ci.yml']
@@ -93,7 +93,37 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          flutter test --reporter expanded 2>&1 | tee ../test.txt
+          flutter test --reporter expanded --file-reporter json:../test.json 2>&1 | tee ../test.txt
+
+      - name: Summarise tests
+        if: always() && steps.pub.outcome == 'success'
+        working-directory: .
+        run: |
+          python3 - <<'PY'
+          import json, os
+          tests, failures, prints = {}, [], []
+          if os.path.exists('test.json'):
+              for line in open('test.json'):
+                  try: e = json.loads(line)
+                  except ValueError: continue
+                  t = e.get('type')
+                  if t == 'testStart': tests[e['test']['id']] = {'name': e['test']['name'], 'msgs': []}
+                  elif t in ('print', 'error') and e.get('testID') in tests:
+                      tests[e['testID']]['msgs'].append(e.get('message') or e.get('error', ''))
+                      if t == 'print' and 'LAYOUT SURVEY' in (e.get('message') or ''): prints.append(e['message'])
+                  elif t == 'testDone' and e.get('testID') in tests:
+                      d = tests[e['testID']]; d['result'] = e['result']; d['skipped'] = e.get('skipped', False); d['hidden'] = e.get('hidden', False)
+          done = [d for d in tests.values() if 'result' in d and not d.get('hidden')]
+          failed = [d for d in done if d['result'] != 'success']
+          skipped = [d for d in done if d.get('skipped')]
+          with open('test-summary.txt', 'w') as f:
+              f.write(f"tests: {len(done)}  passed: {len(done) - len(failed) - len(skipped)}  failed: {len(failed)}  skipped: {len(skipped)}\n")
+              for d in failed[:40]:
+                  f.write(f"\nFAILED: {d['name']}\n")
+                  for m in d['msgs'][:2]: f.write('\n'.join(m.splitlines()[:25]) + '\n')
+          with open('layout-survey.txt', 'w') as f:
+              f.write('\n'.join(prints) or '(survey not run)')
+          PY
 
       - name: flutter build apk --debug
         id: build
@@ -115,6 +145,48 @@ jobs:
           name: adlease-debug-apk-flutter-${{ matrix.flutter }}
           path: adlease/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 14
+
+      - name: Screenshots (only when the commit message contains [screenshots])
+        id: shots
+        if: steps.pub.outcome == 'success' && contains(github.event.head_commit.message, '[screenshots]')
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          export ADLEASE_SCREENSHOT_DIR="$PWD/build/screenshots"
+          flutter test test/screenshots_test.dart 2>&1 | tail -15 | tee ../shots.txt
+          ls -l build/screenshots | tee -a ../shots.txt
+
+      - name: Upload screenshots
+        if: steps.shots.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: adlease-screenshots
+          path: adlease/build/screenshots
+          retention-days: 14
+
+      - name: Post screenshots as checks
+        if: steps.shots.outcome == 'success'
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          command -v convert >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick; }
+          mkdir -p shots
+          for f in adlease/build/screenshots/*.png; do
+            n=$(basename "$f" .png)
+            convert "$f" -quality 72 "shots/$n.jpg"
+            base64 -w 0 "shots/$n.jpg" > "shots/$n.b64"
+            split -b 60000 -d -a 2 "shots/$n.b64" "shots/$n.part."
+            total=$(ls shots/$n.part.* | wc -l); i=0
+            for part in shots/$n.part.*; do
+              i=$((i+1))
+              { echo '```'; cat "$part"; echo; echo '```'; } > shots/body.md
+              gh api "repos/$GITHUB_REPOSITORY/check-runs" -f name="AdLease screenshot $n ($i/$total)" \
+                -f head_sha="$SHA" -f status=completed -f conclusion=neutral \
+                -f "output[title]=$n, part $i of $total (JPEG, base64)" -F "output[summary]=@shots/body.md" > /dev/null
+            done
+          done
 
       - name: dart format (files changed compared with main)
         id: format
@@ -157,7 +229,9 @@ jobs:
             section "committed lockfile" lock.txt 30
             section "dependencies" pub.txt 60
             section "flutter analyze" analyze.txt 150
-            section "flutter test" test.txt 120
+            section "flutter test (summary)" test-summary.txt 400
+            section "layout survey (other screens)" layout-survey.txt 120
+            section "flutter test (last lines)" test.txt 25
             section "flutter build apk --debug" build.txt 40
             section "dart format" format.txt 40
           } > report.md

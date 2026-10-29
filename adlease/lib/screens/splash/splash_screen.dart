@@ -7,6 +7,7 @@ import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/theme_provider.dart';
 import 'package:adlease/providers/locale_provider.dart';
+import 'package:adlease/widgets/powered_by_avaru.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -49,9 +50,16 @@ class _SplashScreenState extends State<SplashScreen> {
         decoration: const BoxDecoration(
           gradient: AdLeaseTheme.primaryGradient,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
             Container(
               width: 120,
               height: 120,
@@ -99,6 +107,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: Colors.white.withValues(alpha: 0.9),
                 letterSpacing: 4,
               ),
+              textAlign: TextAlign.center,
             )
                 .animate()
                 .fadeIn(delay: 800.ms, duration: 800.ms),
@@ -111,7 +120,21 @@ class _SplashScreenState extends State<SplashScreen> {
                 strokeWidth: 3,
               ),
             ).animate().fadeIn(delay: 1200.ms, duration: 600.ms),
-          ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Parent-company attribution; AdLease stays the main brand.
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24, top: 8),
+                child: PoweredByAvaru(
+                  logoSize: 36,
+                  textColor: Colors.white.withValues(alpha: 0.85),
+                ).animate().fadeIn(delay: 1000.ms, duration: 600.ms),
+              ),
+            ],
+          ),
         ),
       ),
     );

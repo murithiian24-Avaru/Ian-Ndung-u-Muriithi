@@ -80,5 +80,8 @@
   "choosePhoneFirst": "Chagua simu kwanza. Katika onyesho hili, zawadi za matangazo zinahesabiwa kwa simu yako pekee.",
   "demoAmountsNotice": "Viwango vya onyesho tu. Hakuna pesa halisi inayohifadhiwa au kulipwa.",
   "rewardAddedToPhone": "{amount} imeongezwa kwenye maendeleo ya simu yako (kuigwa)",
-  "watchSampleAdHint": "Tazama tangazo la mfano la sekunde 60 ili kuongeza {amount} kwenye maendeleo ya simu yako (kuigwa)"
+  "watchSampleAdHint": "Tazama tangazo la mfano la sekunde 60 ili kuongeza {amount} kwenye maendeleo ya simu yako (kuigwa)",
+  "notAvailableYet": "Bado haipatikani",
+  "notificationsNotAvailable": "AdLease bado haitumi arifa.",
+  "demoVersionNotice": "AdLease bado inatengenezwa. Katika toleo hili, matangazo na zawadi ni za kuigwa, na hakuna pesa halisi inayohifadhiwa au kulipwa."
 }
