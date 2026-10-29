@@ -88,10 +88,11 @@ Nothing below is production-ready.
 | Wallet and transaction history | Simulated / demo-only | Shows simulated phone-progress entries; there is no cash balance |
 | Withdrawals | Disabled / unavailable | Hidden (`AppFeatures.withdrawalsEnabled = false`). No payment integration exists |
 | Referral codes | Working (on this phone only) | Each account gets a code, and a code can be entered at sign-up |
-| Referral bonus | Disabled / unavailable | The Referral screen says "You both earn a … bonus (demo)!", but no referral is ever recorded and no bonus is ever credited |
+| Referral bonus | Disabled / unavailable | No referral is recorded and no bonus is credited. The Referral and Wallet screens say referral rewards are not available yet |
 | Settings: dark/light mode, language (English, Kiswahili) | Working | Saved on the phone and restored at start-up |
 | Settings: notifications, change password, biometric login, two-factor authentication | Disabled / unavailable | Shown and marked "Not available yet" (see [Not available yet](#not-available-yet)) |
 | Edit profile | Working (on this phone only) | Saves to the phone |
+| Android backup of app data | Disabled | `android:allowBackup="false"` and data extraction rules (`android/app/src/main/res/xml/data_extraction_rules.xml`) exclude app data from cloud backup and device transfer. Not yet verified on a physical device |
 | Real accounts, server-side rewards, real ads, payouts | Planned, not implemented | Proposed only; each step needs approval ([open decisions](docs/architecture/open-decisions.md)) |
 
 ### Admin Dashboard

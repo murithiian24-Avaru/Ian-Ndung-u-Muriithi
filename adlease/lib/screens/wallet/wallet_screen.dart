@@ -156,7 +156,7 @@ class WalletScreen extends StatelessWidget {
               },
               icon: const Icon(Icons.share),
               label: Text(
-                'Refer & Earn',
+                'Refer a Friend',
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
               ),
             ),

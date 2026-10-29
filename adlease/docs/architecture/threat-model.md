@@ -26,7 +26,7 @@
 | T7 | User marks their own account verified, active or referred | Draft rules allow it | Users may update only an allow-list of profile fields ([firestore-rules-review.md](firestore-rules-review.md)) |
 | T8 | Account takeover | Local unsalted SHA-256 hashes; no lockout | Firebase Authentication (no passwords stored by AdLease); sign-in rate limits; recovery through verified contact method |
 | T9 | Unauthorised admin access or admin misuse | Dashboard has no sign-in (not deployed) | Admin role set only by server code; two-factor sign-in; least-privilege roles; every action audit-logged ([operations.md](operations.md)) |
-| T10 | Personal data leaked from the device or backups | Plain JSON; Android backup not disabled | Store no personal data or tokens beyond what Firebase manages; disable Android backup of app data (separate PR) |
+| T10 | Personal data leaked from the device or backups | Plain JSON; Android backup disabled (`allowBackup="false"` and data extraction rules), not yet verified on a device | Store no personal data or tokens beyond what Firebase manages; keep Android backup of app data disabled |
 | T11 | Personal data leaked from the database | Not applicable yet | Owner-only read rules; no list queries across users; admin reads only through audited functions |
 | T12 | Secrets leaked (service-account keys, signing key) | No secrets exist yet | Secret Manager; no keys in the repository or app; no long-lived service-account keys ([operations.md](operations.md)) |
 | T13 | Test data mixed with real users | Not applicable yet | Separate development and production projects; test ad units only in development |
