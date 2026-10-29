@@ -4,6 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/theme_provider.dart';
 import 'package:adlease/providers/locale_provider.dart';
+import 'package:adlease/l10n/app_localizations.dart';
+import 'package:adlease/widgets/powered_by_avaru.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -33,13 +36,16 @@ class SettingsScreen extends StatelessWidget {
           _buildLanguageSelector(context, isDark),
           const SizedBox(height: 24),
           _buildSectionTitle('Notifications'),
-          _buildNotificationSettings(isDark),
+          _buildNotificationSettings(context, isDark),
           const SizedBox(height: 24),
           _buildSectionTitle('Security'),
           _buildSecuritySettings(context, isDark),
           const SizedBox(height: 24),
           _buildSectionTitle('About'),
-          _buildAboutSection(isDark),
+          _buildAboutSection(context, isDark),
+          const SizedBox(height: 32),
+          const Center(child: PoweredByAvaru()),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -56,19 +62,9 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildThemeToggle(BuildContext context, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Consumer<ThemeProvider>(
+    return _card(
+      isDark,
+      Consumer<ThemeProvider>(
         builder: (_, themeProvider, __) {
           return SwitchListTile(
             title: Text(
@@ -94,19 +90,9 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildLanguageSelector(BuildContext context, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Consumer<LocaleProvider>(
+    return _card(
+      isDark,
+      Consumer<LocaleProvider>(
         builder: (_, localeProvider, __) {
           return RadioGroup<String>(
             groupValue: localeProvider.locale.languageCode,
@@ -133,166 +119,167 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationSettings(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-          ),
-        ],
+  // AdLease cannot send notifications yet (no notification service is set
+  // up), so these switches are shown off and disabled instead of pretending
+  // to work.
+  Widget _buildNotificationSettings(BuildContext context, bool isDark) {
+    final l = AppLocalizations.of(context)!;
+    // No icon colour: disabled tiles then use the theme's disabled colour.
+    Widget tile(String title, IconData icon) => SwitchListTile(
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
       ),
-      child: Column(
-        children: [
-          SwitchListTile(
-            title: Text(
-              'Push Notifications',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            secondary: const Icon(
-              Icons.notifications,
-              color: AdLeaseTheme.primaryBlue,
-            ),
-            value: true,
-            onChanged: (_) {},
-          ),
-          SwitchListTile(
-            title: Text(
-              'Ad Reminders',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            secondary: const Icon(Icons.alarm, color: AdLeaseTheme.accentGold),
-            value: true,
-            onChanged: (_) {},
-          ),
-          SwitchListTile(
-            title: Text(
-              'Reward Alerts',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            secondary: const Icon(
-              Icons.card_giftcard,
-              color: AdLeaseTheme.successGreen,
-            ),
-            value: true,
-            onChanged: (_) {},
-          ),
-        ],
+      subtitle: Text(
+        l.notAvailableYet,
+        style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
       ),
+      secondary: Icon(icon),
+      value: false,
+      onChanged: null,
     );
-  }
-
-  Widget _buildSecuritySettings(BuildContext context, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Column(
+    return _card(
+      isDark,
+      Column(
         children: [
-          ListTile(
-            leading: const Icon(Icons.lock, color: AdLeaseTheme.primaryBlue),
-            title: Text(
-              'Change Password',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.fingerprint,
-              color: AdLeaseTheme.primaryBlue,
-            ),
-            title: Text(
-              'Biometric Login',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.verified_user,
-              color: AdLeaseTheme.primaryBlue,
-            ),
-            title: Text(
-              'Two-Factor Authentication',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAboutSection(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.info, color: AdLeaseTheme.primaryBlue),
-            title: Text(
-              'About AdLease',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            subtitle: Text(
-              'Version 1.0.0',
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(
+              l.notificationsNotAvailable,
               style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
             ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
           ),
-          ListTile(
-            leading: const Icon(
-              Icons.description,
-              color: AdLeaseTheme.primaryBlue,
-            ),
-            title: Text(
-              'Terms of Service',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.privacy_tip,
-              color: AdLeaseTheme.primaryBlue,
-            ),
-            title: Text(
-              'Privacy Policy',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {},
+          tile('Push Notifications', Icons.notifications),
+          tile('Ad Reminders', Icons.alarm),
+          tile('Reward Alerts', Icons.card_giftcard),
+        ],
+      ),
+    );
+  }
+
+  /// A row for a feature that is not built yet: visibly disabled, with no
+  /// arrow, and labelled "Not available yet".
+  Widget _unavailableTile(BuildContext context, IconData icon, String title) {
+    return ListTile(
+      enabled: false,
+      leading: Icon(icon),
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+      ),
+      subtitle: Text(
+        AppLocalizations.of(context)!.notAvailableYet,
+        style: GoogleFonts.poppins(fontSize: 12),
+      ),
+    );
+  }
+
+  /// A settings card. The transparent Material keeps list-tile tap ripples
+  /// visible above the card colour (Flutter warns when a ListTile's nearest
+  /// Material is underneath a coloured box).
+  Widget _card(bool isDark, Widget child) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
           ),
         ],
       ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Padding(padding: const EdgeInsets.all(4), child: child),
+      ),
+    );
+  }
+
+  // Password change, biometric login and two-factor authentication need a
+  // real authentication backend, which does not exist yet.
+  Widget _buildSecuritySettings(BuildContext context, bool isDark) {
+    return _card(
+      isDark,
+      Column(
+        children: [
+          _unavailableTile(context, Icons.lock, 'Change Password'),
+          _unavailableTile(context, Icons.fingerprint, 'Biometric Login'),
+          _unavailableTile(
+            context,
+            Icons.verified_user,
+            'Two-Factor Authentication',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAboutSection(BuildContext context, bool isDark) {
+    return _card(
+      isDark,
+      Column(
+        children: [
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final info = snapshot.data;
+              final version = info == null
+                  ? null
+                  : '${info.version} (${info.buildNumber})';
+              return ListTile(
+                leading: const Icon(
+                  Icons.info,
+                  color: AdLeaseTheme.primaryBlue,
+                ),
+                title: Text(
+                  'About AdLease',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                ),
+                subtitle: version == null
+                    ? null
+                    : Text(
+                        'Version $version',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showAbout(context, version),
+              );
+            },
+          ),
+          // No AdLease terms or privacy policy have been published yet.
+          _unavailableTile(context, Icons.description, 'Terms of Service'),
+          _unavailableTile(context, Icons.privacy_tip, 'Privacy Policy'),
+        ],
+      ),
+    );
+  }
+
+  void _showAbout(BuildContext context, String? version) {
+    final l = AppLocalizations.of(context)!;
+    showAboutDialog(
+      context: context,
+      applicationName: 'AdLease',
+      applicationVersion: version,
+      applicationIcon: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          gradient: AdLeaseTheme.primaryGradient,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.phone_android, color: Colors.white),
+      ),
+      applicationLegalese: '© Avaru Tech Company Limited',
+      children: [
+        const SizedBox(height: 16),
+        Text(l.demoVersionNotice, style: GoogleFonts.poppins(fontSize: 13)),
+        const SizedBox(height: 16),
+        const PoweredByAvaru(),
+      ],
     );
   }
 }

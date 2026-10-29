@@ -113,3 +113,42 @@ npm run build   # Production
 flutter test        # Run unit tests
 flutter analyze     # Static analysis
 ```
+
+Layout tests (`test/layout_test.dart`) render screens at 320x568, 360x640
+and 393x873 with system font sizes from 100% to 200%, using the app's real
+fonts (Poppins from `test/fonts/poppins`, SIL Open Font License; Roboto and
+Material Icons from the Flutter SDK). Any overflow fails the test and names
+the widget. To write screenshots for review:
+
+```bash
+ADLEASE_SCREENSHOT_DIR=build/screenshots flutter test test/screenshots_test.dart
+```
+
+## Brand
+
+AdLease is the product brand. Avaru Tech Company Limited is its parent
+company, credited as "Powered by Avaru" (`lib/widgets/powered_by_avaru.dart`)
+on the splash screen, at the end of Settings, in the About dialog and on the
+Profile screen.
+
+- `assets/brand/avaru-logo-official.png` is a byte-for-byte copy of the
+  official Avaru logo master (avaru-website repository,
+  `public/brand/avaru-logo-official.png`, SHA-256
+  `9031557c5f24f9a9b58d49cff211357a28143b589d70ca2b2b619d7d0a31ab47`).
+  `test/brand_test.dart` fails if the file changes. Never redraw, crop,
+  recolour or replace it. It is about 1 MB; a smaller, approved export of the
+  same artwork can replace it later.
+
+## Not available yet
+
+These are visible in the app but marked "Not available yet" and disabled,
+because what they need does not exist:
+
+- Notifications (push, ad reminders, reward alerts): no notification service.
+- Change password, biometric login, two-factor authentication: need a real
+  authentication backend.
+- Terms of Service and Privacy Policy: no AdLease documents published yet.
+- Withdrawals: hidden (`AppFeatures.withdrawalsEnabled = false`).
+
+Dark mode and language are saved on the device and restored at start-up.
+Edit Profile saves to the device (local prototype storage).
