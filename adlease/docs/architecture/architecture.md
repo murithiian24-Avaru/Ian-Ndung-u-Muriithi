@@ -42,7 +42,7 @@ flowchart LR
 |---|---|---|
 | AdLease app | Sign-in, show ads, show the user's own records, send requests to server code | Write rewards, balances, limits, view records or account flags; hold secrets |
 | Firebase Authentication | Identity: who the user or admin is; account recovery | Be the place roles are decided by the client |
-| App Check | Confirms requests come from the genuine app on a genuine device (Play Integrity on Android) | Be treated as complete fraud protection on its own |
+| App Check | An additional abuse-prevention layer: helps reject requests that do not appear to come from the genuine app on a genuine device (Play Integrity on Android). It can be bypassed | Be treated as a guarantee or as complete fraud protection on its own |
 | Cloud Functions | All writes to protected data: account creation, ad-view sessions, SSV verification, reward crediting, limits, referrals, admin actions, audit log | Trust any amount, timestamp or "completed" flag sent by the app |
 | Cloud Firestore | Stores accounts, ownership progress, ledger, view records, configuration, audit log | Accept client writes to protected collections (enforced by security rules) |
 | Admin dashboard | Read-only views and admin actions through server code | Write to the database directly; be reachable without admin sign-in |

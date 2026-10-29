@@ -46,13 +46,15 @@ way for the user to access, correct and delete it.
 
 ## Data the current demo collects that the target SHOULD NOT
 
-From the user model in `lib/models/user_model.dart`:
-
-- `passwordHash` (stored on the phone): replaced by Firebase Authentication;
-  AdLease never stores passwords.
-- `profilePictureUrl`: no purpose in v1.
-- `deviceId` as a free value from the phone: replaced by an app-scoped ID and
-  App Check.
+- `passwordHash`: not a field of the user model. It is added to each stored
+  account record by `lib/services/auth_service.dart` (`signUp()`, an unsalted
+  SHA-256 of the password) and kept on the phone in SharedPreferences under
+  `adlease_users`. Replaced by Firebase Authentication; AdLease never stores
+  passwords.
+- `profilePictureUrl` (field of the user model in
+  `lib/models/user_model.dart`): no purpose in v1.
+- `deviceId` (field of the user model in `lib/models/user_model.dart`), as a
+  free value from the phone: replaced by an app-scoped ID and App Check.
 
 ## Transfers outside Kenya
 

@@ -28,8 +28,11 @@ Later steps implement it in small, separately reviewed pull requests.
 One Firebase project per environment (development and production). Users sign
 in with **Firebase Authentication**. Data lives in **Cloud Firestore**. Only
 **Cloud Functions** (server code) may create ad-view records, credit rewards,
-enforce limits or perform admin actions. **App Check** rejects requests that do
-not come from the genuine app. The **admin dashboard** is a separate web app
+enforce limits or perform admin actions. **App Check** adds a layer of abuse
+prevention by helping to reject requests that do not appear to come from the
+genuine app on a genuine device. It is not a guarantee: it can be bypassed,
+so server-side checks, limits and fraud review are still required (see
+[threat-model.md](threat-model.md)). The **admin dashboard** is a separate web app
 with its own sign-in, an admin role that only server code can grant, and an
 audit log of every admin action.
 
