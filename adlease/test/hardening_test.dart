@@ -62,9 +62,9 @@ void main() {
 
     test('every transfer type excludes every storage domain', () {
       // Ignore XML comments, which may mention the element names.
-      final rules = File(
-        _rulesPath,
-      ).readAsStringSync().replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
+      final rules = File(_rulesPath)
+          .readAsStringSync()
+          .replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
       expect(rules, isNot(contains('<include')));
       for (final section in [
         'cloud-backup',
