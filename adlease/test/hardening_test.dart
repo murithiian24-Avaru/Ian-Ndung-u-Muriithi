@@ -24,6 +24,9 @@ const _domains = [
   'device_sharedpref',
 ];
 
+/// The data extraction sections Android supports.
+const _sections = ['cloud-backup', 'device-transfer'];
+
 /// All text on screen, including text that is scrolled out of view.
 List<String> _visibleText(WidgetTester tester) {
   return find
@@ -66,11 +69,11 @@ void main() {
           .readAsStringSync()
           .replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
       expect(rules, isNot(contains('<include')));
-      for (final section in [
-        'cloud-backup',
-        'device-transfer',
-        'cross-platform-transfer',
-      ]) {
+      // Only supported sections: no cross-platform-transfer, which opts in.
+      final tags = RegExp(r'<([a-z-]+)\b').allMatches(rules);
+      final names = {for (final m in tags) m.group(1)};
+      expect(names, {'data-extraction-rules', 'exclude', ..._sections});
+      for (final section in _sections) {
         final body = RegExp(
           '<$section\\b[^>]*>(.*?)</$section>',
           dotAll: true,
