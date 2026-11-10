@@ -1,0 +1,765 @@
+# One-off, read-only verification of GitHub Actions artifact 13578151976:
+# the PR #12 debug APK built by run 42381774726 from commit 7412b2d.
+#
+# Trigger: the "push" event for one branch only. The temporary branch
+# verify/artifact-13578151976 is created by a single git push of one commit
+# that adds only this file on top of main's current commit. GitHub reads
+# workflows from the pushed commit, so this file never needs to be on main.
+# AdLease CI, the only other workflow in that commit, runs on pushes to main,
+# feature/** and fix/** only, so this push does not start it.
+#
+# It downloads that one artifact by ID, checks its SHA-256 digest, and reads
+# the APK's signing certificate, package ID, version, SDK levels, permissions
+# and backup settings. Every check ends PASS, FAIL or INCONCLUSIVE; anything
+# that cannot be established is INCONCLUSIVE, never PASS.
+#
+# It never checks out code, builds, signs, publishes, uploads artifacts,
+# installs or runs the APK, uses secrets, or touches Firebase, billing or any
+# other artifact. Delete the branch after the run.
+name: Verify artifact 13578151976 (read-only)
+
+on:
+  push:
+    branches:
+      - verify/artifact-13578151976
+
+# The job token can read GitHub Actions data (artifact metadata and download)
+# and nothing else. Every permission not listed here is "none".
+permissions:
+  actions: read
+
+concurrency:
+  group: verify-artifact-13578151976
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  verify:
+    name: Verify artifact 13578151976
+    if: >-
+      github.repository == 'murithiian24-Avaru/Ian-Ndung-u-Muriithi' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/verify/artifact-13578151976' &&
+      github.event.created == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      # Byte-wise text handling for every command (the tests ran this way).
+      LC_ALL: C
+      # The newest Android build-tools in ubuntu-24.04 image 20261101.360.1,
+      # the image that built this artifact. If this version is not installed,
+      # the job stops in step 1, before any download.
+      EXPECTED_BUILD_TOOLS: 37.0.0
+      REPO: murithiian24-Avaru/Ian-Ndung-u-Muriithi
+      ARTIFACT_ID: '13578151976'
+      EXPECTED_NAME: adlease-debug-apk-flutter-3.47.8
+      EXPECTED_RUN_ID: '42381774726'
+      EXPECTED_HEAD_SHA: 7412b2daa7ff4a6e021b2a4fd00f2a3dbb588ff9
+      EXPECTED_DIGEST: sha256:030f7c092c2f58b15d0b4852bc9eb67c3ed550134271233c1e0a6525052c7935
+      EXPECTED_ZIP_BYTES: '91915865'
+      EXPECTED_APK_NAME: app-debug.apk
+      CI_REPORTED_APK_BYTES: '173343240'
+      CI_REPORTED_PACKAGE: com.adlease.adlease
+      CI_REPORTED_VERSION_CODE: '1'
+      CI_REPORTED_VERSION_NAME: 1.0.0
+      CI_REPORTED_MIN_SDK: '24'
+      CI_REPORTED_TARGET_SDK: '36'
+    steps:
+      - name: 1. Prepare and check the tools (before any download)
+        run: |
+          # Every external command used by steps 1-10, checked before any is
+          # used. Bash builtins (printf, echo, read, test, cd, command) need no
+          # check.
+          MISSING_TOOLS=""
+          for t in cat cmp cut date diff grep jq java curl ls mawk mkdir rm sed sha256sum sort stat touch tr unzip wc zipinfo; do
+            command -v "$t" > /dev/null || MISSING_TOOLS="$MISSING_TOOLS $t"
+          done
+          # The shared helpers are written with bash builtins only, so this
+          # check's result is recorded even when a command is missing.
+          while IFS= read -r l; do printf '%s\n' "$l"; done > "$RUNNER_TEMP/verify-lib.sh" <<'LIB'
+          W="$RUNNER_TEMP/verify"
+          RES="$RUNNER_TEMP/verify-results.txt"
+          APK="$W/apk/$EXPECTED_APK_NAME"
+          TAB=$(printf '\t')
+          # result STATUS CHECK-ID "what was checked" "detail" (line breaks become "; ")
+          result() { local nl=$'\n' line; line=$(printf '%s | %s | %s | %s' "$1" "$2" "$3" "${4//$nl/; }"); printf '%s\n' "$line"; printf '%s\n' "$line" >> "$RES"; }
+          info() { result INFO "$1" "$2" "$3"; }
+          # count: number of non-empty lines in a value
+          count() { printf '%s' "$1" | grep -c . || true; }
+          # check CHECK-ID "what" observed expected. An empty or null observed
+          # value is INCONCLUSIVE; otherwise equal is PASS and different is FAIL.
+          check() {
+            if [ -z "$3" ] || [ "$3" = "null" ]; then
+              result INCONCLUSIVE "$1" "$2" "value could not be read"; LAST=INCONCLUSIVE
+            elif [ "$3" = "$4" ]; then
+              result PASS "$1" "$2" "$3"; LAST=PASS
+            else
+              result FAIL "$1" "$2" "observed: $3; expected: $4"; LAST=FAIL
+            fi
+          }
+          # require: like check, but stops the job unless the result is PASS.
+          require() { check "$@"; [ "$LAST" = PASS ] || { echo "Stopping: $1 is $LAST."; exit 1; }; }
+          LIB
+          . "$RUNNER_TEMP/verify-lib.sh"
+          echo "Runner image: ${ImageOS:-unknown} ${ImageVersion:-unknown}"
+          echo "Event: $GITHUB_EVENT_NAME; ref: $GITHUB_REF; commit: $GITHUB_SHA"
+          echo "Workflow: ${GITHUB_WORKFLOW_REF:-unknown} at ${GITHUB_WORKFLOW_SHA:-unknown}"
+          if [ -n "$MISSING_TOOLS" ]; then
+            result INCONCLUSIVE TOOLS "Required tools available" "not found:$MISSING_TOOLS"; exit 1
+          fi
+          mkdir -p "$W/apk"
+          # The checks rely on GNU stat, wc and sha256sum output, and on mawk
+          # 1.3.4 20240123 (Ubuntu 24.04's awk), the build the parsers were
+          # tested with. Check them on known input.
+          printf 'abc\n' > "$W/probe"
+          PROBE=""
+          [ "$(stat -c %s "$W/probe")" = 4 ] || PROBE="$PROBE stat"
+          [ "$(wc -l < "$W/probe")" = 1 ] || PROBE="$PROBE wc"
+          [ "$(sha256sum "$W/probe" | cut -d' ' -f1)" = edeaaff3f1774ad2888673770c6d64097e391bc362d7d6fb34982ddf0efd18cb ] || PROBE="$PROBE sha256sum"
+          MAWK_V=$(mawk -W version 2>&1 | sed -n 1p) || MAWK_V=""
+          case "$MAWK_V" in "mawk 1.3.4 20240123") ;; *) PROBE="$PROBE mawk(version: ${MAWK_V:-unknown})" ;; esac
+          rm -f "$W/probe"
+          if [ -n "$PROBE" ]; then
+            result INCONCLUSIVE TOOLS "Required tools available" "unexpected output or version:$PROBE"; exit 1
+          fi
+          if [ -z "${ANDROID_HOME:-}" ] || [ ! -d "$ANDROID_HOME/build-tools" ]; then
+            result INCONCLUSIVE TOOLS "Required tools available" "Android build-tools folder not found"; exit 1
+          fi
+          echo "Installed build-tools: $(ls "$ANDROID_HOME/build-tools" | tr '\n' ' ')"
+          BT="$EXPECTED_BUILD_TOOLS"
+          for t in aapt2 apksigner; do
+            if [ ! -x "$ANDROID_HOME/build-tools/$BT/$t" ]; then
+              result INCONCLUSIVE TOOLS "Required tools available" "$t not found in build-tools $BT, the version this workflow expects"; exit 1
+            fi
+          done
+          # aapt2 and apksigner must run, so a later tool failure is unlikely to
+          # be mistaken for a problem with the APK.
+          AAPT2_V=""; SIGNER_V=""
+          AAPT2_V=$("$ANDROID_HOME/build-tools/$BT/aapt2" version 2>&1 | sed -n 1p) || AAPT2_V=""
+          SIGNER_V=$("$ANDROID_HOME/build-tools/$BT/apksigner" --version 2>&1 | sed -n 1p) || SIGNER_V=""
+          if [ -z "$AAPT2_V" ] || [ -z "$SIGNER_V" ]; then
+            result INCONCLUSIVE TOOLS "Required tools available" "aapt2 or apksigner did not run (aapt2: ${AAPT2_V:-no output}; apksigner: ${SIGNER_V:-no output})"; exit 1
+          fi
+          REV=$(sed -n 's/^Pkg.Revision=//p' "$ANDROID_HOME/build-tools/$BT/source.properties" 2>/dev/null | sed -n 1p) || REV=""
+          echo "BT=$BT" >> "$GITHUB_ENV"
+          java -version 2>&1 | sed -n 1p
+          curl --version | sed -n 1p
+          jq --version
+          unzip -v | sed -n 1p
+          result PASS TOOLS "Required tools available" "build-tools $BT (Pkg.Revision: ${REV:-not readable}); aapt2: $AAPT2_V; apksigner: $SIGNER_V; $MAWK_V"
+
+      - name: 2. Read artifact metadata and confirm identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          . "$RUNNER_TEMP/verify-lib.sh"
+          cd "$W"
+          # "|| rc=$?" records curl's own exit code without stopping the script.
+          rc=0
+          curl --fail --silent --show-error --proto '=https' --retry 3 --retry-all-errors \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -o meta.json "https://api.github.com/repos/$REPO/actions/artifacts/$ARTIFACT_ID" || rc=$?
+          if [ "$rc" -ne 0 ]; then
+            result INCONCLUSIVE META "Artifact metadata readable" "curl exit code $rc"; exit 1
+          fi
+          if ! jq -e . meta.json > /dev/null; then
+            result INCONCLUSIVE META "Artifact metadata readable" "response is not valid JSON"; exit 1
+          fi
+          jq '{id, name, size_in_bytes, digest, expired, created_at, expires_at, workflow_run}' meta.json
+          require META-ID "Artifact ID" "$(jq -r .id meta.json)" "$ARTIFACT_ID"
+          require META-NAME "Artifact name" "$(jq -r .name meta.json)" "$EXPECTED_NAME"
+          require META-NOT-EXPIRED "Artifact not expired" "$(jq -r .expired meta.json)" "false"
+          require META-RUN "Built by workflow run" "$(jq -r .workflow_run.id meta.json)" "$EXPECTED_RUN_ID"
+          require META-COMMIT "Built from commit" "$(jq -r .workflow_run.head_sha meta.json)" "$EXPECTED_HEAD_SHA"
+          require META-DIGEST "Digest in GitHub metadata" "$(jq -r .digest meta.json)" "$EXPECTED_DIGEST"
+          require META-SIZE "Zip size in GitHub metadata" "$(jq -r .size_in_bytes meta.json)" "$EXPECTED_ZIP_BYTES"
+
+      - name: 3. Download artifact 13578151976 only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          . "$RUNNER_TEMP/verify-lib.sh"
+          cd "$W"
+          # curl drops the Authorization header when GitHub redirects to its
+          # storage host, and the signed storage URL is never printed.
+          # "|| rc=$?" records curl's own exit code without stopping the script.
+          rc=0
+          curl --fail --silent --show-error --location \
+            --proto '=https' --proto-redir '=https' --max-redirs 3 \
+            --max-filesize 209715200 --retry 3 --retry-all-errors \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -o artifact.zip "https://api.github.com/repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" || rc=$?
+          if [ "$rc" -ne 0 ]; then
+            result INCONCLUSIVE DOWNLOAD "Artifact zip downloaded" "curl exit code $rc"; exit 1
+          fi
+          result PASS DOWNLOAD "Artifact zip downloaded" "$(stat -c %s artifact.zip) bytes"
+
+      - name: 4. Verify the zip's SHA-256 digest and size
+        run: |
+          . "$RUNNER_TEMP/verify-lib.sh"
+          cd "$W"
+          ACTUAL="sha256:$(sha256sum artifact.zip | cut -d' ' -f1)"
+          echo "Computed on runner: $ACTUAL"
+          echo "GitHub metadata:    $(jq -r .digest meta.json)"
+          echo "Pinned in workflow: $EXPECTED_DIGEST"
+          require ZIP-SHA256-PINNED "Zip SHA-256 computed on runner = value pinned in workflow" "$ACTUAL" "$EXPECTED_DIGEST"
+          require ZIP-SHA256-GITHUB "Zip SHA-256 computed on runner = GitHub metadata" "$ACTUAL" "$(jq -r .digest meta.json)"
+          require ZIP-SIZE "Zip size in bytes" "$(stat -c %s artifact.zip)" "$EXPECTED_ZIP_BYTES"
+
+      - name: 5. Check the archive and extract the APK
+        run: |
+          . "$RUNNER_TEMP/verify-lib.sh"
+          cd "$W"
+          if unzip -tq artifact.zip; then
+            result PASS ZIP-CRC "Zip entries pass CRC test" "no errors"
+          else
+            result FAIL ZIP-CRC "Zip entries pass CRC test" "unzip -t reported errors"; exit 1
+          fi
+          zipinfo artifact.zip
+          ENTRIES=$(zipinfo -1 artifact.zip) || ENTRIES=""
+          require ZIP-ENTRIES "Archive holds exactly one file, named $EXPECTED_APK_NAME" "$ENTRIES" "$EXPECTED_APK_NAME"
+          unzip -q artifact.zip "$EXPECTED_APK_NAME" -d apk
+          info APK-SHA256 "APK SHA-256" "$(sha256sum "$APK" | cut -d' ' -f1)"
+          check APK-SIZE "APK size in bytes = size reported by CI" "$(stat -c %s "$APK")" "$CI_REPORTED_APK_BYTES"
+          if unzip -tq "$APK"; then
+            result PASS APK-CRC "APK entries pass CRC test" "no errors"
+          else
+            result FAIL APK-CRC "APK entries pass CRC test" "unzip -t reported errors"; exit 1
+          fi
+          zipinfo -1 "$APK" > apk-entries.txt
+          info APK-ENTRIES "Files inside the APK" "$(wc -l < apk-entries.txt)"
+
+      - name: 6. Verify the APK signature and read the signing certificate
+        run: |
+          . "$RUNNER_TEMP/verify-lib.sh"
+          cd "$W"
+          # The PASS/FAIL decision uses apksigner's exit code only.
+          if "$ANDROID_HOME/build-tools/$BT/apksigner" verify --verbose --print-certs "$APK" > signing.txt 2>&1; then
+            cat signing.txt
+            result PASS SIG-VERIFY "APK signature verifies (apksigner exit code)" "verified"
+          else
+            cat signing.txt
+            result FAIL SIG-VERIFY "APK signature verifies (apksigner exit code)" "apksigner reported a failure"; exit 1
+          fi
+          # Certificate lines come in one of two forms:
+          #   "Signer #1 certificate DN: ..."   (older apksigner output)
+          #   "V2 Signer: certificate DN: ..."  (apksigner 0.9 in build-tools
+          #                                      37.0.0, seen in run 42819157571)
+          # PASS needs exactly one "Number of signers: 1" line, exactly one
+          # certificate DN line and exactly one certificate SHA-256 digest line,
+          # both with the same signer label ("Signer #1" or "V<n> Signer"), a
+          # non-empty DN and a digest of 64 lowercase hex characters. Only those
+          # two exactly written forms are accepted. Every line is first reduced
+          # to lower-case letters and digits; a line that mentions both the
+          # number of signers and a certificate DN or SHA-256 digest is
+          # ambiguous, and so is a supported DN or digest line whose value
+          # mentions a certificate DN or SHA-256 digest again. Any ambiguous
+          # line, any other line that mentions a
+          # certificate DN, a certificate SHA-256 digest or the number of
+          # signers in any capitalisation or spacing, and any missing, repeated
+          # or malformed line, gives INCONCLUSIVE. So an APK whose
+          # certificate is printed once per signature scheme also gives
+          # INCONCLUSIVE; this APK's certificate is printed once (v2 only).
+          cat > sigcert.awk <<'AWK'
+          BEGIN { OFS = "\t"; ns = 0; nsv = ""; ndn = 0; nsha = 0; other = 0; mixed = 0; embedded = 0 }
+          # marked(v): v mentions a certificate DN or SHA-256 digest (case,
+          # spaces and punctuation ignored).
+          function marked(v) { v = tolower(v); gsub(/[^a-z0-9]/, "", v); return (index(v, "certificatedn") > 0 || index(v, "certificatesha256") > 0) }
+          # Every line, reduced to lower-case letters and digits, is checked for
+          # both kinds of marker before anything else is done with it.
+          { lc = tolower($0); gsub(/[^a-z0-9]/, "", lc)
+            cm = (index(lc, "certificatedn") > 0 || index(lc, "certificatesha256") > 0)
+            sm = (index(lc, "numberofsigners") > 0) }
+          cm && sm { mixed++; next }
+          /^(Signer #[0-9]+ |V[0-9]+ Signer: )certificate DN: / {
+            v = $0; sub(/^(Signer #[0-9]+ |V[0-9]+ Signer: )certificate DN: /, "", v)
+            if (marked(v)) { embedded++; next }
+            ndn++; dl = $0; sub(/:? certificate DN: .*$/, "", dl); dv = v; next
+          }
+          /^(Signer #[0-9]+ |V[0-9]+ Signer: )certificate SHA-256 digest: / {
+            v = $0; sub(/^(Signer #[0-9]+ |V[0-9]+ Signer: )certificate SHA-256 digest: /, "", v)
+            if (marked(v)) { embedded++; next }
+            nsha++; hl = $0; sub(/:? certificate SHA-256 digest: .*$/, "", hl); hv = v; next
+          }
+          cm { other++; next }
+          sm { ns++; nsv = $0; next }
+          END {
+            r = ""
+            if (mixed > 0) r = "lines mixing the number of signers with a certificate DN or digest: " mixed
+            else if (embedded > 0) r = "DN or digest values that mention a certificate DN or digest again: " embedded
+            else if (ns != 1) r = "\"Number of signers\" lines: " ns
+            else if (nsv != "Number of signers: 1") r = "not exactly one signer: " nsv
+            else if (other > 0) r = "unrecognised certificate lines: " other
+            else if (ndn != 1) r = "certificate DN lines: " ndn
+            else if (nsha != 1) r = "certificate SHA-256 digest lines: " nsha
+            else if (dl != hl) r = "DN and digest have different signer labels: " dl " / " hl
+            else if (dl ~ /^Signer #/ && dl != "Signer #1") r = "signer label is not Signer #1: " dl
+            else if (dv !~ /[^ ]/) r = "certificate DN is empty"
+            else if (hv !~ /^[0-9a-f]+$/ || length(hv) != 64) r = "certificate SHA-256 digest is not 64 lowercase hex characters"
+            if (r != "") print "NO", r
+            else print "OK", dl, dv, hv
+          }
+          AWK
+          SDESC="Signing certificate read (one signer, one DN, one SHA-256 digest)"
+          SC=$(mawk -f sigcert.awk signing.txt) || SC=""
+          LABEL=""; DN=""; CERT=""
+          if [ "$(count "$SC")" = 1 ] && [ "$(printf '%s' "$SC" | cut -f1)" = OK ]; then
+            LABEL=$(printf '%s' "$SC" | cut -f2); DN=$(printf '%s' "$SC" | cut -f3); CERT=$(printf '%s' "$SC" | cut -f4-)
+          fi
+          if [ -n "$LABEL" ] && [ -n "$DN" ] && printf '%s' "$CERT" | grep -Eqx '[0-9a-f]{64}'; then
+            result PASS SIG-CERT "$SDESC" "SHA-256 $CERT (from the \"$LABEL\" lines)"
+            info SIG-SUBJECT "Certificate subject" "$DN"
+            case "$DN" in
+              *"CN=Android Debug"*) info SIG-TYPE "Certificate type (by subject name only)" "debug/test: standard Android debug key name" ;;
+              *) info SIG-TYPE "Certificate type (by subject name only)" "REVIEW: not the standard Android debug key name" ;;
+            esac
+          elif [ "$(printf '%s' "$SC" | cut -f1)" = OK ]; then
+            result INCONCLUSIVE SIG-CERT "$SDESC" "certificate fields not recognised"
+          else
+            result INCONCLUSIVE SIG-CERT "$SDESC" "$(printf '%s' "${SC:-no result from the certificate reader}" | cut -f2-)"
+          fi
+          grep '^Verified using' signing.txt | while IFS= read -r l; do info SIG-SCHEME "Signature scheme" "$l"; done || true
+
+      - name: 7. Read application ID, version, SDK levels and the permission dump
+        run: |
+          . "$RUNNER_TEMP/verify-lib.sh"
+          cd "$W"
+          AAPT2="$ANDROID_HOME/build-tools/$BT/aapt2"
+          B_OK=no; P_OK=no
+          if "$AAPT2" dump badging "$APK" > badging.txt 2> badging.err; then B_OK=yes; fi
+          if "$AAPT2" dump permissions "$APK" > permissions.txt 2> permissions.err; then P_OK=yes; fi
+          echo "--- aapt2 dump badging (completed: $B_OK)"; cat badging.txt badging.err
+          echo "--- aapt2 dump permissions (completed: $P_OK)"; cat permissions.txt permissions.err
+          PKG=""; VC=""; VN=""; MIN=""; TGT=""
+          PKG_LINES=$(grep -c "^package: name='" badging.txt || true)
+          if [ "$B_OK" = yes ] && [ "$PKG_LINES" = 1 ]; then
+            PKG=$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" badging.txt)
+            VC=$(sed -n "s/^package: .* versionCode='\([^']*\)'.*/\1/p" badging.txt)
+            VN=$(sed -n "s/^package: .* versionName='\([^']*\)'.*/\1/p" badging.txt)
+            MIN=$(sed -n "s/^minSdkVersion:'\([^']*\)'.*/\1/p; s/^sdkVersion:'\([^']*\)'.*/\1/p" badging.txt | sed -n 1p)
+            TGT=$(sed -n "s/^targetSdkVersion:'\([^']*\)'.*/\1/p" badging.txt | sed -n 1p)
+          fi
+          check PKG-ID "Application ID" "$PKG" "$CI_REPORTED_PACKAGE"
+          check PKG-VERSION-CODE "Version code" "$VC" "$CI_REPORTED_VERSION_CODE"
+          check PKG-VERSION-NAME "Version name" "$VN" "$CI_REPORTED_VERSION_NAME"
+          check SDK-MIN "Minimum SDK" "$MIN" "$CI_REPORTED_MIN_SDK"
+          check SDK-TARGET "Target SDK" "$TGT" "$CI_REPORTED_TARGET_SDK"
+          if grep -qx 'application-debuggable' badging.txt; then D=yes; else D=no; fi
+          info PKG-DEBUGGABLE "Debuggable build" "$D"
+          # aapt2 badging prints each implied permission twice: as a
+          # "uses-permission:" line and as a "uses-implied-permission:" line.
+          # Implied permissions are not in the manifest, so they are recorded
+          # for information only and are not part of the permission checks.
+          sed -n "s/^uses-implied-permission: \(.*\)/\1/p" badging.txt | while IFS= read -r l; do info IMPLIED "Implied by aapt2, not in the manifest" "$l"; done
+          # Strict reading of "aapt2 dump permissions". Line formats come from
+          # aapt2's DumpManifest.cpp (permissions mode): a first line
+          # "package: NAME", "permission: NAME" for each declared permission, and
+          # "uses-permission[-sdk-23]: name='N'[ maxSdkVersion='M']" for each
+          # requested one. Any other line (usesPermissionFlags, required-feature,
+          # required-not-feature, optional-permission, ...) carries information
+          # these checks do not compare, so step 8 then reports INCONCLUSIVE.
+          cat > perm.awk <<'AWK'
+          BEGIN { bad = 0; pk = 0 }
+          NR == 1 && /^package: [^ ]+$/ { pk = 1; next }
+          /^permission: [^ ]+$/ { v = $0; sub(/^permission: /, "", v); print v > dec; next }
+          /^uses-permission(-sdk-23)?: name='[^']+'( maxSdkVersion='-?[0-9]+')?$/ {
+            el = $0; sub(/:.*$/, "", el)
+            nm = $0; sub(/^[^']*'/, "", nm); sub(/'.*$/, "", nm)
+            mx = "-"
+            if (index($0, " maxSdkVersion='") > 0) { mx = $0; sub(/^.* maxSdkVersion='/, "", mx); sub(/'$/, "", mx) }
+            print el "|" nm "|" mx > req; next
+          }
+          { print "line not compared by these checks: " $0; bad = 1 }
+          END { if (!pk) { print "first line is not 'package: NAME'"; bad = 1 }; exit bad }
+          AWK
+          : > perm-dump-requested.txt; : > perm-dump-declared.txt; : > perm-dump.problems
+          if [ "$P_OK" = yes ]; then
+            if mawk -v req=perm-dump-requested.txt -v dec=perm-dump-declared.txt -f perm.awk permissions.txt > perm-dump.problems; then touch perm-dump.ok; fi
+            LC_ALL=C sort -o perm-dump-requested.txt perm-dump-requested.txt
+            LC_ALL=C sort -o perm-dump-declared.txt perm-dump-declared.txt
+          else
+            echo "aapt2 dump permissions did not complete" > perm-dump.problems
+          fi
+          while IFS= read -r l; do info PERM-DUMP "Permission dump not usable" "$l"; done < perm-dump.problems
+
+      - name: 8. Read the compiled manifest (permissions and backup settings)
+        run: |
+          . "$RUNNER_TEMP/verify-lib.sh"
+          cd "$W"
+          AAPT2="$ANDROID_HOME/build-tools/$BT/aapt2"
+          # Strict parser for "aapt2 dump xmltree" output. Layout rules come from
+          # aapt2's XmlPrinter (Debug.cpp) and Printer (text/Printer.cpp):
+          #   - two spaces per indentation level;
+          #   - "N: prefix=uri (line=N)" declares a namespace for the next
+          #     element, and each declaration adds one level before it;
+          #   - "E: name (line=N)": its attributes are one level deeper, and its
+          #     child elements and text two levels deeper;
+          #   - "A: [namespace:]name[(0xIIIIIIII)]=value[ (Raw: "raw")]", where
+          #     aapt2 prints the namespace as its full URI;
+          #   - "T: 'text'".
+          # A line breaking these rules, a duplicate attribute, a duplicate prefix
+          # in one group of declarations, an undeclared prefix or a second root
+          # element is recorded as X, and any X prevents a PASS.
+          # Output (tab-separated): E id parent name | N element prefix uri |
+          # A element namespace-uri name resource-id value | T element text |
+          # X line-number reason line
+          cat > xmltree.awk <<'AWK'
+          BEGIN { OFS = "\t"; NAMERE = "^[A-Za-z_][A-Za-z0-9_.-]*$" }
+          function bad(why) { print "X", NR, why, $0 }
+          {
+            match($0, /^ */); ind = RLENGTH; t = substr($0, ind + 1)
+            if (ind % 2 != 0) { bad("odd indentation"); next }
+            if (t ~ /^N: [^= ]+=[^ ]+ \(line=[0-9]+\)$/) {
+              if (inrun && ind != lastn + 2) { bad("namespace declaration out of place"); next }
+              if (!inrun) { inrun = 1; runind = ind; np = 0 }
+              lastn = ind
+              d = t; sub(/^N: /, "", d); sub(/ \(line=[0-9]+\)$/, "", d)
+              q = index(d, "="); pf = substr(d, 1, q - 1); u = substr(d, q + 1)
+              if (pf !~ NAMERE) { bad("malformed namespace prefix"); next }
+              for (i = 1; i <= np; i++) if (pfx[i] == pf) { bad("duplicate namespace prefix"); next }
+              np++; pfx[np] = pf; puri[np] = u
+              next
+            }
+            if (t ~ /^E: [^ ]+ \(line=[0-9]+\)$/) {
+              if (inrun && ind != lastn + 2) { bad("element not directly after its namespace declarations"); next }
+              start = inrun ? runind : ind
+              while (depth > 0 && sstart[depth] >= start) depth--
+              if (depth == 0 && n > 0) { bad("second root element"); next }
+              expect = (depth > 0) ? eact[sid[depth]] + 4 : 0
+              if (start != expect) { bad("element indentation does not match its parent"); next }
+              name = t; sub(/^E: /, "", name); sub(/ \(line=[0-9]+\)$/, "", name)
+              parent = (depth > 0) ? sid[depth] : 0
+              if (parent > 0) kids[parent] = 1
+              n++; depth++; sstart[depth] = start; sid[depth] = n; cur = n; par[n] = parent; eact[n] = ind
+              print "E", n, parent, name
+              for (i = 1; i <= np; i++) { nsmap[n SUBSEP pfx[i]] = puri[i]; print "N", n, pfx[i], puri[i] }
+              np = 0; inrun = 0
+              next
+            }
+            if (inrun) { bad("namespace declaration not followed by an element"); next }
+            if (t ~ /^A: /) {
+              if (cur == 0 || ind != eact[cur] + 2 || kids[cur]) { bad("attribute out of place"); next }
+              rest = substr(t, 4)
+              p = index(rest, " (Raw: \"")
+              if (p > 0) { if (rest !~ /"\)$/) { bad("malformed raw value"); next }; rest = substr(rest, 1, p - 1) }
+              eq = index(rest, "=")
+              if (eq < 2) { bad("malformed attribute"); next }
+              key = substr(rest, 1, eq - 1); val = substr(rest, eq + 1); rid = ""
+              if (match(key, /\(0x[0-9a-f]+\)$/)) {
+                rid = substr(key, RSTART + 1, RLENGTH - 2); key = substr(key, 1, RSTART - 1)
+                if (length(rid) != 10) { bad("malformed resource ID"); next }
+              }
+              c = 0; for (i = length(key); i > 0; i--) if (substr(key, i, 1) == ":") { c = i; break }
+              ns = (c > 0) ? substr(key, 1, c - 1) : ""; nm = (c > 0) ? substr(key, c + 1) : key
+              if (nm !~ NAMERE) { bad("malformed attribute name"); next }
+              uri = ""
+              if (c > 0) {
+                if (ns ~ /^[a-z]+:\/\//) uri = ns
+                else if (ns ~ NAMERE) {
+                  for (e = cur; e > 0; e = par[e]) if ((e SUBSEP ns) in nsmap) { uri = nsmap[e SUBSEP ns]; break }
+                  if (uri == "") { bad("namespace prefix not declared"); next }
+                } else { bad("malformed namespace"); next }
+              }
+              if (val ~ /^"/) {
+                if (val !~ /^".*"$/ || length(val) < 2) { bad("malformed quoted value"); next }
+                val = substr(val, 2, length(val) - 2)
+              } else if (val == "" || val ~ /[" ]/) { bad("unrecognised value format"); next }
+              k = cur SUBSEP uri SUBSEP nm
+              if (k in seen) { bad("duplicate attribute"); next }
+              seen[k] = 1
+              print "A", cur, uri, nm, rid, val
+              next
+            }
+            if (t ~ /^T: '.*'$/) {
+              while (depth > 0 && sstart[depth] >= ind) depth--
+              if (depth == 0 || ind != eact[sid[depth]] + 4) { bad("text out of place"); next }
+              e = sid[depth]; kids[e] = 1; cur = e
+              txt = t; sub(/^T: '/, "", txt); sub(/'$/, "", txt)
+              print "T", e, txt
+              next
+            }
+            bad("unrecognised line")
+          }
+          END { if (inrun) print "X", NR, "namespace declaration not followed by an element", "" }
+          AWK
+          # Resource-table lookup for one resource ID. Formats come from aapt2's
+          # Dump.cpp and PrintTable (Debug.cpp): first line "Binary APK"; an entry
+          # starts with "resource 0xIIIIIIII type/name"; its values are
+          # "(config) ..." lines; "Flag disabled values:" may follow; the default
+          # configuration prints as "()"; a file value is
+          # "(file) res/path type=XML", optionally followed by " src=...".
+          # The entry must be the only one with that ID, of type xml, with exactly
+          # one default-configuration file value, no flag-disabled values and no
+          # other lines; otherwise the result is NO with a reason.
+          cat > lookup.awk <<'AWK'
+          BEGIN { OFS = "\t"; hdr = 0; vals = 0; flagv = 0; other = 0; good = 0; inres = 0 }
+          NR == 1 { first = $0 }
+          {
+            t = $0; sub(/^ +/, "", t)
+            if (t ~ /^resource 0x[0-9a-f]+ /) {
+              split(t, f, " "); inres = (f[2] == id); flag = 0
+              if (inres) { hdr++; name = f[3]; print "H", t }
+              next
+            }
+            if (t ~ /^(type |Package name=|DynamicRefTable )/) { inres = 0; next }
+            if (!inres) next
+            if (t == "Flag disabled values:") { flag = 1; next }
+            if (t ~ /^\(/) {
+              if (flag) { flagv++; print "F", t; next }
+              vals++; print "V", t
+              if (t ~ /^\(\) \(file\) res\/[^ ]+ type=XML( src=[^ ]*)?$/) { p = t; sub(/^\(\) \(file\) /, "", p); sub(/ type=XML.*$/, "", p); path = p; good++ }
+              next
+            }
+            other++; print "U", t
+          }
+          END {
+            r = ""
+            if (first != "Binary APK") r = "first line is not 'Binary APK'"
+            else if (hdr != 1) r = "entries with this ID: " hdr
+            else if (name !~ /^xml\/[^ ]+$/) r = "entry is not an xml resource: " name
+            else if (other > 0) r = "unexpected lines inside the entry: " other
+            else if (flagv > 0) r = "flag-disabled values: " flagv
+            else if (vals != 1) r = "values: " vals
+            else if (good != 1) r = "value is not one default-configuration XML file"
+            if (r != "") print "RESULT", "NO", r
+            else print "RESULT", "OK", name, path
+          }
+          AWK
+          ANDROID_NS="http://schemas.android.com/apk/res/android"
+          M_OK=no; ROOT=""; APP=""; NSDECL="not checked"; APP_NS="not checked"; REF=""; RULES=""
+          if "$AAPT2" dump xmltree --file AndroidManifest.xml "$APK" > manifest-tree.txt 2> manifest-tree.err; then M_OK=yes; fi
+          mawk -f xmltree.awk manifest-tree.txt > manifest.rec
+          echo "--- compiled manifest: namespace declarations, then the <application> element and its attributes"
+          grep -E '^ *N: ' manifest-tree.txt || true
+          mawk '/^ *E: application /{f=1; print; next} f && /^ *A: /{print; next} f{exit}' manifest-tree.txt
+          echo "--- lines the parser did not accept (none expected)"; grep '^X' manifest.rec || true
+          M_UNKNOWN=$(grep -c '^X' manifest.rec || true)
+          M_TEXT=$(grep -c '^T' manifest.rec || true)
+          M_ROOTS=$(mawk -F'\t' '$1=="E" && $3==0 {print $2 ":" $4}' manifest.rec)
+          if [ "$M_OK" = yes ] && [ "$M_UNKNOWN" = 0 ] && [ "$M_TEXT" = 0 ] && [ "$(count "$M_ROOTS")" = 1 ] && [ "${M_ROOTS#*:}" = manifest ]; then
+            ROOT=${M_ROOTS%%:*}
+            NSDECL=$(mawk -F'\t' -v r="$ROOT" -v ns="$ANDROID_NS" '$1=="N" && $2==r && $4==ns' manifest.rec | wc -l)
+            APPS=$(mawk -F'\t' -v r="$ROOT" '$1=="E" && $3==r && $4=="application" {print $2}' manifest.rec)
+            if [ "$(count "$APPS")" = 1 ]; then
+              APP_NS=$(mawk -F'\t' -v e="$APPS" -v ns="$ANDROID_NS" '$1=="A" && $2==e && $3==ns' manifest.rec | wc -l)
+              if [ "$NSDECL" -ge 1 ] && [ "$APP_NS" -ge 1 ]; then APP=$APPS; fi
+            fi
+          fi
+          if [ -n "$APP" ]; then
+            result PASS BK-MANIFEST-PARSED "Compiled manifest parsed with no unrecognised lines; Android namespace declared; one <application> element" "element $APP; Android-namespace attributes on <application>: $APP_NS"
+          else
+            result INCONCLUSIVE BK-MANIFEST-PARSED "Compiled manifest parsed with no unrecognised lines; Android namespace declared; one <application> element" "aapt2 completed: $M_OK; unrecognised lines: $M_UNKNOWN; text nodes: $M_TEXT; root: ${M_ROOTS:-none}; Android namespace declarations on <manifest>: $NSDECL; Android-namespace attributes on <application>: $APP_NS"
+          fi
+          # Requested permissions. Compared with "aapt2 dump permissions":
+          # element type, android:name and android:maxSdkVersion, including how
+          # many times each entry appears. Any other attribute on these elements
+          # (usesPermissionFlags, requiredFeature, requiredNotFeature, required,
+          # ...) is not compared, so its presence gives INCONCLUSIVE, not PASS.
+          PDESC="Requested permissions: element type, name and maxSdkVersion match aapt2 dump permissions; no other attributes on these elements"
+          if [ -n "$APP" ] && [ -f perm-dump.ok ]; then
+            mawk -F'\t' -v r="$ROOT" -v ns="$ANDROID_NS" '
+              $1=="E" && ($4=="uses-permission" || $4=="uses-permission-sdk-23") { el[$2] = $4; if ($3 != r) print "BAD\t<" $4 "> not directly under <manifest>" }
+              $1=="A" && ($2 in el) {
+                if ($3==ns && $4=="name") nm[$2] = $6
+                else if ($3==ns && $4=="maxSdkVersion") { if ($6 ~ /^-?[0-9]+$/) mx[$2] = $6; else print "BAD\tandroid:maxSdkVersion is not a decimal number: " $6 }
+                else print "BAD\tattribute not compared by this check: " ($3 != "" ? $3 ":" : "") $4 "=" $6
+              }
+              END { for (k in el) { if (k in nm) print "REQ\t" el[k] "|" nm[k] "|" ((k in mx) ? mx[k] : "-"); else print "BAD\t<" el[k] "> without android:name" } }
+            ' manifest.rec > perm-manifest.rec
+            { grep '^REQ' perm-manifest.rec || true; } | cut -f2 | LC_ALL=C sort > perm-manifest-requested.txt
+            P_BAD=$({ grep '^BAD' perm-manifest.rec || true; } | cut -f2 | LC_ALL=C sort -u)
+            if [ -n "$P_BAD" ]; then
+              result INCONCLUSIVE PERMISSIONS "$PDESC" "$P_BAD"
+            elif cmp -s perm-dump-requested.txt perm-manifest-requested.txt; then
+              result PASS PERMISSIONS "$PDESC" "$(wc -l < perm-manifest-requested.txt) entries"
+              while IFS= read -r p; do info PERMISSION "Requested permission (element|name|maxSdkVersion)" "$p"; done < perm-manifest-requested.txt
+            else
+              result INCONCLUSIVE PERMISSIONS "$PDESC" "the two lists differ"
+              diff perm-dump-requested.txt perm-manifest-requested.txt || true
+            fi
+          else
+            result INCONCLUSIVE PERMISSIONS "$PDESC" "compiled manifest not understood, or permission dump not usable"
+          fi
+          # Declared permissions (<permission> elements). aapt2 prints only their
+          # names, so only names are compared; their other attributes (for
+          # example protectionLevel) are recorded below and not compared.
+          DDESC="Declared permissions: names match aapt2 dump permissions (other <permission> attributes recorded, not compared)"
+          if [ -n "$APP" ] && [ -f perm-dump.ok ]; then
+            mawk -F'\t' -v ns="$ANDROID_NS" '
+              $1=="E" && $4=="permission" { el[$2] = 1 }
+              $1=="A" && ($2 in el) { if ($3==ns && $4=="name") print "DEC\t" $6; else print "ATTR\t" $2 "\t" ($3 != "" ? $3 ":" : "") $4 "=" $6 }
+            ' manifest.rec > perm-declared.rec
+            { grep '^DEC' perm-declared.rec || true; } | cut -f2 | LC_ALL=C sort > perm-manifest-declared.txt
+            if cmp -s perm-dump-declared.txt perm-manifest-declared.txt; then
+              result PASS PERMISSIONS-DECLARED "$DDESC" "$(wc -l < perm-manifest-declared.txt) declared"
+              while IFS= read -r p; do info DECLARED "Declared permission" "$p"; done < perm-manifest-declared.txt
+              { grep '^ATTR' perm-declared.rec || true; } | cut -f3 | while IFS= read -r l; do info DECLARED-ATTR "Attribute on a <permission> element (not compared)" "$l"; done
+            else
+              result INCONCLUSIVE PERMISSIONS-DECLARED "$DDESC" "the two lists differ"
+              diff perm-dump-declared.txt perm-manifest-declared.txt || true
+            fi
+          else
+            result INCONCLUSIVE PERMISSIONS-DECLARED "$DDESC" "compiled manifest not understood, or permission dump not usable"
+          fi
+          androidattr() { mawk -F'\t' -v e="$APP" -v ns="$ANDROID_NS" -v n="$1" '$1=="A" && $2==e && $3==ns && $4==n {print $6}' manifest.rec; }
+          if [ -z "$APP" ]; then
+            result INCONCLUSIVE BK-ALLOW-BACKUP "android:allowBackup is false" "manifest not understood"
+            result INCONCLUSIVE BK-RULES-DECLARED "android:dataExtractionRules points to a resource" "manifest not understood"
+          else
+            AB=$(androidattr allowBackup)
+            if [ "$(count "$AB")" = 0 ]; then
+              result FAIL BK-ALLOW-BACKUP "android:allowBackup is false" "attribute absent (Android then allows backup)"
+            elif [ "$(count "$AB")" != 1 ]; then
+              result INCONCLUSIVE BK-ALLOW-BACKUP "android:allowBackup is false" "attribute found more than once"
+            elif [ "$AB" = false ]; then
+              result PASS BK-ALLOW-BACKUP "android:allowBackup is false" "false"
+            elif [ "$AB" = true ]; then
+              result FAIL BK-ALLOW-BACKUP "android:allowBackup is false" "value: true"
+            else
+              result INCONCLUSIVE BK-ALLOW-BACKUP "android:allowBackup is false" "value not recognised: $AB"
+            fi
+            for a in fullBackupContent fullBackupOnly backupAgent; do
+              v=$(androidattr "$a"); info "BK-$a" "android:$a" "${v:-absent}"
+            done
+            DER=$(androidattr dataExtractionRules)
+            if [ "$(count "$DER")" = 0 ]; then
+              result FAIL BK-RULES-DECLARED "android:dataExtractionRules points to a resource" "attribute absent"
+            elif [ "$(count "$DER")" = 1 ] && printf '%s' "$DER" | grep -Eqx '@0x[0-9a-f]{8}'; then
+              REF=${DER#@}
+              result PASS BK-RULES-DECLARED "android:dataExtractionRules points to a resource" "$REF"
+            else
+              result INCONCLUSIVE BK-RULES-DECLARED "android:dataExtractionRules points to a resource" "value not recognised or found more than once: $DER"
+            fi
+          fi
+          if [ -n "$REF" ]; then
+            R_OK=no
+            if "$AAPT2" dump resources "$APK" > resources.txt 2> resources.err; then R_OK=yes; fi
+            mawk -v id="$REF" -f lookup.awk resources.txt > lookup.rec
+            echo "--- resource table entry for $REF"; cat lookup.rec
+            LK=$(grep '^RESULT' lookup.rec || true)
+            if [ "$R_OK" = yes ] && [ "$(printf '%s' "$LK" | cut -f2)" = OK ]; then
+              NAME=$(printf '%s' "$LK" | cut -f3); FOUND=$(printf '%s' "$LK" | cut -f4)
+              IN_APK=$(grep -cxF "$FOUND" apk-entries.txt || true)
+              if [ "$IN_APK" = 1 ]; then
+                RULES=$FOUND
+                result PASS BK-RULES-LOOKUP "Resource resolves to exactly one compiled XML file in the APK" "$REF $NAME -> $RULES"
+              else
+                result INCONCLUSIVE BK-RULES-LOOKUP "Resource resolves to exactly one compiled XML file in the APK" "$FOUND found $IN_APK times in the APK file list"
+              fi
+            else
+              result INCONCLUSIVE BK-RULES-LOOKUP "Resource resolves to exactly one compiled XML file in the APK" "aapt2 completed: $R_OK; $(printf '%s' "${LK:-RESULT	NO	no result}" | cut -f3-)"
+            fi
+          else
+            result INCONCLUSIVE BK-RULES-LOOKUP "Resource resolves to exactly one compiled XML file in the APK" "no resource reference to look up"
+          fi
+          X_OK=no; R_UNKNOWN=1; R_TEXT=1; R_NS=1; R_ROOTS=""
+          if [ -n "$RULES" ]; then
+            if "$AAPT2" dump xmltree --file "$RULES" "$APK" > rules-tree.txt 2> rules-tree.err; then X_OK=yes; fi
+            echo "--- compiled rules file $RULES (full)"; cat rules-tree.txt rules-tree.err
+            mawk -f xmltree.awk rules-tree.txt > rules.rec
+            echo "--- lines the parser did not accept (none expected)"; grep '^X' rules.rec || true
+            R_UNKNOWN=$(grep -c '^X' rules.rec || true)
+            R_TEXT=$(grep -c '^T' rules.rec || true)
+            R_NS=$(grep -c '^N' rules.rec || true)
+            R_ROOTS=$(mawk -F'\t' '$1=="E" && $3==0 {print $2 ":" $4}' rules.rec)
+          fi
+          RULE_IDS="BK-RULES-PARSED BK-RULES-ROOT BK-RULES-STRUCTURE BK-CLOUD-SECTION BK-D2D-SECTION BK-NO-CROSS-PLATFORM BK-NO-INCLUDE BK-CLOUD-RULES BK-D2D-RULES"
+          if [ -n "$RULES" ] && [ "$X_OK" = yes ] && [ "$R_UNKNOWN" = 0 ] && [ "$R_TEXT" = 0 ] && [ "$R_NS" = 0 ] && [ "$(count "$R_ROOTS")" = 1 ]; then
+            result PASS BK-RULES-PARSED "Compiled rules file parsed: no unrecognised lines, text or namespace declarations" "$RULES"
+            RR=${R_ROOTS%%:*}
+            attrs_of() { mawk -F'\t' -v e="$1" '$1=="A" && $2==e' rules.rec | wc -l; }
+            check BK-RULES-ROOT "Root element is <data-extraction-rules>, with no attributes" "${R_ROOTS#*:}; attributes: $(attrs_of "$RR")" "data-extraction-rules; attributes: 0"
+            STRUCT=$(mawk -F'\t' '
+              $1=="E" { lvl[$2] = ($3 == 0) ? 0 : lvl[$3] + 1
+                if (lvl[$2] == 1 && $4 !~ /^(cloud-backup|device-transfer|cross-platform-transfer)$/) print "unexpected section <" $4 ">"
+                if (lvl[$2] == 2 && $4 !~ /^(exclude|include)$/) print "unexpected rule element <" $4 ">"
+                if (lvl[$2] > 2) print "element <" $4 "> nested below a rule" }
+            ' rules.rec)
+            check BK-RULES-STRUCTURE "Only sections under the root, only rule elements under sections, nothing deeper" "${STRUCT:-as expected}" "as expected"
+            section() { mawk -F'\t' -v r="$RR" -v s="$1" '$1=="E" && $3==r && $4==s {print $2}' rules.rec; }
+            sec_state() { if [ "$(count "$1")" = 1 ]; then echo "count: 1; attributes: $(attrs_of "$1")"; else echo "count: $(count "$1")"; fi; }
+            # Each rule element is described by its name and ALL of its
+            # attributes (namespace, resource ID and value included), sorted. A
+            # section passes only if its rule elements are exactly the 9 expected
+            # <exclude domain="..." path="."/> elements: an extra, missing or
+            # changed attribute, or an extra or missing element, is a FAIL.
+            # (Duplicate attributes never get here: the parser records them as X.)
+            rules_in() {
+              mawk -F'\t' -v p="$1" '
+                $1=="E" && $3==p { kid[$2] = 1; print $2 "\t#" $4 }
+                $1=="A" && ($2 in kid) { print $2 "\t" ($3 != "" ? $3 "|" : "") $4 ($5 != "" ? "(" $5 ")" : "") "=" $6 }
+              ' rules.rec | LC_ALL=C sort -t "$TAB" -k1,1n -k2,2 | mawk -F'\t' '
+                $1 != id { if (id != "") print line; id = $1; line = $2; next }
+                { line = line ";" $2 }
+                END { if (id != "") print line }
+              ' | LC_ALL=C sort | tr '\n' ' '
+            }
+            CLOUD=$(section cloud-backup); D2D=$(section device-transfer); XPLAT=$(section cross-platform-transfer)
+            check BK-CLOUD-SECTION "Exactly one <cloud-backup> section, with no attributes" "$(sec_state "$CLOUD")" "count: 1; attributes: 0"
+            check BK-D2D-SECTION "Exactly one <device-transfer> section, with no attributes" "$(sec_state "$D2D")" "count: 1; attributes: 0"
+            check BK-NO-CROSS-PLATFORM "No <cross-platform-transfer> section" "$(count "$XPLAT")" 0
+            check BK-NO-INCLUDE "No <include> rules anywhere" "$(mawk -F'\t' '$1=="E" && $4=="include"' rules.rec | wc -l)" 0
+            EXPECTED=$(printf '#exclude;domain=%s;path=.\n' root file database sharedpref external device_root device_file device_database device_sharedpref | LC_ALL=C sort | tr '\n' ' ')
+            for s in CLOUD:cloud-backup D2D:device-transfer; do
+              var=${s%%:*}; label=${s#*:}; id=${!var}
+              if [ "$(count "$id")" = 1 ]; then
+                check "BK-$var-RULES" "<$label>: exactly the 9 expected exclude elements, each with only domain and path=\".\"" "$(rules_in "$id")" "$EXPECTED"
+              else
+                result INCONCLUSIVE "BK-$var-RULES" "<$label>: exactly the 9 expected exclude elements, each with only domain and path=\".\"" "section count is not 1"
+              fi
+            done
+          else
+            for id in $RULE_IDS; do
+              result INCONCLUSIVE "$id" "Backup rules check" "compiled rules file not read or not understood (unrecognised lines: $R_UNKNOWN; text nodes: $R_TEXT; namespace declarations: $R_NS)"
+            done
+          fi
+          result NOTE SCOPE "What this shows" "Evidence from the APK file only. It does not show what a phone does; only a device test (T9) can, and this workflow runs none."
+
+      - name: 9. Summary
+        if: always()
+        run: |
+          RES="$RUNNER_TEMP/verify-results.txt"
+          [ -f "$RES" ] || RES=/dev/null
+          show() { while IFS= read -r l; do printf '%s\n' "$l"; done < "$RES"; }
+          REQUIRED="TOOLS META-ID META-NAME META-NOT-EXPIRED META-RUN META-COMMIT META-DIGEST META-SIZE DOWNLOAD
+            ZIP-SHA256-PINNED ZIP-SHA256-GITHUB ZIP-SIZE ZIP-CRC ZIP-ENTRIES APK-SIZE APK-CRC SIG-VERIFY SIG-CERT
+            PKG-ID PKG-VERSION-CODE PKG-VERSION-NAME SDK-MIN SDK-TARGET PERMISSIONS PERMISSIONS-DECLARED
+            BK-MANIFEST-PARSED BK-ALLOW-BACKUP BK-RULES-DECLARED BK-RULES-LOOKUP BK-RULES-PARSED BK-RULES-ROOT
+            BK-RULES-STRUCTURE BK-CLOUD-SECTION BK-D2D-SECTION BK-NO-CROSS-PLATFORM BK-NO-INCLUDE BK-CLOUD-RULES
+            BK-D2D-RULES"
+          MISSING=""
+          for id in $REQUIRED; do
+            grep -q "^[A-Z]* | $id | " "$RES" || MISSING="$MISSING $id"
+          done
+          if grep -q '^FAIL | ' "$RES"; then OVERALL=FAIL
+          elif [ -n "$MISSING" ] || grep -q '^INCONCLUSIVE | ' "$RES"; then OVERALL=INCONCLUSIVE
+          else OVERALL=PASS
+          fi
+          {
+            echo "## Artifact 13578151976 verification: $OVERALL"
+            echo
+            echo "Run $GITHUB_RUN_ID, attempt $GITHUB_RUN_ATTEMPT, event $GITHUB_EVENT_NAME, workflow commit ${GITHUB_WORKFLOW_SHA:-unknown}, finished $(date -u +%FT%TZ)."
+            if [ -n "$MISSING" ]; then echo; echo "Checks that did not run:$MISSING"; fi
+            echo
+            echo '```'
+            show
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "=== RESULTS ==="
+          show
+          if [ -n "$MISSING" ]; then echo "Checks that did not run:$MISSING"; fi
+          echo "=== OVERALL: $OVERALL ==="
+          [ "$OVERALL" = PASS ]
+
+      - name: 10. Delete downloaded files from the runner
+        if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/verify" "$RUNNER_TEMP/verify-lib.sh" "$RUNNER_TEMP/verify-results.txt"
+          echo "Deleted the downloaded and working files. GitHub discards this runner after the job."
