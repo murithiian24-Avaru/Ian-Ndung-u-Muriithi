@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { FundRequest, RequestStatus, Wallet, TransactionCategory } from '../types';
 import { analyzeRequest } from '../services/geminiService';
 import { MessageSquare, Paperclip, Check, X, Wand2, FileText, Loader2 } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
+import StatusBadge from './ui/StatusBadge';
+import Card from './ui/Card';
 
 interface ChatRequestsProps {
   requests: FundRequest[];
@@ -71,14 +74,8 @@ export default function ChatRequests({ requests, setRequests, wallet, setWallet 
                     </div>
                     <p className="text-sm text-gray-600 line-clamp-1">{req.reason}</p>
                     <div className="mt-2 flex justify-between items-center">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                            req.status === RequestStatus.PENDING ? 'bg-amber-100 text-amber-700' :
-                            req.status === RequestStatus.APPROVED ? 'bg-green-100 text-green-700' :
-                            'bg-gray-100 text-gray-600'
-                        }`}>
-                            {req.status}
-                        </span>
-                        <span className="font-bold text-sm">KES {req.amount.toLocaleString()}</span>
+                        <StatusBadge status={req.status} />
+                        <span className="font-bold text-sm">{formatCurrency(req.amount)}</span>
                     </div>
                 </div>
             ))}
@@ -90,10 +87,10 @@ export default function ChatRequests({ requests, setRequests, wallet, setWallet 
         {selectedRequest ? (
             <>
                 <div className="p-6 flex-1 overflow-y-auto">
-                    <div className="bg-white p-6 rounded-xl shadow-sm mb-6">
+                    <Card className="mb-6 !rounded-xl">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold text-gray-900">{selectedRequest.category} Request</h3>
-                            <span className="text-2xl font-bold text-brand-600">KES {selectedRequest.amount.toLocaleString()}</span>
+                            <span className="text-2xl font-bold text-brand-600">{formatCurrency(selectedRequest.amount)}</span>
                         </div>
                         <p className="text-gray-700 mb-6 text-lg">"{selectedRequest.reason}"</p>
                         
@@ -128,7 +125,7 @@ export default function ChatRequests({ requests, setRequests, wallet, setWallet 
                                 </div>
                             </div>
                         ) : null}
-                    </div>
+                    </Card>
                 </div>
 
                 {/* Action Footer */}

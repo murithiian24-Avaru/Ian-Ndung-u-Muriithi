@@ -2,6 +2,8 @@ import React from 'react';
 import { Wallet, FundRequest, RequestStatus } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { ArrowUpRight, ArrowDownLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
+import Card from './ui/Card';
 
 interface DashboardProps {
   wallet: Wallet;
@@ -27,19 +29,19 @@ export default function Dashboard({ wallet, requests }: DashboardProps) {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+        <Card className="relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <ArrowUpRight size={64} className="text-brand-600" />
           </div>
           <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Wallet Balance</h3>
-          <p className="text-4xl font-bold text-gray-900 mt-2">KES {wallet.balance.toLocaleString()}</p>
+          <p className="text-4xl font-bold text-gray-900 mt-2">{formatCurrency(wallet.balance)}</p>
           <div className="mt-4 flex items-center text-sm text-green-600">
             <CheckCircle size={16} className="mr-1" />
             <span>Secure & Ready</span>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <Card>
            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Pending Requests</h3>
            <div className="flex items-end mt-2">
              <span className="text-4xl font-bold text-gray-900">{pendingRequests}</span>
@@ -49,7 +51,7 @@ export default function Dashboard({ wallet, requests }: DashboardProps) {
              <AlertCircle size={16} className="mr-1" />
              <span>Action required</span>
            </div>
-        </div>
+        </Card>
 
         <div className="bg-gradient-to-br from-brand-600 to-brand-800 p-6 rounded-2xl shadow-lg text-white">
           <h3 className="text-sm font-medium text-brand-100 uppercase tracking-wider">Next Scheduled Payout</h3>
@@ -65,7 +67,7 @@ export default function Dashboard({ wallet, requests }: DashboardProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Allocation Chart */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-96">
+        <Card className="h-96">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Fund Allocation</h3>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -84,16 +86,16 @@ export default function Dashboard({ wallet, requests }: DashboardProps) {
                 ))}
               </Pie>
               <Tooltip 
-                formatter={(value: number) => `KES ${value.toLocaleString()}`}
+                formatter={(value: number) => formatCurrency(value)}
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               />
               <Legend verticalAlign="bottom" height={36}/>
             </PieChart>
           </ResponsiveContainer>
-        </div>
+        </Card>
 
         {/* Recent Transactions List (Simulated) */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-96 overflow-y-auto">
+        <Card className="h-96 overflow-y-auto">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Activity</h3>
           <div className="space-y-4">
             {[
@@ -113,12 +115,12 @@ export default function Dashboard({ wallet, requests }: DashboardProps) {
                   </div>
                 </div>
                 <span className={`font-semibold ${tx.amount > 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                  {tx.amount > 0 ? '+' : ''}KES {Math.abs(tx.amount).toLocaleString()}
+                  {tx.amount > 0 ? '+' : ''}{formatCurrency(Math.abs(tx.amount))}
                 </span>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
