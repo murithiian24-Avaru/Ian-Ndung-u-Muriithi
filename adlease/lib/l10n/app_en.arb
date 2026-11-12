@@ -96,6 +96,7 @@
     }
   },
   "notAvailableYet": "Not available yet",
+  "referralRewardsNotAvailable": "Referral rewards are not available yet. No bonus is paid for referrals.",
   "notificationsNotAvailable": "AdLease does not send notifications yet.",
   "demoVersionNotice": "AdLease is in development. In this version, ads and rewards are simulated, and no real money is held or paid out."
 }

@@ -3,10 +3,17 @@
          profile manifests. Without it, network calls (Google Fonts, Firebase,
          ads) fail in a release build. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Backup is off: AdLease stores accounts and demo records on the phone
+         without encryption, so they must not be copied to cloud backups or to
+         another device. allowBackup="false" covers Android 11 and lower;
+         dataExtractionRules covers Android 12 and higher, where some
+         manufacturers still allow device-to-device transfer otherwise. -->
     <application
         android:label="adlease"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
         <activity
             android:name=".MainActivity"
             android:exported="true"

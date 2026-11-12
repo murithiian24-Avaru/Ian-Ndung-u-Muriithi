@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:adlease/config/theme.dart';
+import 'package:adlease/l10n/app_localizations.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/services/referral_service.dart';
 import 'package:adlease/widgets/gradient_button.dart';
-import 'package:adlease/utils/currency.dart';
 
 class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});
@@ -18,7 +18,6 @@ class ReferralScreen extends StatefulWidget {
 class _ReferralScreenState extends State<ReferralScreen> {
   final ReferralService _referralService = ReferralService();
   int _referralCount = 0;
-  double _referralEarnings = 0;
 
   @override
   void initState() {
@@ -30,12 +29,8 @@ class _ReferralScreenState extends State<ReferralScreen> {
     final user = context.read<AuthProvider>().user;
     if (user != null) {
       final count = await _referralService.getReferralCount(user.uid);
-      final earnings = await _referralService.getTotalReferralEarnings(
-        user.uid,
-      );
       setState(() {
         _referralCount = count;
-        _referralEarnings = earnings;
       });
     }
   }
@@ -96,7 +91,8 @@ class _ReferralScreenState extends State<ReferralScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Share your referral code and earn ${formatKsh(ReferralService.referralReward)} (demo)\nfor each friend who joins!',
+            'Share your referral code with friends.\n'
+            '${AppLocalizations.of(context)!.referralRewardsNotAvailable}',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -250,20 +246,24 @@ class _ReferralScreenState extends State<ReferralScreen> {
             child: Column(
               children: [
                 Icon(
-                  Icons.monetization_on,
+                  Icons.card_giftcard,
                   color: AdLeaseTheme.accentGold,
                   size: 32,
                 ),
                 const SizedBox(height: 8),
+                // Referral rewards are not paid in this version, so no
+                // amount is shown.
                 Text(
-                  formatKsh(_referralEarnings),
+                  AppLocalizations.of(context)!.notAvailableYet,
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
-                  'Referral Earnings',
+                  AppLocalizations.of(context)!.referralRewards,
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                 ),
               ],
@@ -303,9 +303,8 @@ class _ReferralScreenState extends State<ReferralScreen> {
           _buildStep('2', 'Friends sign up using your code'),
           _buildStep(
             '3',
-            'You both earn a ${formatKsh(ReferralService.referralReward)} bonus (demo)!',
+            AppLocalizations.of(context)!.referralRewardsNotAvailable,
           ),
-          _buildStep('4', 'No limit on referrals!'),
         ],
       ),
     );
