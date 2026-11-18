@@ -1,6 +1,6 @@
 // Tests for the audit fixes on branch fix/adlease-audit-safe-fixes.
 // Run with: flutter test
-import 'package:flutter_test/flutter.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adlease/services/ad_service.dart';
 import 'package:adlease/services/auth_service.dart';
@@ -103,23 +103,6 @@ void main() {
     });
   });
 
-  group('AuthService referral code generation', () {
-    test(
-      'generates unique codes in the expected format for sequential signups',
-      () async {
-        final auth = AuthService();
-        final codes = <String>{};
-        for (var i = 0; i < 20; i++) {
-          final user = await auth.signUp(
-            email: 'referral-test-$i@example.com',
-            password: 'Password123!',
-            fullName: 'Referral Test $i',
-            phoneNumber: '+254700000000',
-            country: 'Kenya',
-          );
-          expect(user.referralCode, matches(RegExp(r'^ADL-[A-Z0-9]{8}
-  });
-
   group('AuthService placeholders (findings H1, H2)', () {
     test('Google sign-in no longer logs into a demo account', () async {
       expect(() => AuthService().signInWithGoogle(), throwsA(isA<Exception>()));
@@ -132,25 +115,23 @@ void main() {
       );
     });
   });
-}
-)));
-          codes.add(user.referralCode);
-        }
-        expect(codes, hasLength(20));
-      },
-    );
-  });
-
-  group('AuthService placeholders (findings H1, H2)', () {
-    test('Google sign-in no longer logs into a demo account', () async {
-      expect(() => AuthService().signInWithGoogle(), throwsA(isA<Exception>()));
-    });
-
-    test('password reset does not pretend to send an email', () async {
-      expect(
-        () => AuthService().resetPassword('someone@example.com'),
-        throwsA(isA<Exception>()),
-      );
+  group('Referral code regression', () {
+    test('codes follow format and are unique across sequential signups', () async {
+      final auth = AuthService();
+      final codes = <String>{};
+      for (var i = 0; i < 20; i++) {
+        final user = await auth.signUp(
+          email: 'referral-test-$i@example.com',
+          password: 'Password123!',
+          fullName: 'Referral Test $i',
+          phoneNumber: '+254700000000',
+          country: 'Kenya',
+        );
+        expect(user.referralCode, matches(RegExp(r'^ADL-[A-Z0-9]{8})));
+        codes.add(user.referralCode);
+      }
+      expect(codes.length, 20);
     });
   });
+
 }
