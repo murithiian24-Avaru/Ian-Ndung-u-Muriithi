@@ -101,7 +101,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import json, os
-          tests, failures, prints = {}, [], []
+          tests = {}
           if os.path.exists('test.json'):
               for line in open('test.json'):
                   try: e = json.loads(line)
@@ -110,7 +110,6 @@ jobs:
                   if t == 'testStart': tests[e['test']['id']] = {'name': e['test']['name'], 'msgs': []}
                   elif t in ('print', 'error') and e.get('testID') in tests:
                       tests[e['testID']]['msgs'].append(e.get('message') or e.get('error', ''))
-                      if t == 'print' and 'LAYOUT SURVEY' in (e.get('message') or ''): prints.append(e['message'])
                   elif t == 'testDone' and e.get('testID') in tests:
                       d = tests[e['testID']]; d['result'] = e['result']; d['skipped'] = e.get('skipped', False); d['hidden'] = e.get('hidden', False)
           done = [d for d in tests.values() if 'result' in d and not d.get('hidden')]
@@ -123,8 +122,16 @@ jobs:
                   for m in d['msgs'][:2]:
                       lines = [l for l in m.splitlines() if l.strip() and not l.startswith('══')]
                       f.write('\n'.join(lines[:12]) + '\n')
+          layout = [d for d in done if 'fits:' in d['name']]
+          layout_failed = [d for d in layout if d['result'] != 'success']
+          layout_skipped = [d for d in layout if d.get('skipped')]
           with open('layout-survey.txt', 'w') as f:
-              f.write('\n'.join(prints) or '(survey not run)')
+              f.write(f"layout tests: {len(layout)}  passed: {len(layout) - len(layout_failed) - len(layout_skipped)}  failed: {len(layout_failed)}  skipped: {len(layout_skipped)}\n")
+              for d in layout_failed:
+                  f.write(f"\nFAILED: {d['name']}\n")
+                  for m in d['msgs'][:2]:
+                      lines = [l for l in m.splitlines() if l.strip() and not l.startswith('══')]
+                      f.write('\n'.join(lines[:12]) + '\n')
           PY
 
       - name: flutter build apk --debug
