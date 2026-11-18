@@ -176,7 +176,7 @@ void main() {
       const password = 'LegacyPass123!';
       final legacyHash = sha256.convert(utf8.encode(password)).toString();
       final prefs = await SharedPreferences.getInstance();
-      prefs.setString(
+      await prefs.setString(
         'adlease_users',
         jsonEncode([
           {
