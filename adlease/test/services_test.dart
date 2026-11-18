@@ -13,56 +13,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('WalletService.requestWithdrawal (finding C5)', () {
-    test('deducts the requested amount from the balance', () async {
-      final wallet = WalletService();
-      await wallet.addEarning('u1', 10, 'test earning');
-
-      await wallet.requestWithdrawal(
-        userId: 'u1',
-        amount: 6,
-        paymentMethod: 'M-Pesa',
-        paymentDetails: '0700000000',
-      );
-
-      final after = await wallet.getWallet('u1');
-      expect(after.balance, 4);
+  group('WalletService disables customer money movement', () {
+    test('does not allow local earnings or reward credits', () async {
+      expect(() => WalletService().addEarning('u1', 10, 'test'), throwsA(isA<StateError>()));
     });
-
-    test('rejects a second withdrawal of the same balance', () async {
-      final wallet = WalletService();
-      await wallet.addEarning('u1', 10, 'test earning');
-
-      await wallet.requestWithdrawal(
-        userId: 'u1',
-        amount: 10,
-        paymentMethod: 'M-Pesa',
-        paymentDetails: '0700000000',
-      );
-
-      expect(
-        () => wallet.requestWithdrawal(
-          userId: 'u1',
-          amount: 10,
-          paymentMethod: 'M-Pesa',
-          paymentDetails: '0700000000',
-        ),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    test('rejects zero or negative amounts', () async {
-      final wallet = WalletService();
-      await wallet.addEarning('u1', 10, 'test earning');
-      expect(
-        () => wallet.requestWithdrawal(
-          userId: 'u1',
-          amount: 0,
-          paymentMethod: 'M-Pesa',
-          paymentDetails: '0700000000',
-        ),
-        throwsA(isA<Exception>()),
-      );
+    test('does not allow withdrawals', () async {
+      expect(() => WalletService().requestWithdrawal(userId: 'u1', amount: 1, paymentMethod: 'M-Pesa', paymentDetails: '0700000000'), throwsA(isA<StateError>()));
     });
   });
 
