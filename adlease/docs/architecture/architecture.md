@@ -1,3 +1,5 @@
+> **SUPERSEDED IN PART — 18 November 2026.** The rewarded-ad and ad-to-phone-credit flows below are historical proposals and are not part of the approved product model. Do not implement those flows. Use the partner-neutral technology-provider architecture and release gates in docs/TECHNOLOGY_PROVIDER_ARCHITECTURE_AND_IMPLEMENTATION_PLAN.md. Advertising, financing and payments remain disabled pending policy, privacy, legal and partner approvals.
+
 # Proposed architecture and data flows
 
 > Status: **proposed**. Nothing described here is built or deployed.
