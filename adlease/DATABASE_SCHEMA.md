@@ -1,3 +1,5 @@
+> **HISTORICAL DRAFT — NOT THE CURRENT DATA MODEL.** The wallet, ad reward, ad view, ownership-progress and referral-reward fields below are legacy proposals and must not be used to create customer value. The approved model has no ad-derived customer rewards. Financing contracts and repayments must be represented separately from Avaru advertising revenue and only from a verified financing partner. See docs/TECHNOLOGY_PROVIDER_ARCHITECTURE_AND_IMPLEMENTATION_PLAN.md.
+
 # AdLease Database Schema
 
 > **Draft. Not deployed.** No Firebase project is configured for the app in
