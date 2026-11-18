@@ -24,7 +24,9 @@ class FirebaseBootstrap {
   static Future<void> initialize() async {
     if (!_useEmulators) return;
     if (!kDebugMode) {
-      throw StateError('Firebase Emulator mode is only permitted in debug builds.');
+      throw StateError(
+        'Firebase Emulator mode is only permitted in debug builds.',
+      );
     }
 
     final host = _configuredHost.isNotEmpty
