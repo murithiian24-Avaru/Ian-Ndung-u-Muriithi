@@ -1,6 +1,6 @@
 // Regression tests for the Phase 2 product decisions:
-// A. withdrawals hidden, B. generic sample ads, C. KSh amounts,
-// D. a simulated ad reward goes to phone-ownership progress only.
+// Covers legacy withdrawal restrictions, generic sample data, currency formatting
+// and the new disabled-ad / financing feature gates.
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
