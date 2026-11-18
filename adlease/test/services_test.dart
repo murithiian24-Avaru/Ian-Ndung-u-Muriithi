@@ -188,7 +188,7 @@ void main() {
             'isVerified': false,
             'isActive': true,
             'passwordHash': encodedHash,
-          }
+          },
         ]),
       );
       final signedIn = await AuthService().signIn(
@@ -221,7 +221,7 @@ void main() {
             'isVerified': false,
             'isActive': true,
             'passwordHash': legacyHash,
-          }
+          },
         ]),
       );
 
@@ -243,5 +243,4 @@ void main() {
       expect(migratedHash, isNot(legacyHash));
     });
   });
-
 }
