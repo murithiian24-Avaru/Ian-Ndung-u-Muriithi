@@ -1,16 +1,14 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
-import { initializeApp, deleteApp } from "firebase-admin/app";
+import { getApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { applyVerifiedPartnerEvent } from "../src/index";
 
-const projectId = "adlease-emulator-test";
-let app: ReturnType<typeof initializeApp>;
+let app: ReturnType<typeof getApp>;
 let db: ReturnType<typeof getFirestore>;
 
 before(async () => {
-  process.env.GCLOUD_PROJECT = projectId;
-  app = initializeApp({ projectId }, "ledger-test");
+  app = getApp();
   db = getFirestore(app);
   await db.recursiveDelete(db.collection("users"));
   await db.recursiveDelete(db.collection("adSessions"));
@@ -19,7 +17,7 @@ before(async () => {
   await db.recursiveDelete(db.collection("wallets"));
   await db.recursiveDelete(db.collection("dailyRewardCounters"));
 });
-after(async () => { await deleteApp(app); });
+after(async () => { /* Firebase Functions module owns the default app. */ });
 
 async function seed(uid: string, sessionId: string) {
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());

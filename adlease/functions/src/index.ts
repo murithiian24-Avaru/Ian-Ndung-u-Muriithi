@@ -139,8 +139,7 @@ export const startAdSession = onCall(async (request) => {
 export async function applyVerifiedPartnerEvent(input: {
   providerEventId: string; sessionId: string; uid: string;
 }) {
-  if (!input.providerEventId || !input.sessionId || !input.uid ||
-      false) {
+  if (!input.providerEventId || !input.sessionId || !input.uid) {
     throw new Error("Invalid verified partner event.");
   }
   const eventId = safeId(input.providerEventId);
@@ -165,8 +164,7 @@ export async function applyVerifiedPartnerEvent(input: {
     if (!expiry || expiry.getTime() < now.getTime() || session.get("dayKey") !== dayKey) {
       throw new Error("Ad session expired or outside its Nairobi day.");
     }
-    const userStatus = user.get("status");
-    if (!user.exists || userStatus !== "active" || user.get("verificationStatus") !== "approved") {
+    if (!user.exists || user.get("status") !== "active" || user.get("verificationStatus") !== "approved") {
       throw new Error("Account is not eligible.");
     }
     const credited = Number(counter.get("creditedCount") ?? 0);
