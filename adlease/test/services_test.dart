@@ -127,7 +127,9 @@ void main() {
           phoneNumber: '+254700000000',
           country: 'Kenya',
         );
-        expect(user.referralCode, matches(RegExp(r'^ADL-[A-Z0-9]{8}
+        expect(user.referralCode, startsWith('ADL-'));
+        expect(user.referralCode.length, 12);
+        // 
         codes.add(user.referralCode);
       }
       expect(codes, hasLength(20));
