@@ -197,15 +197,12 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          # All tracked .dart files under adlease/ (lib and test). Files made by
-          # flutter gen-l10n are git-ignored, so they are not included.
+          # Check tracked Dart files without rewriting files or treating
+          # generated native plugin registrants as Dart formatting failures.
           files=$(git ls-files -- '*.dart')
-          echo "Checked $(echo "$files" | wc -l) files" | tee ../format.txt
+          echo "Checked $(echo "$files" | wc -l) tracked Dart files" | tee ../format.txt
           [ -n "$files" ] || { echo "no Dart files found" | tee -a ../format.txt; exit 1; }
-          dart format $files 2>&1 | tail -2 | tee -a ../format.txt
-          git diff --stat -- . | tee -a ../format.txt
-          git diff -- . > ../format.diff
-          git diff --quiet -- .
+          dart format --output=none --set-exit-if-changed $files 2>&1 | tee -a ../format.txt
 
       - name: Post reports
         if: always()
@@ -249,11 +246,7 @@ jobs:
             { echo '```yaml'; cat adlease/pubspec.lock; echo '```'; } > lock.md
             post "AdLease resolved pubspec.lock (Flutter $V)" neutral "pubspec.lock resolved by Flutter $V" lock.md
           fi
-          if [ "$FORMAT" = failure ] && [ -s format.diff ]; then
-            # gzip + base64 so the whole patch fits in one check report.
-            { echo '```'; gzip -9c format.diff | base64 -w 120; echo '```'; } > fmt.md
-            post "AdLease dart format changes (Flutter $V)" neutral "dart format changes needed" fmt.md
-          fi
+i
           [ "$conclusion" = success ]
 
   admin-dashboard:
