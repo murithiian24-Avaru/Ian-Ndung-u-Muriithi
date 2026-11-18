@@ -159,9 +159,13 @@ void main() {
 
     test('verifies the PBKDF2-HMAC-SHA256 known vector', () async {
       const password = 'Password123!';
-      final encodedHash = 'pbkdf2_sha256' + r' + '120000' + r' +
-          '00112233445566778899aabbccddeeff' + r' +
-          'a347c459bf2630291c32e2074384328bfce1c0fc110d4dac12d85f85b8ab88ee';
+      final delimiter = String.fromCharCode(36);
+      final encodedHash = [
+        'pbkdf2_sha256',
+        '120000',
+        '00112233445566778899aabbccddeeff',
+        'a347c459bf2630291c32e2074384328bfce1c0fc110d4dac12d85f85b8ab88ee',
+      ].join(delimiter);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
         'adlease_users',
