@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:uuid/uuid.dart';
 import 'package:adlease/models/ownership_model.dart';
 import 'package:adlease/models/phone_model.dart';
 import 'package:adlease/services/storage_service.dart';
