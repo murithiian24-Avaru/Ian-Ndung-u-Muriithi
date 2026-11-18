@@ -14,8 +14,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('signup, profile, signout, login, phone, ad reward and wallet journey',
-      () async {
+  test(
+    'signup, profile, signout, login, phone, ad reward and wallet journey',
+    () async {
     final auth = AuthProvider();
 
     expect(
@@ -37,9 +38,18 @@ void main() {
 
     await auth.signOut();
     expect(auth.isAuthenticated, isFalse);
-    expect(await auth.signIn(email: 'journey@example.com', password: 'wrong'), isFalse);
+    expect(
+      await auth.signIn(email: 'journey@example.com', password: 'wrong'),
+      isFalse,
+    );
     expect(auth.isAuthenticated, isFalse);
-    expect(await auth.signIn(email: 'journey@example.com', password: 'Password123!'), isTrue);
+    expect(
+      await auth.signIn(
+        email: 'journey@example.com',
+        password: 'Password123!',
+      ),
+      isTrue,
+    );
     expect(auth.user?.uid, uid);
 
     final ownership = OwnershipProvider();
@@ -70,8 +80,9 @@ void main() {
     expect(wallet.transactions, isEmpty);
   });
 
-  test('duplicate signup is rejected and wrong password cannot authenticate',
-      () async {
+  test(
+    'duplicate signup is rejected and wrong password cannot authenticate',
+    () async {
     final auth = AuthProvider();
     expect(
       await auth.signUp(
@@ -96,9 +107,18 @@ void main() {
       isFalse,
     );
     expect(auth.error, contains('already exists'));
-    expect(await auth.signIn(email: 'duplicate@example.com', password: 'wrong'), isFalse);
+    expect(
+      await auth.signIn(email: 'duplicate@example.com', password: 'wrong'),
+      isFalse,
+    );
     expect(auth.isAuthenticated, isFalse);
-    expect(await auth.signIn(email: 'duplicate@example.com', password: 'Password123!'), isTrue);
+    expect(
+      await auth.signIn(
+        email: 'duplicate@example.com',
+        password: 'Password123!',
+      ),
+      isTrue,
+    );
   });
 
   test('reward without phone credits nothing and does not consume daily cap',
@@ -126,8 +146,9 @@ void main() {
     expect(await AdService().getRemainingAdsToday(uid), AdService.maxAdsPerDay);
   });
 
-  test('reward daily limit blocks the next claim and preserves exact progress',
-      () async {
+  test(
+    'reward daily limit blocks the next claim and preserves exact progress',
+    () async {
     final auth = AuthProvider();
     expect(
       await auth.signUp(
