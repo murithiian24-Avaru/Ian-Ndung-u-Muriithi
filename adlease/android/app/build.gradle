@@ -32,7 +32,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // Flutter 3.47 supports Android API 24 and newer (API 23 is unsupported).
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 36 // Google Play new-app requirement from 31 August 2026
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
