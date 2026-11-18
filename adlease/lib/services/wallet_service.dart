@@ -59,14 +59,6 @@ class WalletService {
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
-  Future<void> _addTransaction(TransactionModel transaction) async {
-    final data = await _storage.getString(_transactionsKey);
-    final list = data != null
-        ? List<Map<String, dynamic>>.from(jsonDecode(data))
-        : <Map<String, dynamic>>[];
-    list.add(transaction.toMap());
-    await _storage.saveString(_transactionsKey, jsonEncode(list));
-  }
 
   Future<List<Map<String, dynamic>>> _getWallets() async {
     final data = await _storage.getString(_walletsKey);
