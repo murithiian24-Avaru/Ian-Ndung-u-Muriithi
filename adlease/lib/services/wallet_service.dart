@@ -30,112 +30,23 @@ class WalletService {
     return wallet;
   }
 
+  /// Customer credits are not part of the approved product model.
   Future<WalletModel> addEarning(
     String userId,
     double amount,
     String description,
   ) async {
-    final wallets = await _getWallets();
-    final index = wallets.indexWhere((w) => w['userId'] == userId);
-
-    WalletModel wallet;
-    if (index != -1) {
-      wallet = WalletModel.fromMap(wallets[index]);
-    } else {
-      wallet = WalletModel(
-        userId: userId,
-        balance: 0,
-        totalEarnings: 0,
-        totalWithdrawn: 0,
-        lastUpdated: DateTime.now(),
-      );
-    }
-
-    wallet = wallet.copyWith(
-      balance: wallet.balance + amount,
-      totalEarnings: wallet.totalEarnings + amount,
-      lastUpdated: DateTime.now(),
-    );
-
-    if (index != -1) {
-      wallets[index] = wallet.toMap();
-    } else {
-      wallets.add(wallet.toMap());
-    }
-    await _saveWallets(wallets);
-
-    await _addTransaction(
-      TransactionModel(
-        id: const Uuid().v4(),
-        userId: userId,
-        type: TransactionType.adReward,
-        amount: amount,
-        status: TransactionStatus.completed,
-        description: description,
-        createdAt: DateTime.now(),
-      ),
-    );
-
-    return wallet;
+    throw StateError('Customer earnings and ad rewards are disabled.');
   }
 
+  /// Withdrawals remain unavailable; no customer cash wallet is active.
   Future<WithdrawalRequest> requestWithdrawal({
     required String userId,
     required double amount,
     required String paymentMethod,
     required String paymentDetails,
   }) async {
-    if (amount <= 0) {
-      throw Exception('Enter an amount greater than zero');
-    }
-    final wallet = await getWallet(userId);
-    if (wallet.balance < amount) {
-      throw Exception('Insufficient balance');
-    }
-
-    // Reserve the amount immediately so the same balance cannot be requested
-    // twice. The request stays "pending"; totalWithdrawn is only updated once
-    // a payout is actually made.
-    final wallets = await _getWallets();
-    final walletIndex = wallets.indexWhere((w) => w['userId'] == userId);
-    if (walletIndex != -1) {
-      wallets[walletIndex] = wallet
-          .copyWith(
-            balance: wallet.balance - amount,
-            lastUpdated: DateTime.now(),
-          )
-          .toMap();
-      await _saveWallets(wallets);
-    }
-
-    final request = WithdrawalRequest(
-      id: const Uuid().v4(),
-      userId: userId,
-      amount: amount,
-      paymentMethod: paymentMethod,
-      paymentDetails: paymentDetails,
-      status: 'pending',
-      requestedAt: DateTime.now(),
-    );
-
-    final withdrawals = await _getWithdrawals();
-    withdrawals.add(request.toMap());
-    await _storage.saveString(_withdrawalsKey, jsonEncode(withdrawals));
-
-    await _addTransaction(
-      TransactionModel(
-        id: const Uuid().v4(),
-        userId: userId,
-        type: TransactionType.withdrawal,
-        amount: -amount,
-        status: TransactionStatus.pending,
-        description: 'Withdrawal via $paymentMethod',
-        createdAt: DateTime.now(),
-        referenceId: request.id,
-      ),
-    );
-
-    return request;
+    throw StateError('Customer withdrawals are disabled.');
   }
 
   Future<List<TransactionModel>> getTransactions(String userId) async {
