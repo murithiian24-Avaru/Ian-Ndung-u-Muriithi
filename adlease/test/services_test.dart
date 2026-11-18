@@ -130,7 +130,7 @@ void main() {
         expect(user.referralCode, matches(RegExp(r'^ADL-[A-Z0-9]{8})));
         codes.add(user.referralCode);
       }
-      expect(codes.length, 20);
+      expect(codes, hasLength(20));
     });
   });
 
