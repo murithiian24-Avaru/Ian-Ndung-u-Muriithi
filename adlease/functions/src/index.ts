@@ -32,9 +32,16 @@ export const initializeUserProfile = onCall(async (request) => {
   await db.runTransaction(async (tx) => {
     const existing = await tx.get(userRef);
     if (existing.exists) return;
+    const fullName = String(request.data?.fullName ?? "").trim().slice(0, 100);
+    const phoneNumber = String(request.data?.phoneNumber ?? "").trim().slice(0, 24);
+    const country = String(request.data?.country ?? "").trim().slice(0, 60);
+    if (!fullName || !phoneNumber || !country) {
+      throw new HttpsError("invalid-argument", "Name, phone number and country are required.");
+    }
     tx.create(userRef, {
       uid: auth.uid,
       email: String(auth.token.email ?? ""),
+      fullName, phoneNumber, country,
       status: "pending",
       verificationStatus: "not_started",
       createdAt: FieldValue.serverTimestamp(),
