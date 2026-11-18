@@ -6,7 +6,6 @@ import 'package:adlease/config/routes.dart';
 import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/wallet_provider.dart';
 import 'package:adlease/providers/auth_provider.dart';
-import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/l10n/app_localizations.dart';
 import 'package:adlease/utils/currency.dart';
 import 'package:adlease/models/transaction_model.dart';
