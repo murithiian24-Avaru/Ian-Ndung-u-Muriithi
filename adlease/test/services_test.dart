@@ -172,6 +172,107 @@ void main() {
       );
     });
 
+
+    test('verifies a known PBKDF2-HMAC-SHA256 test vector', () async {
+      const password = 'Password123!';
+      const encodedHash =
+          'pbkdf2_sha256$120000$00112233445566778899aabbccddeeff
+      const password = 'LegacyPass123!';
+      final legacyHash = sha256.convert(utf8.encode(password)).toString();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adlease_users',
+        jsonEncode([
+          {
+            'uid': 'legacy-user',
+            'email': 'legacy@example.com',
+            'fullName': 'Legacy User',
+            'phoneNumber': '+254700000003',
+            'country': 'Kenya',
+            'profilePictureUrl': '',
+            'referralCode': 'ADL-LEGACY01',
+            'referredBy': null,
+            'deviceModel': '',
+            'deviceId': '',
+            'createdAt': DateTime.now().toIso8601String(),
+            'lastLoginAt': DateTime.now().toIso8601String(),
+            'isVerified': false,
+            'isActive': true,
+            'passwordHash': legacyHash,
+          }
+        ]),
+      );
+
+      final auth = AuthService();
+      final user = await auth.signIn(email: 'legacy@example.com', password: password);
+      expect(user.uid, 'legacy-user');
+
+      final migrated = List<Map<String, dynamic>>.from(
+        jsonDecode(prefs.getString('adlease_users')!),
+      ).single['passwordHash'] as String;
+      expect(migrated, startsWith('pbkdf2_sha256$120000
+    test('Google sign-in no longer logs into a demo account', () async {
+      expect(() => AuthService().signInWithGoogle(), throwsA(isA<Exception>()));
+    });
+
+    test('password reset does not pretend to send an email', () async {
+      expect(
+        () => AuthService().resetPassword('someone@example.com'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+}
+));
+      expect(migrated, isNot(legacyHash));
+    });
+  });
+
+  group('AuthService placeholders (findings H1, H2)', () {
+    test('Google sign-in no longer logs into a demo account', () async {
+      expect(() => AuthService().signInWithGoogle(), throwsA(isA<Exception>()));
+    });
+
+    test('password reset does not pretend to send an email', () async {
+      expect(
+        () => AuthService().resetPassword('someone@example.com'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+}
+
+          'a347c459bf2630291c32e2074384328bfce1c0fc110d4dac12d85f85b8ab88ee';
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'adlease_users',
+        jsonEncode([
+          {
+            'uid': 'pbkdf2-vector',
+            'email': 'vector@example.com',
+            'fullName': 'Vector Test',
+            'phoneNumber': '+254700000004',
+            'country': 'Kenya',
+            'profilePictureUrl': '',
+            'referralCode': 'ADL-VECTOR01',
+            'referredBy': null,
+            'deviceModel': '',
+            'deviceId': '',
+            'createdAt': DateTime.now().toIso8601String(),
+            'lastLoginAt': DateTime.now().toIso8601String(),
+            'isVerified': false,
+            'isActive': true,
+            'passwordHash': encodedHash,
+          }
+        ]),
+      );
+      final signedIn = await AuthService().signIn(
+        email: 'vector@example.com',
+        password: password,
+      );
+      expect(signedIn.uid, 'pbkdf2-vector');
+    });
+
     test('upgrades legacy SHA-256 hash after successful login', () async {
       const password = 'LegacyPass123!';
       final legacyHash = sha256.convert(utf8.encode(password)).toString();
