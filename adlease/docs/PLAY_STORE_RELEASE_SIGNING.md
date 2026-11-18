@@ -18,10 +18,10 @@ Create `android/key.properties` locally (this file is git-ignored):
 storePassword=YOUR_STORE_PASSWORD
 keyPassword=YOUR_KEY_PASSWORD
 keyAlias=adlease-upload
-storeFile=adlease-upload.jks
+storeFile=../adlease-upload.jks
 ```
 
-The keystore path is resolved relative to `android/app` by Gradle in the common Flutter template. If your local Gradle environment resolves it differently, use the absolute local path; never commit that path if it reveals sensitive filesystem details.
+The `storeFile` path is resolved relative to the Android app Gradle project (`android/app`), hence `../adlease-upload.jks` points to the keystore in `android/`.
 
 ## Validate locally
 
