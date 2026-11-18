@@ -82,6 +82,7 @@ Use server timestamps, stable IDs, explicit schema/version fields, currency (KES
 
 - Each entry has immutable ID, UID, event type, amount in integer minor units, currency, source ID, idempotency key, server timestamp, policy/rule version, and metadata.
 - Only trusted functions can append; no client create/update/delete.
+- Ledger write functions are append-only/create-only: no update/delete API paths; corrections are separate reversal entries. Firestore rules deny client access, and privileged Admin SDK operations are constrained by code review, tests, audit logging and backup/reconciliation controls (Firestore is not intrinsically immutable).
 - Earn, reversal, manual correction, ownership allocation, payment, repayment and settlement are distinct types.
 - Corrections append reversal/correction entries referencing originals. Never overwrite history.
 - Wallet balance equals sum of valid ledger entries (projection must be rebuildable and periodically reconciled).
