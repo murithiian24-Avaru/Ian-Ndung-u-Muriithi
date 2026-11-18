@@ -92,7 +92,7 @@ export const reviewVerification = onCall(async (request) => {
     const userRef = db.collection("users").doc(snap.get("uid"));
     const user = await tx.get(userRef);
     if (!user.exists) throw new HttpsError("not-found", "User profile not found.");
-    if (user.get("status") === "suspended" || user.get("status") === "closed") {
+    if (decision === "approved" && (user.get("status") === "suspended" || user.get("status") === "closed")) {
       throw new HttpsError("failed-precondition", "Suspended or closed accounts cannot be approved.");
     }
     const auditRef = db.collection("adminAudit").doc();
@@ -144,12 +144,16 @@ export const startAdSession = onCall(async (request) => {
 // This function is called only after a provider-specific adapter has verified
 // the partner's signed SSV/webhook. Never expose it as a client callable.
 export async function applyVerifiedPartnerEvent(input: {
-  providerEventId: string; sessionId: string; uid: string;
+  provider: string; providerEventId: string; sessionId: string; uid: string;
 }) {
-  if (!input.providerEventId || !input.sessionId || !input.uid) {
+  const provider = input.provider.trim().toLowerCase();
+  if (!/^[a-z0-9][a-z0-9_-]{1,39}$/.test(provider)
+      || !input.providerEventId || !input.sessionId || !input.uid) {
     throw new Error("Invalid verified partner event.");
   }
-  const eventId = safeId(input.providerEventId);
+  // Provider-scoped idempotency prevents unrelated ad networks from colliding
+  // when they happen to issue the same external event identifier.
+  const eventId = safeId(`${provider}:${input.providerEventId}`);
   const claimRef = db.collection("rewardClaims").doc(eventId);
   const sessionRef = db.collection("adSessions").doc(input.sessionId);
   const userRef = db.collection("users").doc(input.uid);
@@ -177,10 +181,10 @@ export async function applyVerifiedPartnerEvent(input: {
     const credited = Number(counter.get("creditedCount") ?? 0);
     if (credited >= DAILY_LIMIT) throw new Error("Daily reward limit reached.");
     const previousBalance = Number(wallet.get("balanceMinor") ?? 0);
-    tx.create(claimRef, { uid: input.uid, sessionId: input.sessionId, providerEventIdHash: eventId, createdAt: FieldValue.serverTimestamp() });
+    tx.create(claimRef, { uid: input.uid, sessionId: input.sessionId, provider, providerEventIdHash: eventId, createdAt: FieldValue.serverTimestamp() });
     tx.create(ledgerRef, {
       uid: input.uid, type: "ad_reward", amountMinor: REWARD_MINOR, currency: "KES",
-      sourceId: input.sessionId, idempotencyKey: eventId, createdAt: FieldValue.serverTimestamp(),
+      provider, sourceId: input.sessionId, idempotencyKey: eventId, createdAt: FieldValue.serverTimestamp(),
       schemaVersion: 1,
     });
     tx.set(walletRef, { balanceMinor: previousBalance + REWARD_MINOR, currency: "KES", updatedAt: FieldValue.serverTimestamp() }, { merge: true });
