@@ -99,6 +99,14 @@ export const reviewVerification = onCall(async (request) => {
   return { status: decision };
 });
 
+// Compatibility seam retained for emulator regression tests. There is no
+// provider SSV verifier and this function intentionally performs no writes.
+export async function applyVerifiedPartnerEvent(_input: {
+  provider: string; providerEventId: string; sessionId: string; uid: string;
+}): Promise<never> {
+  throw new Error("Ad rewards are disabled; no provider event can create customer value.");
+}
+
 // Advertising/reward endpoints are intentionally disabled. Do not add a
 // client-callable reward route. A future ordinary-ad integration must have no
 // access to financing, wallet, payment or customer-ledger mutation paths.
