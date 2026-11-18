@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:adlease/models/ad_model.dart';
 import 'package:adlease/services/storage_service.dart';
@@ -72,14 +71,6 @@ class AdService {
     return remaining > 0;
   }
 
-  String _generateVerificationHash(
-    String userId,
-    String adId,
-    DateTime timestamp,
-  ) {
-    final data = '$userId:$adId:${timestamp.toIso8601String()}:adlease_secret';
-    return sha256.convert(utf8.encode(data)).toString();
-  }
 
   /// Ad-view recording is disabled: an ad interaction must never create value.
   Future<AdViewRecord> recordAdView({
