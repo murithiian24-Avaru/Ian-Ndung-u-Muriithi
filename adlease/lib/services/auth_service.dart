@@ -102,13 +102,14 @@ class AuthService {
 
   bool _isLegacyHash(String stored) => !stored.startsWith(r'pbkdf2_sha256$');
 
-  String _generateReferralCode() {
+  String _generateReferralCode(List<Map<String, dynamic>> users) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = DateTime.now().millisecondsSinceEpoch;
-    final code = List.generate(
-      8,
-      (i) => chars[(random + i * 7) % chars.length],
-    ).join();
+    final random = math.Random.secure();
+    final existingCodes = users.map((u) => u['referralCode']).toSet();
+    String code;
+    do {
+      code = List.generate(8, (_) => chars[random.nextInt(chars.length)]).join();
+    } while (existingCodes.contains('ADL-$code'));
     return 'ADL-$code';
   }
 
@@ -144,7 +145,7 @@ class AuthService {
       fullName: fullName,
       phoneNumber: phoneNumber,
       country: country,
-      referralCode: _generateReferralCode(),
+      referralCode: _generateReferralCode(users),
       referredBy: referralCode,
       createdAt: DateTime.now(),
       lastLoginAt: DateTime.now(),
@@ -220,21 +221,36 @@ class AuthService {
   Future<void> updateUser(UserModel user) async {
     final users = await _getUsers();
     final index = users.indexWhere((u) => u['uid'] == user.uid);
-    if (index != -1) {
-      final passwordHash = users[index]['passwordHash'];
-      users[index] = user.toMap();
-      users[index]['passwordHash'] = passwordHash;
-      await _saveUsers(users);
+    if (index == -1) {
+      throw StateError('Cannot update an account that does not exist locally');
     }
-    await _storage.saveString(_currentUserKey, jsonEncode(user.toMap()));
+
+    final existing = users[index];
+    final updatedUser = user.copyWith(
+      isVerified: existing['isVerified'] == true,
+      isActive: existing['isActive'] != false,
+      referralCode: existing['referralCode'] as String? ?? user.referralCode,
+      referredBy: existing['referredBy'] as String?,
+      deviceModel: existing['deviceModel'] as String? ?? user.deviceModel,
+      deviceId: existing['deviceId'] as String? ?? user.deviceId,
+      createdAt:
+          DateTime.tryParse(existing['createdAt'] as String? ?? '') ??
+          user.createdAt,
+    );
+
+    final userData = updatedUser.toMap();
+    userData['passwordHash'] = existing['passwordHash'];
+    users[index] = userData;
+    await _saveUsers(users);
+    await _storage.saveString(_currentUserKey, jsonEncode(updatedUser.toMap()));
   }
 
+  // Local demo cannot grant verification. Only a trusted backend workflow may
+  // change verification state after checking authoritative evidence.
+  @Deprecated('Client-side verification is disabled; use the secure backend.')
   Future<void> verifyAccount(String uid) async {
-    final users = await _getUsers();
-    final index = users.indexWhere((u) => u['uid'] == uid);
-    if (index != -1) {
-      users[index]['isVerified'] = true;
-      await _saveUsers(users);
-    }
+    throw UnsupportedError(
+      'Verification is unavailable in the demo and requires the secure backend.',
+    );
   }
 }

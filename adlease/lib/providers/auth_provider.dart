@@ -115,7 +115,9 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> updateUser(UserModel updatedUser) async {
     await _authService.updateUser(updatedUser);
-    _user = updatedUser;
+    // Re-read the stored account: AuthService protects server-owned fields
+    // (verification, active state, referral attribution, etc.) during updates.
+    _user = await _authService.getCurrentUser();
     notifyListeners();
   }
 
