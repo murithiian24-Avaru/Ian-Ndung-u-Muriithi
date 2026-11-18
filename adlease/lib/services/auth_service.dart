@@ -137,12 +137,14 @@ class AuthService {
     await _storage.saveString(_currentUserKey, jsonEncode(user.toMap()));
   }
 
+  // Verification cannot be granted by this client-only demo service.
+  // A future backend must verify identity/contact evidence and set authoritative
+  // account status through a protected server operation.
+  @Deprecated('Client-side account verification is disabled; use the backend when implemented.')
   Future<void> verifyAccount(String uid) async {
-    final users = await _getUsers();
-    final index = users.indexWhere((u) => u['uid'] == uid);
-    if (index != -1) {
-      users[index]['isVerified'] = true;
-      await _saveUsers(users);
-    }
+    throw UnsupportedError(
+      'Account verification is unavailable in the demo. '
+      'Verification requires the secure backend.',
+    );
   }
 }
