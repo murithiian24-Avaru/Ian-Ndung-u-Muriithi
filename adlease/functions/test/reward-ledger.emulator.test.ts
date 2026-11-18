@@ -70,5 +70,5 @@ test("daily reward limit allows the final permitted reward and rejects the next"
   });
   await assert.rejects(applyVerifiedPartnerEvent({
     providerEventId: "provider-event-fourth", sessionId: "s-limit", uid: "u-limit",
-  }), /daily reward limit/);
+  }), /daily reward limit/i);
 });
