@@ -1,0 +1,46 @@
+name: AdLease Firebase Emulator Tests
+
+on:
+  pull_request:
+    paths:
+      - 'adlease/firebase.json'
+      - 'adlease/firestore.rules'
+      - 'adlease/firestore.indexes.json'
+      - 'adlease/functions/**'
+      - '.github/workflows/adlease-backend-emulator.yml'
+  push:
+    branches: [main, 'backend/**', 'security/**']
+    paths:
+      - 'adlease/firebase.json'
+      - 'adlease/firestore.rules'
+      - 'adlease/firestore.indexes.json'
+      - 'adlease/functions/**'
+      - '.github/workflows/adlease-backend-emulator.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  firebase-emulator:
+    name: Firebase Auth + Firestore emulator tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: adlease/functions
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: adlease/functions/package-lock.json
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build TypeScript and run emulator tests
+        run: npm run test:emulator

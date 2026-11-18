@@ -33,7 +33,7 @@ async function seed(uid: string, sessionId: string) {
 
 test("duplicate provider callback credits exactly once", async () => {
   await seed("u-duplicate", "s-duplicate");
-  const event = { providerEventId: "provider-event-duplicate", sessionId: "s-duplicate", uid: "u-duplicate", amountMinor: 250 };
+  const event = { providerEventId: "provider-event-duplicate", sessionId: "s-duplicate", uid: "u-duplicate" };
   const first = await applyVerifiedPartnerEvent(event);
   const second = await applyVerifiedPartnerEvent(event);
   assert.equal(first.credited, true);
@@ -44,7 +44,7 @@ test("duplicate provider callback credits exactly once", async () => {
 
 test("concurrent callbacks for the same event cannot double-credit", async () => {
   await seed("u-concurrent", "s-concurrent");
-  const event = { providerEventId: "provider-event-concurrent", sessionId: "s-concurrent", uid: "u-concurrent", amountMinor: 250 };
+  const event = { providerEventId: "provider-event-concurrent", sessionId: "s-concurrent", uid: "u-concurrent" };
   const results = await Promise.all([applyVerifiedPartnerEvent(event), applyVerifiedPartnerEvent(event)]);
   assert.equal(results.filter((r) => r.credited).length, 1);
   assert.equal((await db.doc("wallets/u-concurrent").get()).get("balanceMinor"), 250);
@@ -54,15 +54,23 @@ test("suspended account cannot receive reward", async () => {
   await seed("u-suspended", "s-suspended");
   await db.doc("users/u-suspended").update({ status: "suspended" });
   await assert.rejects(applyVerifiedPartnerEvent({
-    providerEventId: "provider-event-suspended", sessionId: "s-suspended", uid: "u-suspended", amountMinor: 250,
+    providerEventId: "provider-event-suspended", sessionId: "s-suspended", uid: "u-suspended",
   }), /not eligible/);
 });
 
-test("daily reward limit is enforced on server state", async () => {
+test("daily reward limit allows the final permitted reward and rejects the next", async () => {
   await seed("u-limit", "s-limit");
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  await db.doc(`dailyRewardCounters/u-limit_${day}`).update({ creditedCount: 3 });
+  await db.doc(`dailyRewardCounters/u-limit_${day}`).update({ creditedCount: 2 });
+  const finalAllowed = await applyVerifiedPartnerEvent({
+    providerEventId: "provider-event-third", sessionId: "s-limit", uid: "u-limit",
+  });
+  assert.equal(finalAllowed.credited, true);
+  await db.doc("adSessions/s-limit").set({
+    uid: "u-limit", dayKey: day, status: "issued",
+    createdAt: new Date(), expiresAt: new Date(Date.now() + 300000),
+  });
   await assert.rejects(applyVerifiedPartnerEvent({
-    providerEventId: "provider-event-limit", sessionId: "s-limit", uid: "u-limit", amountMinor: 250,
+    providerEventId: "provider-event-fourth", sessionId: "s-limit", uid: "u-limit",
   }), /daily reward limit/);
 });

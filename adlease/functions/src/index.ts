@@ -83,6 +83,12 @@ export const reviewVerification = onCall(async (request) => {
       throw new HttpsError("failed-precondition", "Verification case is not pending.");
     }
     const userRef = db.collection("users").doc(snap.get("uid"));
+    const user = await tx.get(userRef);
+    if (!user.exists) throw new HttpsError("not-found", "User profile not found.");
+    if (user.get("status") === "suspended" || user.get("status") === "closed") {
+      throw new HttpsError("failed-precondition", "Suspended or closed accounts cannot be approved.");
+    }
+    const auditRef = db.collection("adminAudit").doc();
     tx.create(decisionRef, {
       caseId, uid: snap.get("uid"), decision, reason, reviewerUid: auth.uid,
       createdAt: FieldValue.serverTimestamp(), schemaVersion: 1,
@@ -90,9 +96,14 @@ export const reviewVerification = onCall(async (request) => {
     tx.update(caseRef, { status: decision, reviewedAt: FieldValue.serverTimestamp() });
     tx.set(userRef, {
       verificationStatus: decision,
+      status: decision === "approved" && user.get("status") === "pending" ? "active" : user.get("status"),
       verifiedAt: decision === "approved" ? FieldValue.serverTimestamp() : null,
       updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
+    tx.create(auditRef, {
+      actorUid: auth.uid, action: "verification_review", targetUid: snap.get("uid"),
+      caseId, decision, reason, createdAt: FieldValue.serverTimestamp(),
+    });
   });
   return { status: decision };
 });
@@ -126,10 +137,10 @@ export const startAdSession = onCall(async (request) => {
 // This function is called only after a provider-specific adapter has verified
 // the partner's signed SSV/webhook. Never expose it as a client callable.
 export async function applyVerifiedPartnerEvent(input: {
-  providerEventId: string; sessionId: string; uid: string; amountMinor: number;
+  providerEventId: string; sessionId: string; uid: string;
 }) {
   if (!input.providerEventId || !input.sessionId || !input.uid ||
-      !Number.isSafeInteger(input.amountMinor) || input.amountMinor <= 0) {
+      false) {
     throw new Error("Invalid verified partner event.");
   }
   const eventId = safeId(input.providerEventId);
@@ -163,11 +174,11 @@ export async function applyVerifiedPartnerEvent(input: {
     const previousBalance = Number(wallet.get("balanceMinor") ?? 0);
     tx.create(claimRef, { uid: input.uid, sessionId: input.sessionId, providerEventIdHash: eventId, createdAt: FieldValue.serverTimestamp() });
     tx.create(ledgerRef, {
-      uid: input.uid, type: "ad_reward", amountMinor: input.amountMinor, currency: "KES",
+      uid: input.uid, type: "ad_reward", amountMinor: REWARD_MINOR, currency: "KES",
       sourceId: input.sessionId, idempotencyKey: eventId, createdAt: FieldValue.serverTimestamp(),
       schemaVersion: 1,
     });
-    tx.set(walletRef, { balanceMinor: previousBalance + input.amountMinor, currency: "KES", updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(walletRef, { balanceMinor: previousBalance + REWARD_MINOR, currency: "KES", updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     tx.set(counterRef, { uid: input.uid, dayKey, creditedCount: credited + 1, issuedCount: Number(counter.get("issuedCount") ?? 0), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     tx.update(sessionRef, { status: "credited", creditedAt: FieldValue.serverTimestamp() });
     return { credited: true, reason: "accepted" as const };
