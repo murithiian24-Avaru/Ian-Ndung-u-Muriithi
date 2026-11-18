@@ -142,8 +142,10 @@ void main() {
       );
       final hash1 = users.first['passwordHash'] as String;
       final hash2 = users.last['passwordHash'] as String;
-      expect(hash1, startsWith('pbkdf2_sha256' + r' + '120000' + r'));
-      expect(hash2, startsWith('pbkdf2_sha256' + r' + '120000' + r'));
+      final delimiter = String.fromCharCode(36);
+      final prefix = ['pbkdf2_sha256', '120000'].join(delimiter) + delimiter;
+      expect(hash1, startsWith(prefix));
+      expect(hash2, startsWith(prefix));
       expect(hash1, isNot(hash2));
 
       final signedIn = await auth.signIn(
@@ -233,7 +235,11 @@ void main() {
         jsonDecode(prefs.getString('adlease_users')!),
       );
       final migratedHash = migratedUsers.single['passwordHash'] as String;
-      expect(migratedHash, startsWith('pbkdf2_sha256' + r' + '120000' + r'));
+      final delimiter = String.fromCharCode(36);
+      expect(
+        migratedHash,
+        startsWith(['pbkdf2_sha256', '120000'].join(delimiter) + delimiter),
+      );
       expect(migratedHash, isNot(legacyHash));
     });
   });
