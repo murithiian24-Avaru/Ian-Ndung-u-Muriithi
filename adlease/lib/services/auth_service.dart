@@ -128,13 +128,27 @@ class AuthService {
   Future<void> updateUser(UserModel user) async {
     final users = await _getUsers();
     final index = users.indexWhere((u) => u['uid'] == user.uid);
-    if (index != -1) {
-      final passwordHash = users[index]['passwordHash'];
-      users[index] = user.toMap();
-      users[index]['passwordHash'] = passwordHash;
-      await _saveUsers(users);
+    if (index == -1) {
+      throw StateError('Cannot update an account that does not exist locally');
     }
-    await _storage.saveString(_currentUserKey, jsonEncode(user.toMap()));
+
+    final existing = users[index];
+    final updatedUser = user.copyWith(
+      isVerified: existing['isVerified'] == true,
+      isActive: existing['isActive'] != false,
+      referralCode: existing['referralCode'] as String? ?? user.referralCode,
+      referredBy: existing['referredBy'] as String?,
+      deviceModel: existing['deviceModel'] as String? ?? user.deviceModel,
+      deviceId: existing['deviceId'] as String? ?? user.deviceId,
+      createdAt: DateTime.tryParse(existing['createdAt'] as String? ?? '') ??
+          user.createdAt,
+    );
+
+    final userData = updatedUser.toMap();
+    userData['passwordHash'] = existing['passwordHash'];
+    users[index] = userData;
+    await _saveUsers(users);
+    await _storage.saveString(_currentUserKey, jsonEncode(updatedUser.toMap()));
   }
 
   Future<void> verifyAccount(String uid) async {
