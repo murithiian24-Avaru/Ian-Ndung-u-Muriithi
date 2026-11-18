@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
@@ -15,13 +16,17 @@ class AuthService {
     return sha256.convert(bytes).toString();
   }
 
-  String _generateReferralCode() {
+  String _generateReferralCode(List<Map<String, dynamic>> users) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = DateTime.now().millisecondsSinceEpoch;
-    final code = List.generate(
-      8,
-      (i) => chars[(random + i * 7) % chars.length],
-    ).join();
+    final random = math.Random.secure();
+    final existingCodes = users.map((u) => u['referralCode']).toSet();
+    String code;
+    do {
+      code = List.generate(
+        8,
+        (_) => chars[random.nextInt(chars.length)],
+      ).join();
+    } while (existingCodes.contains('ADL-$code'));
     return 'ADL-$code';
   }
 
@@ -57,7 +62,7 @@ class AuthService {
       fullName: fullName,
       phoneNumber: phoneNumber,
       country: country,
-      referralCode: _generateReferralCode(),
+      referralCode: _generateReferralCode(users),
       referredBy: referralCode,
       createdAt: DateTime.now(),
       lastLoginAt: DateTime.now(),

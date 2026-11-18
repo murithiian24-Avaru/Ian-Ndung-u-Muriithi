@@ -115,4 +115,27 @@ void main() {
       );
     });
   });
+
+  group('Referral code regression', () {
+    test(
+      'codes follow format and are unique across sequential signups',
+      () async {
+        final auth = AuthService();
+        final codes = <String>{};
+        for (var i = 0; i < 20; i++) {
+          final user = await auth.signUp(
+            email: 'referral-test-$i@example.com',
+            password: 'Password123!',
+            fullName: 'Referral Test $i',
+            phoneNumber: '+254700000000',
+            country: 'Kenya',
+          );
+          expect(user.referralCode, startsWith('ADL-'));
+          expect(user.referralCode.length, 12);
+          codes.add(user.referralCode);
+        }
+        expect(codes, hasLength(20));
+      },
+    );
+  });
 }
