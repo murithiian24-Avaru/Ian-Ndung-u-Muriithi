@@ -246,7 +246,6 @@ jobs:
             { echo '```yaml'; cat adlease/pubspec.lock; echo '```'; } > lock.md
             post "AdLease resolved pubspec.lock (Flutter $V)" neutral "pubspec.lock resolved by Flutter $V" lock.md
           fi
-i
           [ "$conclusion" = success ]
 
   admin-dashboard:
