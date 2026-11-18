@@ -140,7 +140,9 @@ class AuthService {
   // Verification cannot be granted by this client-only demo service.
   // A future backend must verify identity/contact evidence and set authoritative
   // account status through a protected server operation.
-  @Deprecated('Client-side account verification is disabled; use the backend when implemented.')
+  @Deprecated(
+    'Client-side account verification is disabled; use the backend when implemented.',
+  )
   Future<void> verifyAccount(String uid) async {
     throw UnsupportedError(
       'Account verification is unavailable in the demo. '
