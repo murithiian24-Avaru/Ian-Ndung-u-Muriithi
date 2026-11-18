@@ -37,7 +37,7 @@ The approved initial model is ordinary, non-rewarded ads only. No user incentive
 | # | Decision | Why it matters |
 |---|---|---|
 | C1 | Production Firebase/Google Cloud environment | Staging project exists; production environment is not approved or configured |
-| C2 | A billing account and the pay-as-you-go (Blaze) plan | Cloud Functions, which all server-side reward logic needs, are not available on the no-cost Spark plan |
+| C2 | A billing account and the pay-as-you-go (Blaze) plan | Cloud Functions and other server-side services may require a paid billing plan; confirm current pricing and budget before any deployment |
 | C3 | Budget alert amounts | Alerts notify; they do not cap spending |
 | C4 | Backup retention and point-in-time recovery | Adds storage cost |
 | C5 | Optional Data Access audit logs | Adds logging cost |
@@ -61,9 +61,7 @@ official pricing pages at decision time. This documentation states no prices.
 
 ## Uncertainties flagged in this documentation
 
-- **Firestore location**: `US region (nam5)` (Johannesburg) is listed by Google
-  for Firestore in Datastore mode; availability for Native mode is
-  unverified.
+- **Firestore location**: the current staging database is in the US region (`nam5`). This is a cross-border transfer and requires privacy/legal review before real data is used.
 - **Ad policy**: ordinary non-rewarded ad placements in the final financing app require Google policy clarification (A1).
 - **Legal**: all lawful bases, retention periods and registration questions
   are unverified until reviewed by a qualified adviser.
