@@ -114,8 +114,8 @@ void main() {
         phoneNumber: '+254700000000',
         country: 'Kenya',
       );
-      expect(
-        () => auth.verifyAccount('any-user-id'),
+      await expectLater(
+        auth.verifyAccount('any-user-id'),
         throwsA(isA<UnsupportedError>()),
       );
       final user = await auth.getCurrentUser();
