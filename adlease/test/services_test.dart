@@ -22,6 +22,18 @@ void main() {
     });
   });
 
+  group('WalletService ignores legacy customer value', () {
+    test('legacy stored wallet balances and reward transactions are not exposed', () async {
+      SharedPreferences.setMockInitialValues({
+        'adlease_wallets': '[{"userId":"u1","balance":99,"totalEarnings":99,"totalWithdrawn":0,"lastUpdated":"2026-01-01T00:00:00.000"}]',
+        'adlease_transactions': '[{"id":"legacy","userId":"u1","type":"adReward","amount":2.5,"status":"completed","description":"legacy reward","createdAt":"2026-01-01T00:00:00.000"}]',
+      });
+      final wallet = WalletService();
+      expect((await wallet.getWallet('u1')).balance, 0);
+      expect(await wallet.getTransactions('u1'), isEmpty);
+    });
+  });
+
   group('AdService disables ad tracking and rewards', () {
     test('completed ad views are rejected', () async {
       expect(
