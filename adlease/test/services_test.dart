@@ -139,8 +139,8 @@ void main() {
       );
       final hash1 = users.first['passwordHash'] as String;
       final hash2 = users.last['passwordHash'] as String;
-      expect(hash1, startsWith(r'pbkdf2_sha256$120000));
-      expect(hash2, startsWith(r'pbkdf2_sha256$120000));
+      expect(hash1, startsWith('pbkdf2_sha256' + r' + '120000' + r'));
+      expect(hash2, startsWith('pbkdf2_sha256' + r' + '120000' + r'));
       expect(hash1, isNot(hash2));
 
       final signedIn = await auth.signIn(
@@ -156,8 +156,8 @@ void main() {
 
     test('verifies the PBKDF2-HMAC-SHA256 known vector', () async {
       const password = 'Password123!';
-      const encodedHash =
-          r'pbkdf2_sha256$120000$00112233445566778899aabbccddeeff
+      final encodedHash = 'pbkdf2_sha256' + r' + '120000' + r' +
+          '00112233445566778899aabbccddeeff' + r' +
           'a347c459bf2630291c32e2074384328bfce1c0fc110d4dac12d85f85b8ab88ee';
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
@@ -226,7 +226,7 @@ void main() {
         jsonDecode(prefs.getString('adlease_users')!),
       );
       final migratedHash = migratedUsers.single['passwordHash'] as String;
-      expect(migratedHash, startsWith(r'pbkdf2_sha256$120000));
+      expect(migratedHash, startsWith('pbkdf2_sha256' + r' + '120000' + r'));
       expect(migratedHash, isNot(legacyHash));
     });
   });
