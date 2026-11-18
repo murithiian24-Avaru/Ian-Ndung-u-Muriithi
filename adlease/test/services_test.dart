@@ -137,27 +137,4 @@ void main() {
   });
 
 }
-)));
-        codes.add(user.referralCode);
-      }
-      expect(codes, hasLength(20));
-    });
-  });
 
-}
-)));
-        codes.add(user.referralCode);
-      }
-      expect(codes, hasLength(20));
-    });
-  });
-
-}
-)));
-        codes.add(user.referralCode);
-      }
-      expect(codes, hasLength(20));
-    });
-  });
-
-}
