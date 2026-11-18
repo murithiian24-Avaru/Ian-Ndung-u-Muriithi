@@ -103,6 +103,25 @@ void main() {
     });
   });
 
+  group('Client verification is disabled (security regression)', () {
+    test('verifyAccount refuses to grant verification locally', () async {
+      final auth = AuthService();
+      await auth.signUp(
+        email: 'unverified@example.com',
+        password: 'Password123!',
+        fullName: 'Unverified',
+        phoneNumber: '+254700000000',
+        country: 'Kenya',
+      );
+      await expectLater(
+        auth.verifyAccount('any-user-id'),
+        throwsA(isA<UnsupportedError>()),
+      );
+      final user = await auth.getCurrentUser();
+      expect(user?.isVerified, isFalse);
+    });
+  });
+
   group('AuthService placeholders (findings H1, H2)', () {
     test('Google sign-in no longer logs into a demo account', () async {
       expect(() => AuthService().signInWithGoogle(), throwsA(isA<Exception>()));
