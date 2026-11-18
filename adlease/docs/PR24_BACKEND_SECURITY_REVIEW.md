@@ -35,6 +35,8 @@ The current implementation branch disables all ad session and reward issuance pa
 - Server startAdSession, claimReward and internal event helper reject without writes.
 - Wallet earning/withdrawal and local ownership payment/selection services reject.
 - Home, wallet, ownership and ad copy no longer promises ad-derived money or phone progress.
+- Admin dashboard entry point is fail-closed; sample-data pages are unreachable until authentication/MFA/roles/audit are implemented.
+- Partner-neutral payment interface and disabled mock gateway are present; no payment intent can be created.
 - Flutter and emulator regression tests assert disabled behaviour and mock financing boundary.
 
 ## Acceptance gates
