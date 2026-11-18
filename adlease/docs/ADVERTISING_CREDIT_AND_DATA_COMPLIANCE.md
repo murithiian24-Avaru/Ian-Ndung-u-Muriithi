@@ -1,82 +1,87 @@
 # AdLease advertising, credit and data-protection launch gates
 
-This document is an engineering/product risk register, not legal advice or a regulatory approval. It records the minimum evidence required before real rewards, financing, or a Kenyan pilot.
+**Approved product decisions (18 Nov 2026):**
+- Avaru role: technology/platform provider, subject to written Kenyan legal classification.
+- Advertising model: separate publisher revenue for Avaru; no ad-derived customer reward, wallet credit, phone balance, deposit offset or repayment credit.
+- No merge, deployment, live ads, live payments, credit origination or pilot is authorised by these decisions.
 
-## 1. Google-served rewarded ads: current concept is not approved
+This document is an engineering/product risk register, not legal advice or regulatory approval.
 
-The current demo concept has been described as users watching ads to accrue value toward ownership of a physical phone. Do not connect Google AdMob rewarded ads to a cash-like balance or promise that viewing ads earns money.
+## 1. Google-served advertising: separate, non-rewarded model
+AdLease's initial advertising design is ordinary non-rewarded advertising. Avaru earns publisher revenue; the user receives no financial or other reward for viewing, clicking or interacting with ads. Ad events must not mutate customer wallet, handset price, deposit, instalment, financing balance or repayment status.
 
 Google's rewarded-ad policy states:
 - Direct monetary items (including cash, cryptocurrency and gift cards) cannot be offered as rewards.
-- Indirect/non-monetary rewards must be redeemable only within the publisher's platform, non-transferable, and not directly convertible into cash or transferable items.
+- Indirect/non-monetary rewards are limited to qualifying non-transferable benefits redeemable only within the publisher's platform, website or app.
 - Discounts/vouchers for physical items must not exceed 25% of the item's total value.
-- The reward and required action must be clearly disclosed before the ad; users must affirmatively opt in for standard rewarded ads; skipping must not disrupt normal app use.
-- The publisher is responsible for delivering rewards and must not imply Google endorses them.
+- Required actions and rewards must be clearly disclosed; standard rewarded ads require affirmative opt-in; skipping must not disrupt normal app use.
+- The publisher is responsible for rewards and must not imply Google endorses them.
 
 Official policy: https://support.google.com/admob/answer/7313578
 
-Engineering decision:
-- Keep ad serving disabled and all reward issuance in emulator/test-only mode until an ad network has reviewed the exact proposed user journey and reward mechanics in writing.
-- Do not treat a phone ownership balance, cash-out, transferable credit, deposit offset or repayment credit as automatically compliant.
-- If the model changes to a non-transferable in-app-only benefit, obtain policy review for the exact implementation before enabling ads.
-- A physical phone discount remains subject to the 25% cap under the cited Google policy; do not assume that a different label changes the economic substance.
-- Never pay for clicks, incentivize ad interaction, or obstruct skipping.
+Engineering requirements:
+- Do not implement KES-per-ad, phone credit, loan repayment credit or any ad-linked customer financial benefit.
+- Do not add rewarded ads to the first release. Any future rewarded feature requires a separate product decision and written policy review of the exact flow.
+- Do not treat changing the label to points as a compliance solution.
+- Ad SDK integration must be isolated from financing, wallet and payment domains.
+- Keep production ads disabled until policy, privacy and QA gates pass.
 
-## 2. Kenya credit / pay-as-you-go model: CBK legal review required
-
-Kenya Law lists the Central Bank of Kenya (Non-Deposit Taking Credit Providers) Regulations, 2026 as Legal Notice No. 191 of 2026. Public legal commentary reports the 2026 regulations broaden the regulated perimeter to include asset financing, buy-now-pay-later and pay-as-you-go credit arrangements, among other non-deposit-taking credit business. The precise application to AdLease depends on the actual contracts, who provides credit, who owns the handset, who sets price/fees, who collects repayments, and whether Avaru itself carries credit risk or merely provides software/agency services.
+## 2. Kenya credit / pay-as-you-go model: counsel classification required
+Kenya Law lists the Central Bank of Kenya (Non-Deposit Taking Credit Providers) Regulations, 2026 as Legal Notice No. 191 of 2026. The CBK Act's definition of non-deposit-taking credit business includes asset financing and certain pay-as-you-go arrangements. Public legal commentary describes the 2026 framework as covering asset financing, BNPL and PAYG models. The exact current legal status, operative text, transitional provisions and any subsequent parliamentary/CBK directions must be checked by Kenyan counsel against the Gazette before launch.
 
 Official legislation listing: https://kenyalaw.org/legislation/
+CBK Act: https://www.centralbank.go.ke/wp-content/uploads/2026/03/Central-Bank-of-Kenya-Act.pdf
 CBK regulatory context: https://www.centralbank.go.ke/policy-procedures/legislation-and-guidelines/
 
+Target operating model:
+- A properly authorised financing partner contracts directly with the customer, performs underwriting/affordability assessment, sets and discloses credit terms, owns/manages the receivable, and controls collections and credit complaints.
+- Avaru supplies contracted software/platform services only, without taking credit risk, setting credit terms, approving credit, holding repayments or owning the receivable, unless separately authorised and legally approved.
+- Supplier supplies handset and manages agreed warranty, inventory, returns and title obligations.
+- Advertising revenue is entirely separate from the financing contract and repayment ledger.
+
+Important: describing Avaru as a technology provider does not itself establish an exemption. Actual conduct, agency, outsourcing, control over reserved functions, payment handling, customer communications and data access determine legal treatment.
+
 Before a pilot:
-- Obtain a written Kenyan legal opinion mapping each party's role (Avaru, financier/supplier, payment provider, ad network and customer).
-- Confirm with counsel/CBK whether Avaru is a credit provider, credit agent, technology provider, asset financier, payment intermediary or another regulated participant.
-- Confirm licensing/registration, disclosures, pricing/fees, affordability/creditworthiness, complaints, collections, credit reporting, recordkeeping and customer-protection duties.
-- Execute supplier/financier contracts covering handset title, risk, deposits, repayment schedule, defaults, repossession/returns, warranties, settlement, refunds, data sharing and reconciliation.
-- Do not describe M-KOPA as a partner or rely on its credit facilities until a signed agreement exists.
+- Obtain written Kenyan legal opinion mapping every party's activities and whether Avaru is a technology provider, agent, outsourced service provider, credit arranger, payment intermediary or otherwise regulated.
+- Verify financier authorisation and any CBK approval/notification/registration requirements for outsourced technology.
+- Confirm current Gazette text, commencement, transition and any subsequent parliamentary or CBK directions.
+- Execute technology/outsourcing, financier-customer and supplier agreements covering regulatory access, reserved functions, audit, security, complaints, service continuity, title, pricing, repayment, default, returns, warranties, settlement and refunds.
+- Do not describe M-KOPA as a partner or rely on its facilities until a signed agreement exists.
 
 ## 3. Data protection / ODPC
+Avaru must map controller/processor roles per processing activity. Before real identity, device, financial or ad-attribution data is collected:
+- Complete data inventory, purpose/legal-basis map, retention schedule and data-subject rights process.
+- Assess ODPC registration obligations for Avaru and vendors.
+- Execute data processing and sharing agreements with financier, Firebase/Google, ad networks and other vendors.
+- Assess DPIA requirements, especially for profiling, financial/identity data, monitoring or large-scale processing.
+- Publish accurate privacy notice and terms; implement access controls, encryption, retention/deletion and breach response.
+- Avoid collecting national ID documents until necessity, lawful basis, access and retention are approved.
+- Current Firebase staging database is in the US region (nam5); use synthetic data only until cross-border transfer and privacy review is complete.
 
-Avaru must map whether it acts as data controller, processor, or both for each processing activity. ODPC guidance says entities should assess registration obligations; exemptions are narrow and depend on the applicable criteria. The ODPC compliance page describes controller/processor roles and electronic registration.
-
-Official ODPC compliance guidance: https://www.odpc.go.ke/data-protection-compliance/
-Registration guidance: https://www.odpc.go.ke/wp-content/uploads/2024/02/ODPC-Guidance-Note-on-Registration-of-Data-Controllers-and-Data-Processors.pdf
-
-Before collecting real identity, device, phone, financial or ad-attribution data:
-- Complete a data inventory, purpose/legal-basis map, retention schedule and data-subject rights process.
-- Assess ODPC controller/processor registration requirements for Avaru and relevant vendors.
-- Execute processor/data-sharing agreements with Firebase/Google, ad networks, financiers and other vendors as applicable.
-- Assess whether a DPIA is required, especially for profiling, financial/identity data, monitoring or large-scale processing.
-- Publish accurate privacy notice and terms, obtain valid consent where required, and implement access controls, encryption, deletion/retention and breach response.
-- Avoid collecting national ID or sensitive documents until the verification purpose, necessity, access controls and retention are approved.
+Official ODPC guidance: https://www.odpc.go.ke/data-protection-compliance/
+Registration portal: https://dataportal.odpc.go.ke/account/Register
 
 ## 4. Payments (M-PESA)
-
-Use Safaricom Daraja sandbox only until the company has an approved use case and live business credentials. Safaricom's developer portal requires a Daraja account and sandbox app for test credentials; live activation requires business onboarding and a live Paybill/Till or other approved business setup.
+Use Safaricom Daraja sandbox only after an approved test use case and secure test credentials are configured. Payment initiation and callback verification must be server-side, provider-scoped, idempotent and reconciled. Never put secrets in Flutter, Vercel browser variables, source control or chat.
 
 Official portal: https://developer.safaricom.co.ke/
-Getting started: https://developer.safaricom.co.ke/apis/GettingStarted
-
-Never place consumer secrets, passkeys, security credentials or private keys in the Flutter app, Vercel browser variables, source control or chat. All payment initiation and callback verification must be server-side, idempotent and reconciled.
 
 ## 5. Play Store
+Google Play financial-features declaration includes loan facilitation, mobile payments/digital wallets, rewards/incentives and BNPL categories where applicable. Complete the declaration accurately for the actual shipped functionality; do not declare the app as having no financial features if the app exposes financing or payment features.
 
-For new Android apps and updates submitted from 31 August 2026, Google Play requires target Android 16 / API 36 or higher. This repository's release-readiness branch sets targetSdk 36; CI must validate the actual resolved SDK/toolchain before an AAB is accepted.
+Financial features declaration: https://support.google.com/googleplay/android-developer/answer/13849271
 
-Official policy: https://support.google.com/googleplay/android-developer/answer/11926878
-
-A Play Store submission also needs accurate Data safety, privacy policy, app access, ads declaration, content rating, target audience, store listing and signing. Do not claim real money, ad rewards, repayments, supplier availability or user protections that are not actually live and approved.
+For new apps and updates submitted from 31 August 2026, Google Play requires target Android 16 / API 36 or higher. Verify the actual build/toolchain and Play Console requirements at submission.
 
 ## 6. Go / no-go criteria
+No production ads, live financing, payment collection or Kenyan pilot until:
+1. Google policy and privacy review for the actual advertising flow is complete.
+2. Kenyan counsel provides written role classification and confirms required CBK/other approvals.
+3. Financier authorisation and signed supplier/financier contracts are verified.
+4. ODPC compliance, cross-border safeguards and vendor agreements are complete.
+5. Backend, admin roles, audit, incident response and security tests pass.
+6. Sandbox payment, settlement, refund and reconciliation tests pass.
+7. Play Console declarations, privacy policy, Data safety and release signing are accurate and reviewed.
+8. Owner explicitly approves each production activation, deployment and pilot.
 
-No real-user pilot or production reward/repayment launch until all are evidenced:
-1. Written ad-network approval for the exact reward mechanism, or a redesigned policy-compliant non-AdMob model.
-2. Kenyan legal opinion and any required CBK/other regulatory approvals.
-3. ODPC compliance and vendor contracts.
-4. Signed supplier/financier agreement and tested repayment/settlement/reconciliation process.
-5. Security-reviewed backend, role-based admin, incident response and support process.
-6. End-to-end sandbox tests and audited production readiness.
-7. Approved Play Console declarations and production signing.
-
-Until then, use synthetic test users, emulator-only rewards and a clearly labelled investor demo. No real money or customer data.
+Until then, use synthetic users, emulator-only tests and a clearly labelled demo. No real customer data or money.
