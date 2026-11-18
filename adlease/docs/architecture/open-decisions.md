@@ -61,7 +61,7 @@ official pricing pages at decision time. This documentation states no prices.
 
 ## Uncertainties flagged in this documentation
 
-- **Firestore location**: `africa-south1` (Johannesburg) is listed by Google
+- **Firestore location**: `US region (nam5)` (Johannesburg) is listed by Google
   for Firestore in Datastore mode; availability for Native mode is
   unverified.
 - **Ad policy**: ordinary non-rewarded ad placements in the final financing app require Google policy clarification (A1).
