@@ -66,40 +66,15 @@ void main() {
     });
   });
 
-  group('AdService.recordAdView daily limit (finding H4)', () {
-    test('allows maxAdsPerDay completed views, then refuses more', () async {
-      final ads = AdService();
-      for (var i = 0; i < AdService.maxAdsPerDay; i++) {
-        await ads.recordAdView(
-          userId: 'u1',
-          adId: 'ad$i',
-          completedFully: true,
-          deviceId: '',
-        );
-      }
-      expect(await ads.getAdsWatchedToday('u1'), AdService.maxAdsPerDay);
+  group('AdService disables ad tracking and rewards', () {
+    test('completed ad views are rejected', () async {
       expect(
-        () => ads.recordAdView(
-          userId: 'u1',
-          adId: 'extra',
-          completedFully: true,
-          deviceId: '',
-        ),
+        () => AdService().recordAdView(userId: 'u1', adId: 'ad1', completedFully: true, deviceId: ''),
         throwsA(isA<StateError>()),
       );
     });
-
-    test('the limit is per user', () async {
-      final ads = AdService();
-      for (var i = 0; i < AdService.maxAdsPerDay; i++) {
-        await ads.recordAdView(
-          userId: 'u1',
-          adId: 'ad$i',
-          completedFully: true,
-          deviceId: '',
-        );
-      }
-      expect(await ads.canWatchAd('u2'), isTrue);
+    test('legacy reward amount is zero', () {
+      expect(AdService.rewardPerAd, 0);
     });
   });
 
