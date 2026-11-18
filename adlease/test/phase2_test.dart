@@ -8,6 +8,12 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adlease/config/features.dart';
 import 'package:adlease/screens/wallet/wallet_screen.dart';
+import 'package:adlease/config/routes.dart';
+import 'package:adlease/l10n/app_localizations.dart';
+import 'package:adlease/providers/auth_provider.dart';
+import 'package:adlease/providers/ownership_provider.dart';
+import 'package:adlease/providers/wallet_provider.dart';
+import 'package:adlease/services/ad_reward_service.dart';
 import 'package:adlease/services/ad_service.dart';
 import 'package:adlease/utils/currency.dart';
 
@@ -20,16 +26,6 @@ const _realBrands = [
   'm-pesa',
   'm-shwari',
 ];
-
-final _phone = PhoneModel(
-  id: 'demo-phone',
-  brand: 'Demo',
-  model: 'Phone',
-  imageUrl: '',
-  price: 300,
-  description: 'Test phone',
-  specs: const {},
-);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
