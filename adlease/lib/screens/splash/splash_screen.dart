@@ -102,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             .slideY(begin: 0.3, end: 0),
                         const SizedBox(height: 8),
                         Text(
-                          'Watch. Earn. Own.',
+                          'Explore. Choose. Move forward.',
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.w300,
