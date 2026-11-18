@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
   "appName": "AdLease",
-  "slogan": "Watch. Earn. Own.",
+  "slogan": "Explore. Choose. Move forward.",
   "login": "Login",
   "signUp": "Sign Up",
   "email": "Email",
@@ -59,9 +59,9 @@
   "congratulations": "Congratulations!",
   "phoneOwned": "You now own your phone!",
   "welcome": "Welcome to AdLease",
-  "welcomeSubtitle": "The smart way to own your dream phone",
+  "welcomeSubtitle": "Explore device options and financing information.",
   "getStarted": "Get Started",
-  "watchEarnOwn": "Watch ads, earn rewards, and own your phone",
+  "watchEarnOwn": "Explore devices and review available options.",
   "noTransactions": "No transactions yet",
   "amount": "Amount",
   "date": "Date",
@@ -73,13 +73,13 @@
   "showPassword": "Show password",
   "hidePassword": "Hide password",
   "withdrawalsUnavailable": "Withdrawals are not available yet.",
-  "noCashBalance": "This demo has no cash balance. Ad rewards count only toward your phone.",
-  "phoneProgressDemo": "Phone progress (demo)",
-  "appliedToPhone": "Applied to phone",
+  "noCashBalance": "No customer funds or ad-derived rewards are held in this demo.",
+  "phoneProgressDemo": "Demo device information",
+  "appliedToPhone": "Demo amount (not a payment)",
   "notAvailable": "Not available",
-  "choosePhoneFirst": "Choose a phone first. In this demo, ad rewards count only toward your phone.",
+  "choosePhoneFirst": "Financing is not available in this demo. No credit application has been submitted.",
   "demoAmountsNotice": "Demo amounts only. No real money is held or paid out.",
-  "rewardAddedToPhone": "{amount} added to your phone progress (simulated)",
+  "rewardAddedToPhone": "No advertising reward is available.",
   "@rewardAddedToPhone": {
     "placeholders": {
       "amount": {
@@ -87,7 +87,7 @@
       }
     }
   },
-  "watchSampleAdHint": "Watch a 60-second sample ad to add {amount} to your phone progress (simulated)",
+  "watchSampleAdHint": "Advertising is currently unavailable.",
   "@watchSampleAdHint": {
     "placeholders": {
       "amount": {
@@ -98,5 +98,5 @@
   "notAvailableYet": "Not available yet",
   "referralRewardsNotAvailable": "Referral rewards are not available yet. No bonus is paid for referrals.",
   "notificationsNotAvailable": "AdLease does not send notifications yet.",
-  "demoVersionNotice": "AdLease is in development. In this version, ads and rewards are simulated, and no real money is held or paid out."
+  "demoVersionNotice": "AdLease is in development. Advertising, financing and payments are not active in this demo."
 }
