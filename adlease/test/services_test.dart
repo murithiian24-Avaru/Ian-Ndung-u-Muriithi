@@ -104,7 +104,9 @@ void main() {
   });
 
   group('AuthService referral code generation', () {
-    test('generates unique codes in the expected format for sequential signups', () async {
+    test(
+      'generates unique codes in the expected format for sequential signups',
+      () async {
       final auth = AuthService();
       final codes = <String>{};
       for (var i = 0; i < 20; i++) {
@@ -118,8 +120,9 @@ void main() {
         expect(user.referralCode, matches(RegExp(r'^ADL-[A-Z0-9]{8}$')));
         codes.add(user.referralCode);
       }
-      expect(codes, hasLength(20));
-    });
+        expect(codes, hasLength(20));
+      },
+    );
   });
 
   group('AuthService placeholders (findings H1, H2)', () {
