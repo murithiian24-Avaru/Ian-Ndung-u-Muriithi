@@ -118,6 +118,7 @@ void main() {
       );
     });
   });
+
   group('Local demo password hashing hardening', () {
     test('new accounts use unique salted PBKDF2 hashes', () async {
       final auth = AuthService();
