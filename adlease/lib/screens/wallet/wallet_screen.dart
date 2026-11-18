@@ -46,7 +46,7 @@ class WalletScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     _buildActionButtons(context),
                     const SizedBox(height: 24),
-                    _buildEarningsOverview(context, isDark),
+                    _buildEarningsOverview(isDark),
                     const SizedBox(height: 24),
                     _buildTransactionHistory(walletProvider, isDark),
                   ],
@@ -59,8 +59,7 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  // There is no cash balance: ad rewards count only toward the phone, and
-  // withdrawals are not available yet.
+  // No customer cash balance, ad reward or repayment ledger is active.
   Widget _buildWalletCard(BuildContext context, bool isDark) {
     final l = AppLocalizations.of(context)!;
     return Container(
@@ -166,7 +165,7 @@ class WalletScreen extends StatelessWidget {
   }
 
   // There is no customer balance or financing repayment view in this demo.
-  Widget _buildEarningsOverview(BuildContext context, bool isDark) {
+  Widget _buildEarningsOverview(bool isDark) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
