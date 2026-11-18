@@ -10,10 +10,12 @@ import 'package:adlease/providers/locale_provider.dart';
 import 'package:adlease/providers/ad_provider.dart';
 import 'package:adlease/providers/wallet_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
+import 'package:adlease/services/firebase_bootstrap.dart';
 import 'package:adlease/l10n/app_localizations.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await FirebaseBootstrap.initialize();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
