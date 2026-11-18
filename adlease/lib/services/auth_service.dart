@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
@@ -10,10 +12,95 @@ class AuthService {
   static const _usersKey = 'adlease_users';
   static const _currentUserKey = 'adlease_current_user';
 
-  String _hashPassword(String password) {
-    final bytes = utf8.encode(password);
-    return sha256.convert(bytes).toString();
+  // Local demo credential protection only. Live authentication must be delegated
+  // to a vetted backend identity provider; never use this as a server substitute.
+  static const _pbkdf2Iterations = 120000;
+  static const _saltLength = 16;
+  static const _hashLength = 32;
+
+  String _toHex(List<int> bytes) =>
+      bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+
+  List<int> _fromHex(String value) {
+    if (value.length.isOdd || !RegExp(r'^[0-9a-fA-F]*$').hasMatch(value)) {
+      throw const FormatException('Invalid hex encoding');
+    }
+    return List<int>.generate(
+      value.length ~/ 2,
+      (i) => int.parse(value.substring(i * 2, i * 2 + 2), radix: 16),
+    );
   }
+
+  List<int> _pbkdf2(String password, List<int> salt, int iterations) {
+    final hmac = Hmac(sha256, utf8.encode(password));
+    final blockInput = Uint8List(salt.length + 4)
+      ..setRange(0, salt.length, salt);
+    blockInput[salt.length] = 0;
+    blockInput[salt.length + 1] = 0;
+    blockInput[salt.length + 2] = 0;
+    blockInput[salt.length + 3] = 1;
+    var u = hmac.convert(blockInput).bytes;
+    final t = List<int>.from(u);
+    for (var i = 1; i < iterations; i++) {
+      u = hmac.convert(u).bytes;
+      for (var j = 0; j < t.length; j++) {
+        t[j] ^= u[j];
+      }
+    }
+    return t.take(_hashLength).toList();
+  }
+
+  String _hashPassword(String password) {
+    final salt = List<int>.generate(
+      _saltLength,
+      (_) => math.Random.secure().nextInt(256),
+    );
+    final hash = _pbkdf2(password, salt, _pbkdf2Iterations);
+    return 'pbkdf2_sha256' +
+        r'$' +
+        _pbkdf2Iterations.toString() +
+        r'$' +
+        _toHex(salt) +
+        r'$' +
+        _toHex(hash);
+  }
+
+  bool _constantTimeEquals(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    var difference = 0;
+    for (var i = 0; i < a.length; i++) {
+      difference |= a[i] ^ b[i];
+    }
+    return difference == 0;
+  }
+
+  bool _verifyPassword(String password, String stored) {
+    if (stored.startsWith(r'pbkdf2_sha256$')) {
+      final parts = stored.split(r'$');
+      if (parts.length != 4 || parts[0] != 'pbkdf2_sha256') return false;
+      final iterations = int.tryParse(parts[1]);
+      if (iterations == null || iterations < 100000 || iterations > 1000000) {
+        return false;
+      }
+      try {
+        final salt = _fromHex(parts[2]);
+        final expected = _fromHex(parts[3]);
+        if (salt.length != _saltLength || expected.length != _hashLength) {
+          return false;
+        }
+        return _constantTimeEquals(
+          _pbkdf2(password, salt, iterations),
+          expected,
+        );
+      } on FormatException {
+        return false;
+      }
+    }
+    final legacy = sha256.convert(utf8.encode(password)).toString();
+    return _constantTimeEquals(utf8.encode(legacy), utf8.encode(stored));
+  }
+
+  bool _isLegacyHash(String stored) => !stored.startsWith(r'pbkdf2_sha256$');
 
   String _generateReferralCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -79,17 +166,22 @@ class AuthService {
     required String password,
   }) async {
     final users = await _getUsers();
-    final passwordHash = _hashPassword(password);
+    final matchingIndex = users.indexWhere((u) {
+      final stored = u['passwordHash'];
+      return u['email'] == email &&
+          stored is String &&
+          _verifyPassword(password, stored);
+    });
 
-    final matching = users
-        .where((u) => u['email'] == email && u['passwordHash'] == passwordHash)
-        .toList();
-
-    if (matching.isEmpty) {
+    if (matchingIndex == -1) {
       throw Exception('Invalid email or password');
     }
 
-    final userData = matching.first;
+    final userData = users[matchingIndex];
+    final storedHash = userData['passwordHash'] as String;
+    if (_isLegacyHash(storedHash)) {
+      userData['passwordHash'] = _hashPassword(password);
+    }
     userData['lastLoginAt'] = DateTime.now().toIso8601String();
     await _saveUsers(users);
 
