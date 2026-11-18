@@ -140,7 +140,8 @@ class AuthService {
       referredBy: existing['referredBy'] as String?,
       deviceModel: existing['deviceModel'] as String? ?? user.deviceModel,
       deviceId: existing['deviceId'] as String? ?? user.deviceId,
-      createdAt: DateTime.tryParse(existing['createdAt'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(existing['createdAt'] as String? ?? '') ??
           user.createdAt,
     );
 
