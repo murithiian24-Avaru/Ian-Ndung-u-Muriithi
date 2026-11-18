@@ -108,7 +108,10 @@ class AuthService {
     final existingCodes = users.map((u) => u['referralCode']).toSet();
     String code;
     do {
-      code = List.generate(8, (_) => chars[random.nextInt(chars.length)]).join();
+      code = List.generate(
+        8,
+        (_) => chars[random.nextInt(chars.length)],
+      ).join();
     } while (existingCodes.contains('ADL-$code'));
     return 'ADL-$code';
   }

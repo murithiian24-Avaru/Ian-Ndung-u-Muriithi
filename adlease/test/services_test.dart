@@ -156,10 +156,7 @@ void main() {
         'hash-one@example.com',
       );
       await expectLater(
-        auth.signIn(
-          email: 'hash-one@example.com',
-          password: 'wrong-password',
-        ),
+        auth.signIn(email: 'hash-one@example.com', password: 'wrong-password'),
         throwsA(isA<Exception>()),
       );
     });
@@ -233,10 +230,7 @@ void main() {
       final migrated = List<Map<String, dynamic>>.from(
         jsonDecode(prefs.getString('adlease_users')!),
       );
-      expect(
-        migrated.single['passwordHash'],
-        startsWith('pbkdf2_sha256'),
-      );
+      expect(migrated.single['passwordHash'], startsWith('pbkdf2_sha256'));
     });
   });
 }
