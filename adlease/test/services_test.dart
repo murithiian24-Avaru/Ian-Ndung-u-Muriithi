@@ -168,5 +168,4 @@ void main() {
       expect((await auth.getCurrentUser())?.uid, user.uid);
     });
   });
-
 }
