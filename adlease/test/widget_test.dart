@@ -165,7 +165,7 @@ void main() {
       };
       final ad = AdModel.fromMap(map);
       expect(ad.title, 'Test Ad');
-      expect(ad.rewardAmount, 2.50);
+      expect(ad.rewardAmount, 0); // Legacy reward values are ignored.
       expect(ad.durationSeconds, 60);
     });
   });
