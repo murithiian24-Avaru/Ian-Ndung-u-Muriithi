@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adlease/config/features.dart';
 import 'package:adlease/screens/wallet/wallet_screen.dart';
+import 'package:adlease/screens/ads/ads_screen.dart';
 import 'package:adlease/config/routes.dart';
 import 'package:adlease/l10n/app_localizations.dart';
 import 'package:adlease/providers/auth_provider.dart';
@@ -122,6 +123,13 @@ void main() {
       expect(find.text('Withdrawals are not available yet.'), findsOneWidget);
       expect(find.textContaining(r'$'), findsNothing);
     });
+  });
+
+  testWidgets('advertising screen contains no reward or watch action', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: AdsScreen()));
+    expect(find.text('Advertising is not available yet'), findsOneWidget);
+    expect(find.text('Claim Reward'), findsNothing);
+    expect(find.text('Watch'), findsNothing);
   });
 
   group('D. advertising rewards are disabled', () {
