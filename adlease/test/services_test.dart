@@ -103,7 +103,6 @@ void main() {
     });
   });
 
-
   group('Client verification is disabled (security regression)', () {
     test('verifyAccount refuses to grant verification locally', () async {
       final auth = AuthService();
