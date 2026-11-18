@@ -59,7 +59,13 @@ class AuthService {
     );
     final hash = _pbkdf2(password, salt, _pbkdf2Iterations);
     return 'pbkdf2_sha256' +
-        r'
+        r'$' +
+        _pbkdf2Iterations.toString() +
+        r'$' +
+        _toHex(salt) +
+        r'$' +
+        _toHex(hash);
+  }
 
   bool _constantTimeEquals(List<int> a, List<int> b) {
     if (a.length != b.length) return false;
