@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:uuid/uuid.dart';
 import 'package:adlease/models/wallet_model.dart';
 import 'package:adlease/models/transaction_model.dart';
 import 'package:adlease/services/storage_service.dart';
