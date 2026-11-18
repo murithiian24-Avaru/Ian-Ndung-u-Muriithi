@@ -128,12 +128,14 @@ class AuthService {
   Future<void> updateUser(UserModel user) async {
     final users = await _getUsers();
     final index = users.indexWhere((u) => u['uid'] == user.uid);
-    if (index != -1) {
-      final passwordHash = users[index]['passwordHash'];
-      users[index] = user.toMap();
-      users[index]['passwordHash'] = passwordHash;
-      await _saveUsers(users);
+    if (index == -1) {
+      throw StateError('Cannot update an account that does not exist locally');
     }
+
+    final passwordHash = users[index]['passwordHash'];
+    users[index] = user.toMap();
+    users[index]['passwordHash'] = passwordHash;
+    await _saveUsers(users);
     await _storage.saveString(_currentUserKey, jsonEncode(user.toMap()));
   }
 
