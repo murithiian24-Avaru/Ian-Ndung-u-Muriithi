@@ -115,6 +115,7 @@ void main() {
       );
     });
   });
+
   group('Referral code regression', () {
     test(
       'codes follow format and are unique across sequential signups',
