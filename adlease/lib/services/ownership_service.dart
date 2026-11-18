@@ -131,28 +131,12 @@ class OwnershipService {
     return OwnershipModel.fromMap(match.first);
   }
 
+  /// Local phone selection is not a financing quote or contract.
   Future<OwnershipModel> selectPhone({
     required String userId,
     required PhoneModel phone,
   }) async {
-    final ownership = OwnershipModel(
-      id: const Uuid().v4(),
-      userId: userId,
-      phoneId: phone.id,
-      phoneName: phone.fullName,
-      phonePrice: phone.price,
-      amountPaid: 0,
-      startDate: DateTime.now(),
-    );
-
-    final data = await _storage.getString(_ownershipsKey);
-    final list = data != null
-        ? List<Map<String, dynamic>>.from(jsonDecode(data))
-        : <Map<String, dynamic>>[];
-    list.add(ownership.toMap());
-    await _storage.saveString(_ownershipsKey, jsonEncode(list));
-
-    return ownership;
+    throw StateError('Phone selection is disabled until a financing partner provides a verified quote.');
   }
 
   /// Legacy local ownership balances are not financing repayments.
