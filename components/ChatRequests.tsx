@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FundRequest, RequestStatus, Wallet, TransactionCategory } from '../types';
-import { analyzeRequest } from '../services/geminiService';
-import { MessageSquare, Paperclip, Check, X, Wand2, FileText, Loader2 } from 'lucide-react';
+import { analyzeRequest, AnalysisResult } from '../services/geminiService';
+import { MessageSquare, Paperclip, Check, X, Wand2, FileText, Loader2, AlertTriangle } from 'lucide-react';
 
 interface ChatRequestsProps {
   requests: FundRequest[];
@@ -12,41 +12,62 @@ interface ChatRequestsProps {
 
 export default function ChatRequests({ requests, setRequests, wallet, setWallet }: ChatRequestsProps) {
   const [selectedRequest, setSelectedRequest] = useState<FundRequest | null>(null);
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<AnalysisResult | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const handleSelect = async (req: FundRequest) => {
     setSelectedRequest(req);
     setAiAnalysis(null);
+    setActionError(null);
     
-    // Auto-trigger AI analysis on selection
     if (req.status === RequestStatus.PENDING) {
         setLoadingAi(true);
-        const result = await analyzeRequest(req.reason, req.attachmentUrl);
-        setAiAnalysis(result);
-        setLoadingAi(false);
+        try {
+            const result = await analyzeRequest(req.reason, req.attachmentUrl);
+            setAiAnalysis(result);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            setAiAnalysis({
+                recommendation: "Manual Review Needed",
+                category: TransactionCategory.GENERAL,
+                confidence: 0,
+                summary: "Analysis could not be completed.",
+                error: `Unexpected error: ${message}`
+            });
+        } finally {
+            setLoadingAi(false);
+        }
     }
   };
 
   const handleAction = (status: RequestStatus) => {
     if (!selectedRequest) return;
+    setActionError(null);
     
-    // Update request status
-    const updated = requests.map(r => r.id === selectedRequest.id ? { ...r, status } : r);
-    setRequests(updated);
-    
-    // If approved, deduct funds (simplified)
     if (status === RequestStatus.APPROVED) {
+        const categoryFunds = wallet.allocated[selectedRequest.category];
+        const totalAvailable = categoryFunds + wallet.balance;
+        if (selectedRequest.amount > totalAvailable) {
+            setActionError(
+                `Insufficient funds. Requested KES ${selectedRequest.amount.toLocaleString()} but only KES ${totalAvailable.toLocaleString()} available (KES ${categoryFunds.toLocaleString()} in ${selectedRequest.category} + KES ${wallet.balance.toLocaleString()} unallocated).`
+            );
+            return;
+        }
+
         const newWallet = { ...wallet };
-        // Check if category has funds, else take from balance
         if (newWallet.allocated[selectedRequest.category] >= selectedRequest.amount) {
             newWallet.allocated[selectedRequest.category] -= selectedRequest.amount;
         } else {
-            newWallet.balance -= selectedRequest.amount;
+            const remainder = selectedRequest.amount - newWallet.allocated[selectedRequest.category];
+            newWallet.allocated[selectedRequest.category] = 0;
+            newWallet.balance -= remainder;
         }
         setWallet(newWallet);
     }
     
+    const updated = requests.map(r => r.id === selectedRequest.id ? { ...r, status } : r);
+    setRequests(updated);
     setSelectedRequest(null);
   };
 
@@ -116,12 +137,15 @@ export default function ChatRequests({ requests, setRequests, wallet, setWallet 
                                 <span className="text-sm font-medium">AI Analyzing Request & Documents...</span>
                             </div>
                         ) : aiAnalysis ? (
-                            <div className="bg-brand-50 border border-brand-100 p-4 rounded-lg">
-                                <div className="flex items-center space-x-2 mb-2 text-brand-800">
-                                    <Wand2 size={18} />
-                                    <span className="font-bold text-sm">Gemini Analysis</span>
+                            <div className={`${aiAnalysis.error ? 'bg-red-50 border-red-200' : 'bg-brand-50 border-brand-100'} border p-4 rounded-lg`}>
+                                <div className={`flex items-center space-x-2 mb-2 ${aiAnalysis.error ? 'text-red-800' : 'text-brand-800'}`}>
+                                    {aiAnalysis.error ? <AlertTriangle size={18} /> : <Wand2 size={18} />}
+                                    <span className="font-bold text-sm">{aiAnalysis.error ? 'Analysis Error' : 'Gemini Analysis'}</span>
                                 </div>
-                                <div className="space-y-2 text-sm text-brand-900">
+                                {aiAnalysis.error && (
+                                    <p className="text-sm text-red-700 mb-2">{aiAnalysis.error}</p>
+                                )}
+                                <div className={`space-y-2 text-sm ${aiAnalysis.error ? 'text-red-900' : 'text-brand-900'}`}>
                                     <p><span className="font-semibold">Category Match:</span> {aiAnalysis.category} (Confidence: {aiAnalysis.confidence}%)</p>
                                     <p><span className="font-semibold">Summary:</span> {aiAnalysis.summary}</p>
                                     <p><span className="font-semibold">Recommendation:</span> <span className="uppercase font-bold">{aiAnalysis.recommendation}</span></p>
@@ -133,7 +157,14 @@ export default function ChatRequests({ requests, setRequests, wallet, setWallet 
 
                 {/* Action Footer */}
                 {selectedRequest.status === RequestStatus.PENDING && (
-                    <div className="p-6 bg-white border-t border-gray-200 flex justify-end space-x-4">
+                    <div className="p-6 bg-white border-t border-gray-200">
+                    {actionError && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2 text-red-700 text-sm">
+                            <AlertTriangle size={16} className="flex-shrink-0" />
+                            <span>{actionError}</span>
+                        </div>
+                    )}
+                    <div className="flex justify-end space-x-4">
                         <button 
                             onClick={() => handleAction(RequestStatus.REJECTED)}
                             className="px-6 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 font-medium flex items-center"
@@ -146,6 +177,7 @@ export default function ChatRequests({ requests, setRequests, wallet, setWallet 
                         >
                             <Check size={20} className="mr-2" /> Approve & Pay
                         </button>
+                    </div>
                     </div>
                 )}
             </>

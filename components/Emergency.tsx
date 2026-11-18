@@ -12,17 +12,19 @@ export default function Emergency({ wallet, recipients }: EmergencyProps) {
   const [countdown, setCountdown] = useState(5);
   const [mode, setMode] = useState<'IDLE' | 'ARMED' | 'RELEASED'>('IDLE');
 
+  const emergencyContact = recipients.find(r => r.type === 'Family') || recipients[0];
+  const hasEmergencyContact = Boolean(emergencyContact);
+
   const handlePress = () => {
+    if (!hasEmergencyContact) return;
     if (mode === 'IDLE') {
         setMode('ARMED');
     } else if (mode === 'ARMED') {
-        // Cancel
         setMode('IDLE');
         setCountdown(5);
     }
   };
 
-  // Simulated Effect for release
   React.useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     if (mode === 'ARMED' && countdown > 0) {
@@ -32,8 +34,6 @@ export default function Emergency({ wallet, recipients }: EmergencyProps) {
     }
     return () => clearTimeout(timer);
   }, [mode, countdown]);
-
-  const emergencyContact = recipients.find(r => r.type === 'Family') || recipients[0];
 
   return (
     <div className="max-w-2xl mx-auto text-center pt-10">
@@ -47,7 +47,17 @@ export default function Emergency({ wallet, recipients }: EmergencyProps) {
       </div>
 
       <div className="bg-white p-8 rounded-3xl shadow-xl border border-red-100 relative overflow-hidden">
-        {mode === 'RELEASED' ? (
+        {!hasEmergencyContact ? (
+            <div className="py-12">
+                <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <AlertTriangle className="text-red-600" size={40} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">No Emergency Contact</h2>
+                <p className="text-gray-600">
+                    You must add at least one trusted recipient before the emergency release system can be used.
+                </p>
+            </div>
+        ) : mode === 'RELEASED' ? (
              <div className="py-12">
                 <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <PhoneCall className="text-green-600" size={40} />
