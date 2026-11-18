@@ -1,5 +1,7 @@
 // Tests for the audit fixes on branch fix/adlease-audit-safe-fixes.
 // Run with: flutter test
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adlease/services/ad_service.dart';
@@ -113,6 +115,57 @@ void main() {
         () => AuthService().resetPassword('someone@example.com'),
         throwsA(isA<Exception>()),
       );
+    });
+  });
+  group('Account status protection during profile updates', () {
+    test('profile update cannot promote or deactivate a user', () async {
+      final auth = AuthService();
+      final user = await auth.signUp(
+        email: 'status@example.com',
+        password: 'Password123!',
+        fullName: 'Status User',
+        phoneNumber: '+254700000000',
+        country: 'Kenya',
+      );
+      await auth.updateUser(
+        user.copyWith(
+          fullName: 'Updated Name',
+          isVerified: true,
+          isActive: false,
+          referralCode: 'ADL-MANIPULATED',
+        ),
+      );
+
+      final current = await auth.getCurrentUser();
+      expect(current?.fullName, 'Updated Name');
+      expect(current?.isVerified, isFalse);
+      expect(current?.isActive, isTrue);
+      expect(current?.referralCode, user.referralCode);
+
+      final prefs = await SharedPreferences.getInstance();
+      final storedUsers = List<Map<String, dynamic>>.from(
+        jsonDecode(prefs.getString('adlease_users')!),
+      );
+      final stored = storedUsers.single;
+      expect(stored['isVerified'], isFalse);
+      expect(stored['isActive'], isTrue);
+      expect(stored['referralCode'], user.referralCode);
+    });
+
+    test('unknown user IDs cannot be written as current account', () async {
+      final auth = AuthService();
+      final user = await auth.signUp(
+        email: 'existing@example.com',
+        password: 'Password123!',
+        fullName: 'Existing',
+        phoneNumber: '+254700000000',
+        country: 'Kenya',
+      );
+      await expectLater(
+        auth.updateUser(user.copyWith(uid: 'non-existent')),
+        throwsA(isA<StateError>()),
+      );
+      expect((await auth.getCurrentUser())?.uid, user.uid);
     });
   });
 }
