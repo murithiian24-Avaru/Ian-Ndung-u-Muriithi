@@ -1,5 +1,7 @@
 // Tests for the audit fixes on branch fix/adlease-audit-safe-fixes.
 // Run with: flutter test
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adlease/services/ad_service.dart';
