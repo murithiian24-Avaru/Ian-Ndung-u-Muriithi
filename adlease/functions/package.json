@@ -1,0 +1,20 @@
+{
+  "name": "adlease-functions",
+  "private": true,
+  "engines": { "node": "20" },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test lib/test/*.test.js",
+    "test:emulator": "firebase emulators:exec --only firestore,auth \"npm test\""
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "firebase-tools": "^14.0.0",
+    "typescript": "^5.7.0"
+  }
+}

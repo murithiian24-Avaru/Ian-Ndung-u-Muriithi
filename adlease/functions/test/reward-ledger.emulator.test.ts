@@ -1,0 +1,68 @@
+import assert from "node:assert/strict";
+import { after, before, test } from "node:test";
+import { initializeApp, deleteApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { applyVerifiedPartnerEvent } from "../src/index";
+
+const projectId = "adlease-emulator-test";
+let app: ReturnType<typeof initializeApp>;
+let db: ReturnType<typeof getFirestore>;
+
+before(async () => {
+  process.env.GCLOUD_PROJECT = projectId;
+  app = initializeApp({ projectId }, "ledger-test");
+  db = getFirestore(app);
+  await db.recursiveDelete(db.collection("users"));
+  await db.recursiveDelete(db.collection("adSessions"));
+  await db.recursiveDelete(db.collection("rewardClaims"));
+  await db.recursiveDelete(db.collection("rewardLedger"));
+  await db.recursiveDelete(db.collection("wallets"));
+  await db.recursiveDelete(db.collection("dailyRewardCounters"));
+});
+after(async () => { await deleteApp(app); });
+
+async function seed(uid: string, sessionId: string) {
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  await db.doc(`users/${uid}`).set({ status: "active", verificationStatus: "approved" });
+  await db.doc(`adSessions/${sessionId}`).set({
+    uid, dayKey: day, status: "issued",
+    createdAt: new Date(), expiresAt: new Date(Date.now() + 300000),
+  });
+  await db.doc(`dailyRewardCounters/${uid}_${day}`).set({ uid, dayKey: day, issuedCount: 1, creditedCount: 0 });
+}
+
+test("duplicate provider callback credits exactly once", async () => {
+  await seed("u-duplicate", "s-duplicate");
+  const event = { providerEventId: "provider-event-duplicate", sessionId: "s-duplicate", uid: "u-duplicate", amountMinor: 250 };
+  const first = await applyVerifiedPartnerEvent(event);
+  const second = await applyVerifiedPartnerEvent(event);
+  assert.equal(first.credited, true);
+  assert.equal(second.credited, false);
+  assert.equal((await db.doc("wallets/u-duplicate").get()).get("balanceMinor"), 250);
+  assert.equal((await db.collection("rewardLedger").where("uid", "==", "u-duplicate").get()).size, 1);
+});
+
+test("concurrent callbacks for the same event cannot double-credit", async () => {
+  await seed("u-concurrent", "s-concurrent");
+  const event = { providerEventId: "provider-event-concurrent", sessionId: "s-concurrent", uid: "u-concurrent", amountMinor: 250 };
+  const results = await Promise.all([applyVerifiedPartnerEvent(event), applyVerifiedPartnerEvent(event)]);
+  assert.equal(results.filter((r) => r.credited).length, 1);
+  assert.equal((await db.doc("wallets/u-concurrent").get()).get("balanceMinor"), 250);
+});
+
+test("suspended account cannot receive reward", async () => {
+  await seed("u-suspended", "s-suspended");
+  await db.doc("users/u-suspended").update({ status: "suspended" });
+  await assert.rejects(applyVerifiedPartnerEvent({
+    providerEventId: "provider-event-suspended", sessionId: "s-suspended", uid: "u-suspended", amountMinor: 250,
+  }), /not eligible/);
+});
+
+test("daily reward limit is enforced on server state", async () => {
+  await seed("u-limit", "s-limit");
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  await db.doc(`dailyRewardCounters/u-limit_${day}`).update({ creditedCount: 3 });
+  await assert.rejects(applyVerifiedPartnerEvent({
+    providerEventId: "provider-event-limit", sessionId: "s-limit", uid: "u-limit", amountMinor: 250,
+  }), /daily reward limit/);
+});
