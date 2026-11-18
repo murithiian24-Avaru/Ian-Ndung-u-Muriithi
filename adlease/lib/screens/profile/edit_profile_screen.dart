@@ -57,19 +57,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     setState(() => _isSaving = true);
 
-    final auth = context.read<AuthProvider>();
-    if (auth.user != null) {
-      final updatedUser = auth.user!.copyWith(
-        fullName: _nameController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
-        country: _selectedCountry,
-      );
-      await auth.updateUser(updatedUser);
-    }
+    try {
+      final auth = context.read<AuthProvider>();
+      if (auth.user != null) {
+        final updatedUser = auth.user!.copyWith(
+          fullName: _nameController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+          country: _selectedCountry,
+        );
+        await auth.updateUser(updatedUser);
+      }
 
-    setState(() => _isSaving = false);
-
-    if (mounted) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profile updated successfully!'),
@@ -77,6 +77,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       );
       Navigator.pop(context);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile could not be saved. Please try again.'),
+          backgroundColor: AdLeaseTheme.errorRed,
+        ),
+      );
     }
   }
 
