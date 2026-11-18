@@ -16,18 +16,33 @@ export default function FundManager({ wallet, setWallet, recipients }: FundManag
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const [error, setError] = useState('');
+
   const handleSend = () => {
+    setError('');
     if (!amount || !selectedRecipient) return;
+
+    const amt = parseFloat(amount);
+    if (isNaN(amt) || amt <= 0) {
+      setError('Amount must be a positive number.');
+      return;
+    }
+    if (amt > wallet.balance) {
+      setError('Insufficient wallet balance for this transaction.');
+      return;
+    }
+    const recipient = recipients.find(r => r.id === selectedRecipient);
+    if (!recipient || recipient.status !== 'Verified') {
+      setError('Funds can only be sent to verified recipients.');
+      return;
+    }
+
     setProcessing(true);
 
     setTimeout(() => {
-        const amt = parseFloat(amount);
         const newWallet = { ...wallet };
-        
-        // Deduct from main balance (simplified logic: usually you allocate first, then send)
-        // Here we just update the specific allocation bucket
         newWallet.allocated[category] += amt;
-        newWallet.balance -= amt; // Assuming main balance is unallocated pool for this demo
+        newWallet.balance -= amt;
 
         setWallet(newWallet);
         setProcessing(false);
@@ -102,6 +117,10 @@ export default function FundManager({ wallet, setWallet, recipients }: FundManag
                             onChange={(e) => setNote(e.target.value)}
                         />
                     </div>
+
+                    {error && (
+                      <p className="text-red-600 text-sm font-medium bg-red-50 p-3 rounded-lg">{error}</p>
+                    )}
 
                     <button 
                         disabled={processing || !amount || !selectedRecipient}
