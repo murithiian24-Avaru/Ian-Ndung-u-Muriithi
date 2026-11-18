@@ -30,6 +30,7 @@ Scope: feat/adlease-separate-financing-mock-provider. No merge, deployment, prod
 - [x] Add FinancingProvider interface.
 - [x] Add MockFinancingProvider that returns no quotes and cannot issue real offers/contracts.
 - [x] Add mock provider boundary tests.
+- [x] Add a partner-neutral payment gateway contract and a no-money mock that rejects payment creation and customer payment requests.
 - [ ] Add adapter contract tests and repository/service injection.
 - [ ] Replace legacy sample handset catalogue with partner-sourced quote display only.
 - [ ] Add customer consent/version evidence and partner reference persistence.
@@ -47,6 +48,7 @@ Scope: feat/adlease-separate-financing-mock-provider. No merge, deployment, prod
 
 ## Phase 4 — admin security, payment sandbox and release testing
 ### Admin
+- [x] Fail-closed dashboard entry point: all sample-data pages are unreachable until security controls exist.
 - [ ] Authentication with MFA for privileged accounts.
 - [ ] Server-side role-based authorization; no client-only role checks.
 - [ ] Audited role grant/revocation and least-privilege roles.
@@ -56,6 +58,7 @@ Scope: feat/adlease-separate-financing-mock-provider. No merge, deployment, prod
 - [ ] Security testing before any Vercel deployment.
 
 ### Payments
+- [x] Add provider-neutral payment interface and disabled mock; it cannot create intents or mark payments successful.
 - [ ] Daraja sandbox application and test credentials configured locally/secret manager only.
 - [ ] Server-side payment intent and callback validation.
 - [ ] Provider-scoped idempotency, replay protection, amount/currency/reference validation.
