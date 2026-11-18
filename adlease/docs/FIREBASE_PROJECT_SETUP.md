@@ -58,6 +58,31 @@ The emulator project ID is `demo-adlease`; it must not be replaced with the real
 
 Connect Firebase Auth, Firestore and Functions SDKs to the emulators before any app-level integration test. Never use emulator host settings in a production build. Emulator connection must be guarded by an explicit debug-only configuration flag.
 
+## Run the Flutter app against local emulators
+
+A debug-only bootstrap is included in `lib/services/firebase_bootstrap.dart`. Firebase is not initialized by default. To opt into local emulators explicitly:
+
+```bash
+cd adlease
+flutter run --dart-define=ADLEASE_USE_FIREBASE_EMULATORS=true
+```
+
+For an Android emulator, the default host is `10.0.2.2`; for iOS simulator/desktop it is `127.0.0.1`. For a physical Android device, provide the development computer's LAN address:
+
+```bash
+flutter run \
+  --dart-define=ADLEASE_USE_FIREBASE_EMULATORS=true \
+  --dart-define=ADLEASE_FIREBASE_EMULATOR_HOST=192.168.1.10
+```
+
+Replace the example IP with the development computer's actual LAN IP. Start emulators first from the `adlease/` directory:
+
+```bash
+firebase emulators:start --project demo-adlease
+```
+
+This bootstrap rejects emulator mode in release builds and uses the `demo-adlease` project ID. The app still uses its existing local demo `AuthProvider`; Firebase initialization alone does not switch the login/register screens to Firebase. Do not interpret this as completed app-wide Firebase authentication.
+
 ## Before enabling Firebase in the app
 
 - Keep the local demo authentication flow available as a fallback until the Firebase user journey is tested end-to-end.
