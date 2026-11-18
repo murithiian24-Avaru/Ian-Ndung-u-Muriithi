@@ -26,6 +26,25 @@ function safeId(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
+export const initializeUserProfile = onCall(async (request) => {
+  const auth = requireAuth(request);
+  const userRef = db.collection("users").doc(auth.uid);
+  await db.runTransaction(async (tx) => {
+    const existing = await tx.get(userRef);
+    if (existing.exists) return;
+    tx.create(userRef, {
+      uid: auth.uid,
+      email: String(auth.token.email ?? ""),
+      status: "pending",
+      verificationStatus: "not_started",
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+      schemaVersion: 1,
+    });
+  });
+  return { initialized: true };
+});
+
 export const requestVerification = onCall(async (request) => {
   const auth = requireAuth(request);
   const caseRef = db.collection("verificationCases").doc();
