@@ -102,8 +102,6 @@ class AuthService {
 
   bool _isLegacyHash(String stored) => !stored.startsWith(r'pbkdf2_sha256$');
 
-
-
   String _generateReferralCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final random = DateTime.now().millisecondsSinceEpoch;
