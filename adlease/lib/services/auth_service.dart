@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
@@ -17,10 +18,10 @@ class AuthService {
 
   String _generateReferralCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final random = DateTime.now().millisecondsSinceEpoch;
+    final random = math.Random.secure();
     final code = List.generate(
       8,
-      (i) => chars[(random + i * 7) % chars.length],
+      (_) => chars[random.nextInt(chars.length)],
     ).join();
     return 'ADL-$code';
   }
