@@ -105,3 +105,34 @@ test("one session cannot be credited by two different provider events", async ()
   }), /already-used/);
   assert.equal((await db.doc("wallets/u-session-once").get()).get("balanceMinor"), 250);
 });
+
+test("concurrent distinct rewards preserve wallet and ledger consistency", async () => {
+  const uid = "u-wallet-race";
+  const day = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+  await db.doc(`users/${uid}`).set({ status: "active", verificationStatus: "approved" });
+  await db.doc(`dailyRewardCounters/${uid}_${day}`).set({
+    uid, dayKey: day, issuedCount: 2, creditedCount: 0,
+  });
+  for (const sessionId of ["s-wallet-race-a", "s-wallet-race-b"]) {
+    await db.doc(`adSessions/${sessionId}`).set({
+      uid, dayKey: day, status: "issued",
+      createdAt: new Date(), expiresAt: new Date(Date.now() + 300000),
+    });
+  }
+  const results = await Promise.all([
+    applyVerifiedPartnerEvent({
+      provider: "network-a", providerEventId: "wallet-race-a",
+      sessionId: "s-wallet-race-a", uid,
+    }),
+    applyVerifiedPartnerEvent({
+      provider: "network-b", providerEventId: "wallet-race-b",
+      sessionId: "s-wallet-race-b", uid,
+    }),
+  ]);
+  assert.equal(results.filter((r) => r.credited).length, 2);
+  assert.equal((await db.doc(`wallets/${uid}`).get()).get("balanceMinor"), 500);
+  assert.equal((await db.doc(`dailyRewardCounters/${uid}_${day}`).get()).get("creditedCount"), 2);
+  assert.equal((await db.collection("rewardLedger").where("uid", "==", uid).get()).size, 2);
+});
