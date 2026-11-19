@@ -1,29 +1,13 @@
-import { createHash } from "node:crypto";
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 initializeApp();
 const db = getFirestore();
-const DAILY_LIMIT = 3;
-const REWARD_MINOR = 250; // KES 2.50, expressed in cents; pilot value requires approval.
-const SESSION_TTL_MS = 5 * 60 * 1000;
 
 function requireAuth(request: { auth?: { uid: string; token: Record<string, unknown> } | null }) {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign-in required.");
   return request.auth;
-}
-
-function nairobiDay(date: Date): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit",
-  }).formatToParts(date);
-  const values = Object.fromEntries(parts.map((p) => [p.type, p.value]));
-  return `${values.year}-${values.month}-${values.day}`;
-}
-
-function safeId(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
 }
 
 export const initializeUserProfile = onCall(async (request) => {
@@ -42,7 +26,7 @@ export const initializeUserProfile = onCall(async (request) => {
     const phoneNumber = rawPhone.trim();
     const country = rawCountry.trim();
     if (fullName.length < 2 || fullName.length > 100
-        || !/^\\+[1-9]\\d{7,14}$/.test(phoneNumber)
+        || !/^\+[1-9]\d{7,14}$/.test(phoneNumber)
         || country.length < 2 || country.length > 60) {
       throw new HttpsError("invalid-argument", "Provide a valid name, E.164 phone number and country.");
     }
