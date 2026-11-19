@@ -1,104 +1,131 @@
-# Firebase project setup (AdLease)
+# Firebase project setup — AdLease Staging
 
-This guide prepares a **staging/development** Firebase project. Do not point the app at production while emulator integration and security review are still in progress.
+**Purpose:** configure the existing staging project only. This document does not authorise production deployment, real customer data, live payments or public release.
 
-## Current repository facts
+## Existing project (already created)
 
-- Flutter app directory: `adlease/`
-- Android application ID currently in Gradle: `com.adlease.adlease`
-- Firebase Emulator Suite configuration: `adlease/firebase.json`
-- Emulator project used by tests: `demo-adlease`
+| Item | Confirmed state |
+|---|---|
+| Firebase project name | `AdLease Staging` |
+| Project ID | `adlease-staging` |
+| Project number | `268757513757` |
+| Firestore database | `(default)` |
+| Firestore location | `eur3` — Europe multi-region |
+| Firestore edition/mode | Standard edition; production mode/security locked |
+| Firestore backups | Scheduled backups off |
+| Authentication | Email/Password provider enabled |
+| Google sign-in | Not enabled |
+| Analytics | Disabled |
+| Android Firebase app | Not yet registered/confirmed |
+| `google-services.json` / `firebase_options.dart` | Not yet generated/committed |
+| Firebase CLI login | Not yet confirmed |
+| App-wide Firebase auth | Not integrated; app still uses local demo `AuthProvider` |
+| Production functions | Not deployed |
+
+The existing `eur3` database location is outside Kenya. Do not put real Kenyan user data, national IDs, financial records or production identity documents into this project until the ODPC cross-border transfer assessment, legal basis, DPA/safeguards and any required DPIA/consultation are complete. Use synthetic test records only.
+
+## Repository configuration
+
+- Flutter project: `adlease/`
+- Android application ID: `com.adlease.adlease`
+- Firebase project alias: `staging` → `adlease-staging` (no production alias is configured)
+- Local emulator project: `demo-adlease` (must remain separate from the real project)
 - Auth emulator: `9099`; Firestore emulator: `8080`; Functions emulator: `5001`
-- Cloud Functions runtime: Node.js 20
-- Firebase Flutter dependencies and a separate `FirebaseIdentityService` adapter are already present.
-- The app's default `AuthProvider` is still the local demo provider. Do not treat Firebase sign-in as active in the app yet.
+- Cloud Functions runtime: Node.js 22. Node.js 20 was decommissioned on 30 October 2026, so it must not be used for new deployments.
 
-## Access needed from the owner
+## Step 1 — verify the Firebase Console project
 
-1. A Google account you control, with permission to create Firebase projects.
-2. Permission to create a new Firebase project for AdLease staging (Project Owner or equivalent project-creation access).
-3. Access to the Firebase Console and Google Cloud Console for that project.
-4. Later, a project-scoped service account / GitHub Actions identity for deployment. Do not create or share a service-account JSON key for this setup step.
-5. If Google sign-in is required, access to configure the OAuth consent screen / support email and the Android SHA fingerprints for the app.
+Open https://console.firebase.google.com/ and select **AdLease Staging** (`adlease-staging`). Verify the project ID shown in Project settings matches exactly. Do not create another project.
 
-Do not send passwords, OAuth client secrets, service-account private keys, signing keystores, or M-PESA credentials in chat or commit them to GitHub.
+Authentication → Sign-in method:
+- Email/Password should remain enabled.
+- Google provider remains off until Android app registration, signing fingerprints and OAuth configuration are completed.
 
-## Create the staging project
+Firestore Database:
+- Confirm database `(default)`, location `eur3`, Standard edition and locked production rules.
+- Do not change the database location; it cannot be casually moved after creation.
+- Do not add live user data.
 
-1. Open https://console.firebase.google.com/ and sign in with your Google account.
-2. Create a new project named **AdLease Staging**. Choose a globally unique project ID and save it privately.
-3. Keep this separate from any future production project. Do not enable paid production services or deploy functions yet.
-4. In **Build → Authentication → Get started**, enable **Email/Password**. Enable Google only after the Android app signing fingerprints and OAuth settings are ready.
-5. Create the default Firestore database only when the staging project setup asks for it. Select a region deliberately; changing a Firestore database region later is not straightforward. Confirm the region with the owner before creating it.
-6. Do not add real customer data.
+Analytics remains disabled as previously selected.
 
-## Configure FlutterFire locally
+## Step 2 — register the Android app and generate FlutterFire options
 
-Run these commands from a trusted development machine with Flutter/Dart and Node.js 20 installed:
+On a trusted development computer with Flutter 3.47.8 / Dart 3.13 and Node.js installed:
 
 ```bash
 cd adlease
 firebase login
 dart pub global activate flutterfire_cli
 firebase projects:list
-flutterfire configure --project YOUR_STAGING_PROJECT_ID --platforms android
+flutterfire configure --project=adlease-staging --platforms=android
 ```
 
-The Android package/application ID to register is currently `com.adlease.adlease`. Do not change it as part of Firebase setup without a separate approved package-ID migration.
+When prompted, select the existing **AdLease Staging** project. Register/select Android package ID exactly as:
 
-FlutterFire generates `lib/firebase_options.dart`. These platform identifiers are not private credentials, but review the generated diff before committing it. Keep service-account credentials and OAuth client secrets out of the repository.
+```text
+com.adlease.adlease
+```
 
-## Emulator-first app connection
+Do not change the package ID. The FlutterFire CLI should create/register the Android Firebase app if it does not already exist and generate `lib/firebase_options.dart`. Review the generated diff and ensure the options identify project `adlease-staging` before committing. These app configuration identifiers are not service-account secrets. Never commit service-account JSON private keys, OAuth client secrets, or signing keystores.
 
-The emulator project ID is `demo-adlease`; it must not be replaced with the real staging project ID when running local emulator tests.
+Google sign-in is not required for the first staging authentication test. Keep Email/Password only until the Android SHA fingerprints and OAuth consent configuration are deliberately completed.
 
-- Android Studio emulator host: `10.0.2.2`
-- iOS simulator host: `127.0.0.1`
-- Physical Android device: use the development computer's LAN IP address, with both devices on the same trusted network and the required ports allowed by the local firewall.
+## Step 3 — keep local emulator tests isolated
 
-Connect Firebase Auth, Firestore and Functions SDKs to the emulators before any app-level integration test. Never use emulator host settings in a production build. Emulator connection must be guarded by an explicit debug-only configuration flag.
+The existing debug bootstrap uses an explicit opt-in flag and the demo project ID. It must not silently connect to the real staging project.
 
-## Run the Flutter app against local emulators
+From `adlease/`, start local emulators:
 
-A debug-only bootstrap is included in `lib/services/firebase_bootstrap.dart`. Firebase is not initialized by default. To opt into local emulators explicitly:
+```bash
+firebase emulators:start --project demo-adlease
+```
+
+In a second terminal:
 
 ```bash
 cd adlease
 flutter run --dart-define=ADLEASE_USE_FIREBASE_EMULATORS=true
 ```
 
-For an Android emulator, the default host is `10.0.2.2`; for iOS simulator/desktop it is `127.0.0.1`. For a physical Android device, provide the development computer's LAN address:
+For Android emulator, the host is `10.0.2.2`. For desktop/iOS simulator it is `127.0.0.1`. A physical Android device requires a trusted LAN host IP and local firewall configuration. Never enable emulator mode in a release build.
 
-```bash
-flutter run \
-  --dart-define=ADLEASE_USE_FIREBASE_EMULATORS=true \
-  --dart-define=ADLEASE_FIREBASE_EMULATOR_HOST=192.168.1.10
-```
+## Step 4 — staging project access and billing boundary
 
-Replace the example IP with the development computer's actual LAN IP. Start emulators first from the `adlease/` directory:
+The Firebase Emulator Suite and local TypeScript/Flutter tests do not require upgrading the staging project or deploying anything.
 
-```bash
-firebase emulators:start --project demo-adlease
-```
+**Deploying Cloud Functions to Firebase requires the Blaze pay-as-you-go plan and a linked Cloud Billing account.** Do not upgrade the project yet. Before any upgrade:
+- Confirm the payment method and billing account owner.
+- Set budget alerts and Cloud Run/Functions spend controls.
+- Review expected deployment and logging costs.
+- Obtain the owner's explicit approval.
 
-This bootstrap rejects emulator mode in release builds and uses the `demo-adlease` project ID. The app still uses its existing local demo `AuthProvider`; Firebase initialization alone does not switch the login/register screens to Firebase. Do not interpret this as completed app-wide Firebase authentication.
+A budget alert is not a hard spending cap. Until that approval, use emulator tests only; no `firebase deploy` command should be run.
 
-## Before enabling Firebase in the app
+## Step 5 — app integration is a separate controlled change
 
-- Keep the local demo authentication flow available as a fallback until the Firebase user journey is tested end-to-end.
-- Add integration tests for registration, email verification, login, password reset, sign-out, profile initialization, verification request and reviewer decision.
-- Ensure user profile status and verification status are read from server-controlled data; never trust a client-side boolean.
-- Keep Firestore client writes denied for wallet, ledger, verification decisions, reward claims and admin audit records.
-- Deploy rules/functions only to the staging project after explicit review. Never deploy to production from this setup guide.
+Firebase SDK dependencies and `FirebaseIdentityService` exist, but `AuthProvider` and the app login/register screens still use the local demo `AuthService` and SharedPreferences. The app is not yet using Firebase Authentication for real users.
 
-## Information to return to the engineering team
+After FlutterFire options are generated, the next engineering PR must:
+1. Add an explicit debug-only staging bootstrap that uses `DefaultFirebaseOptions.currentPlatform` only when a dedicated staging flag is set.
+2. Keep emulator and staging modes mutually exclusive; release builds must fail closed unless an approved production configuration is introduced separately.
+3. Wire Firebase email/password registration, email verification, login, password reset and sign-out into a separate Firebase Auth provider.
+4. Call the server profile initializer after Firebase account creation and handle partial failures safely.
+5. Read server-controlled verification/account state; never trust local booleans.
+6. Add widget/integration tests for registration, email verification, login, password reset, logout and profile creation.
+7. Keep the local demo mode clearly labelled and never silently fall back from failed Firebase login to local accounts.
 
-Share only:
-- Firebase staging Project ID (not passwords or private keys).
-- Confirmed Firestore region.
-- Whether Email/Password provider is enabled.
-- Whether the project is staging-only and contains no real customer data.
+Do not make this change by simply switching the current `AuthService` implementation in place; preserve the existing testable demo adapter until end-to-end tests pass.
 
-## Separate partner workstream: M-KOPA
+## Information still needed from the owner
 
-M-KOPA remains the intended first supplier/financing target, not a confirmed partner. Do not configure M-KOPA-specific credentials or hard-code its commercial terms. The integration should use a provider-neutral supplier/financier interface until a signed agreement defines device catalogue, wholesale price, deposit, repayment schedule, settlement account, default/returns, customer data sharing and reconciliation obligations.
+Only these non-secret checks remain:
+- Run the FlutterFire CLI commands above on the trusted development computer.
+- Confirm it registered Android package `com.adlease.adlease` and generated `adlease/lib/firebase_options.dart`.
+- Share the generated file through the repository/approved file workflow; do not paste secrets into chat.
+- Confirm Firebase Console still shows project `adlease-staging`, database `(default)`, region `eur3`, and Email/Password enabled.
+
+Do not send passwords, private keys, service-account JSON, M-PESA credentials or signing keystores in chat.
+
+## Separate partner workstream — M-KOPA
+
+M-KOPA remains the intended first supplier/financing target, not a confirmed partner. Do not configure M-KOPA credentials or hard-code commercial terms. Keep the integration provider-neutral until signed agreements define the device catalogue, wholesale price, customer quotation, deposit, repayment schedule, settlement, default/returns, warranty, customer data sharing and reconciliation.
