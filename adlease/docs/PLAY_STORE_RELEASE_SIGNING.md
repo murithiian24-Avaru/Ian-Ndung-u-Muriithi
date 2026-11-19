@@ -65,3 +65,40 @@ For the closest-to-production physical-device test, use Google Play **Internal t
 7. Keep production rollout disabled until the owner separately approves all legal, privacy, backend and partner gates.
 
 The CI signing test uses a disposable self-signed key only to prove Gradle can build and verify a signed AAB. It is not the owner's upload key and its AAB must never be uploaded to Play Console or used as the final device-test artifact.
+
+## Physical-device test record template
+
+Complete one record for each test build/device. Use a non-production test account and synthetic data only.
+
+| Field | Record |
+|---|---|
+| Test date/time and tester | Pending |
+| Device manufacturer/model | Pending |
+| Android version / security patch | Pending |
+| Build version name / version code | Pending |
+| AAB SHA-256 checksum | Pending |
+| Upload certificate SHA-256 fingerprint | Pending |
+| Play track and tester account | Internal testing / Pending |
+| Install source | Google Play opt-in |
+| Network conditions | Wi-Fi / mobile data / offline |
+| Result / defect references | Pending |
+
+### Test cases
+
+- [ ] Internal-test opt-in succeeds and Google Play installs the uploaded build.
+- [ ] Android package is exactly `com.adlease.adlease`; version name/code match the release record.
+- [ ] App launches from a clean install without crash or unexpected permission prompts.
+- [ ] Welcome, login, registration and demo/staging labels are accurate; no live-customer sign-up is enabled before Firebase auth approval.
+- [ ] Email verification and password-reset screens do not falsely report success.
+- [ ] Ads cannot be watched for rewards; no KES-per-ad, wallet-credit or phone-repayment claim appears.
+- [ ] Financing screens are clearly mock/demo only; no real credit application or payment is submitted.
+- [ ] Wallet, withdrawal and ownership-payment controls cannot create real financial activity.
+- [ ] Settings rows work or are visibly disabled; no overflow on the smallest supported screen.
+- [ ] English and Kiswahili text fit; light and dark themes render correctly.
+- [ ] Rotate is not required; portrait orientation remains stable.
+- [ ] Background/resume, process kill/relaunch, network loss/recovery and sign-out behave safely.
+- [ ] Uninstall/reinstall does not resurrect a demo session or expose another user's data.
+- [ ] Android logs contain no secrets, tokens, PII or repeated fatal exceptions.
+- [ ] Capture screenshots and record crashes/ANRs. Fix blockers, increment version code and repeat.
+
+**Acceptance:** no unresolved crash, data leak, misleading financial claim, unauthorised financial action or critical layout defect. Passing this test is necessary but does not waive legal, privacy, Play policy, partner or backend production gates.
