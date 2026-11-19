@@ -15,29 +15,48 @@ void main() {
 
   group('WalletService disables customer money movement', () {
     test('does not allow local earnings or reward credits', () async {
-      expect(() => WalletService().addEarning('u1', 10, 'test'), throwsA(isA<StateError>()));
+      expect(
+        () => WalletService().addEarning('u1', 10, 'test'),
+        throwsA(isA<StateError>()),
+      );
     });
     test('does not allow withdrawals', () async {
-      expect(() => WalletService().requestWithdrawal(userId: 'u1', amount: 1, paymentMethod: 'M-Pesa', paymentDetails: '0700000000'), throwsA(isA<StateError>()));
+      expect(
+        () => WalletService().requestWithdrawal(
+          userId: 'u1',
+          amount: 1,
+          paymentMethod: 'M-Pesa',
+          paymentDetails: '0700000000',
+        ),
+        throwsA(isA<StateError>()),
+      );
     });
   });
 
   group('WalletService ignores legacy customer value', () {
-    test('legacy stored wallet balances and reward transactions are not exposed', () async {
-      SharedPreferences.setMockInitialValues({
-        'adlease_wallets': '[{"userId":"u1","balance":99,"totalEarnings":99,"totalWithdrawn":0,"lastUpdated":"2026-01-01T00:00:00.000"}]',
-        'adlease_transactions': '[{"id":"legacy","userId":"u1","type":"adReward","amount":2.5,"status":"completed","description":"legacy reward","createdAt":"2026-01-01T00:00:00.000"}]',
-      });
-      final wallet = WalletService();
-      expect((await wallet.getWallet('u1')).balance, 0);
-      expect(await wallet.getTransactions('u1'), isEmpty);
-    });
+    test(
+      'legacy stored wallet balances and reward transactions are not exposed',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'adlease_wallets': '[{"userId":"u1","balance":99,"totalEarnings":99,"totalWithdrawn":0,"lastUpdated":"2026-01-01T00:00:00.000"}]',
+          'adlease_transactions': '[{"id":"legacy","userId":"u1","type":"adReward","amount":2.5,"status":"completed","description":"legacy reward","createdAt":"2026-01-01T00:00:00.000"}]',
+        });
+        final wallet = WalletService();
+        expect((await wallet.getWallet('u1')).balance, 0);
+        expect(await wallet.getTransactions('u1'), isEmpty);
+      },
+    );
   });
 
   group('AdService disables ad tracking and rewards', () {
     test('completed ad views are rejected', () async {
       expect(
-        () => AdService().recordAdView(userId: 'u1', adId: 'ad1', completedFully: true, deviceId: ''),
+        () => AdService().recordAdView(
+          userId: 'u1',
+          adId: 'ad1',
+          completedFully: true,
+          deviceId: '',
+        ),
         throwsA(isA<StateError>()),
       );
     });

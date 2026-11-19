@@ -18,7 +18,11 @@ class FinancingQuote {
 }
 
 class FinancingApplication {
-  const FinancingApplication({required this.applicationId, required this.providerId, required this.status});
+  const FinancingApplication({
+    required this.applicationId,
+    required this.providerId,
+    required this.status,
+  });
   final String applicationId;
   final String providerId;
   final String status;
@@ -46,7 +50,14 @@ class FinancingOffer {
 }
 
 class FinancingContractSnapshot {
-  const FinancingContractSnapshot({required this.contractId, required this.providerId, required this.status, required this.totalPayableMinor, required this.outstandingMinor, required this.currency});
+  const FinancingContractSnapshot({
+    required this.contractId,
+    required this.providerId,
+    required this.status,
+    required this.totalPayableMinor,
+    required this.outstandingMinor,
+    required this.currency,
+  });
   final String contractId;
   final String providerId;
   final String status;

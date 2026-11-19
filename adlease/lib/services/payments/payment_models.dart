@@ -1,4 +1,12 @@
-enum PaymentStatus { created, pending, succeeded, failed, reversed, refunded, demoDisabled }
+enum PaymentStatus {
+  created,
+  pending,
+  succeeded,
+  failed,
+  reversed,
+  refunded,
+  demoDisabled,
+}
 
 class PaymentIntent {
   const PaymentIntent({

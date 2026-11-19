@@ -12,7 +12,11 @@ class WalletService {
     lastUpdated: DateTime.now(),
   );
 
-  Future<WalletModel> addEarning(String userId, double amount, String description) async {
+  Future<WalletModel> addEarning(
+    String userId,
+    double amount,
+    String description,
+  ) async {
     throw StateError('Customer earnings and ad rewards are disabled.');
   }
 
@@ -25,7 +29,9 @@ class WalletService {
     throw StateError('Customer withdrawals are disabled.');
   }
 
-  Future<List<TransactionModel>> getTransactions(String userId) async => const [];
+  Future<List<TransactionModel>> getTransactions(String userId) async =>
+      const [];
 
-  Future<List<WithdrawalRequest>> getUserWithdrawals(String userId) async => const [];
+  Future<List<WithdrawalRequest>> getUserWithdrawals(String userId) async =>
+      const [];
 }

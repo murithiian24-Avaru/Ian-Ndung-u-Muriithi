@@ -7,14 +7,22 @@ void main() {
 
   test('mock gateway cannot create a payment intent', () async {
     await expectLater(
-      gateway.createIntent(amountMinor: 1000, currency: 'KES', purpose: 'repayment', contractReference: 'demo-contract'),
+      gateway.createIntent(
+        amountMinor: 1000,
+        currency: 'KES',
+        purpose: 'repayment',
+        contractReference: 'demo-contract',
+      ),
       throwsA(isA<StateError>()),
     );
   });
 
   test('mock gateway cannot request customer payment', () async {
     await expectLater(
-      gateway.requestCustomerPayment(paymentIntentId: 'demo-intent', msisdn: '+254700000000'),
+      gateway.requestCustomerPayment(
+        paymentIntentId: 'demo-intent',
+        msisdn: '+254700000000',
+      ),
       throwsA(isA<StateError>()),
     );
   });

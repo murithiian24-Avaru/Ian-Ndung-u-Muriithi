@@ -11,7 +11,8 @@ class AdService {
   static const _adsKey = 'adlease_ads_v2';
   static const _viewRecordsKey = 'adlease_ad_views';
   static const int maxAdsPerDay = 3;
-  static const double rewardPerAd = 0; // No ad reward exists in the current product model.
+  static const double rewardPerAd =
+      0; // No ad reward exists in the current product model.
 
   Future<List<AdModel>> getAvailableAds() async {
     final data = await _storage.getString(_adsKey);
@@ -71,7 +72,6 @@ class AdService {
     return remaining > 0;
   }
 
-
   /// Ad-view recording is disabled: an ad interaction must never create value.
   Future<AdViewRecord> recordAdView({
     required String userId,
@@ -79,7 +79,9 @@ class AdService {
     required bool completedFully,
     required String deviceId,
   }) async {
-    throw StateError('Ad view tracking is disabled pending advertising policy and privacy review.');
+    throw StateError(
+      'Ad view tracking is disabled pending advertising policy and privacy review.',
+    );
   }
 
   Future<List<AdViewRecord>> _getViewRecords() async {

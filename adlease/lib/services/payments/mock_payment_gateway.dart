@@ -23,12 +23,13 @@ class MockPaymentGateway implements PaymentGateway {
   }) async => throw StateError('Payment collection is disabled.');
 
   @override
-  Future<PaymentIntent> getStatus({required String paymentIntentId}) async => PaymentIntent(
-    paymentIntentId: paymentIntentId,
-    providerId: providerId,
-    amountMinor: 0,
-    currency: 'KES',
-    purpose: 'demo_only',
-    status: PaymentStatus.demoDisabled,
-  );
+  Future<PaymentIntent> getStatus({required String paymentIntentId}) async =>
+      PaymentIntent(
+        paymentIntentId: paymentIntentId,
+        providerId: providerId,
+        amountMinor: 0,
+        currency: 'KES',
+        purpose: 'demo_only',
+        status: PaymentStatus.demoDisabled,
+      );
 }

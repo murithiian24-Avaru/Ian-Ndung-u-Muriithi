@@ -135,7 +135,9 @@ class OwnershipService {
     required String userId,
     required PhoneModel phone,
   }) async {
-    throw StateError('Phone selection is disabled until a financing partner provides a verified quote.');
+    throw StateError(
+      'Phone selection is disabled until a financing partner provides a verified quote.',
+    );
   }
 
   /// Legacy local ownership balances are not financing repayments.

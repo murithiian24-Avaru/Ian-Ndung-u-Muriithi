@@ -125,7 +125,9 @@ void main() {
     });
   });
 
-  testWidgets('advertising screen contains no reward or watch action', (tester) async {
+  testWidgets('advertising screen contains no reward or watch action', (
+    tester,
+  ) async {
     await tester.pumpWidget(const MaterialApp(home: AdsScreen()));
     expect(find.text('Advertising is not available yet'), findsOneWidget);
     expect(find.text('Claim Reward'), findsNothing);
@@ -149,10 +151,14 @@ void main() {
 
     test('legacy ad records cannot record completed views', () async {
       await expectLater(
-        AdService().recordAdView(userId: 'u1', adId: 'ad1', completedFully: true, deviceId: ''),
+        AdService().recordAdView(
+          userId: 'u1',
+          adId: 'ad1',
+          completedFully: true,
+          deviceId: '',
+        ),
         throwsA(isA<StateError>()),
       );
     });
   });
-
 }

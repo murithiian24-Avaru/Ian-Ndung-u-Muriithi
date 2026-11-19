@@ -9,21 +9,36 @@ class MockFinancingProvider implements FinancingProvider {
   String get providerId => 'mock-demo-only';
 
   @override
-  Future<List<FinancingQuote>> getQuotes({required String deviceSku}) async => const [];
+  Future<List<FinancingQuote>> getQuotes({required String deviceSku}) async =>
+      const [];
 
   @override
-  Future<FinancingApplication> submitApplication({required String quoteId, required String consentVersion}) async =>
-      const FinancingApplication(applicationId: 'mock-application', providerId: 'mock-demo-only', status: 'demo_not_submitted');
+  Future<FinancingApplication> submitApplication({
+    required String quoteId,
+    required String consentVersion,
+  }) async => const FinancingApplication(
+    applicationId: 'mock-application',
+    providerId: 'mock-demo-only',
+    status: 'demo_not_submitted',
+  );
 
   @override
-  Future<FinancingApplication> getApplication({required String applicationId}) async =>
-      FinancingApplication(applicationId: applicationId, providerId: providerId, status: 'demo_not_submitted');
+  Future<FinancingApplication> getApplication({
+    required String applicationId,
+  }) async => FinancingApplication(
+    applicationId: applicationId,
+    providerId: providerId,
+    status: 'demo_not_submitted',
+  );
 
   @override
-  Future<FinancingOffer> getOffer({required String offerId}) =>
-      Future.error(StateError('Mock provider does not issue financing offers.'));
+  Future<FinancingOffer> getOffer({required String offerId}) => Future.error(
+    StateError('Mock provider does not issue financing offers.'),
+  );
 
   @override
   Future<FinancingContractSnapshot> getContract({required String contractId}) =>
-      Future.error(StateError('Mock provider does not create financing contracts.'));
+      Future.error(
+        StateError('Mock provider does not create financing contracts.'),
+      );
 }

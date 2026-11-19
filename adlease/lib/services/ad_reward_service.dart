@@ -6,6 +6,8 @@ class AdRewardService {
     required String adId,
     required String deviceId,
   }) async {
-    throw StateError('Ad rewards are disabled. Advertising activity cannot create customer value.');
+    throw StateError(
+      'Ad rewards are disabled. Advertising activity cannot create customer value.',
+    );
   }
 }
