@@ -9,7 +9,32 @@ service cloud.firestore {
       allow create, delete: if false;
       allow update: if owns(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['fullName', 'phoneNumber', 'country', 'locale', 'updatedAt']);
+          .hasOnly(['fullName', 'phoneNumber', 'country', 'locale', 'updatedAt'])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 2
+        && request.resource.data.fullName.size() <= 100
+        && request.resource.data.phoneNumber is string
+        && request.resource.data.phoneNumber.matches('^\\\\+[1-9][0-9]{7,14}
+    }
+
+    match /verificationCases/{caseId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+    match /verificationDecisions/{id} { allow read, write: if false; }
+    match /adSessions/{id} { allow read, write: if false; }
+    match /rewardClaims/{id} { allow read, write: if false; }
+    match /rewardLedger/{id} { allow read, write: if false; }
+    match /wallets/{uid} { allow read: if owns(uid); allow write: if false; }
+    match /dailyRewardCounters/{id} { allow read, write: if false; }
+    match /adminAudit/{id} { allow read, write: if false; }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
+)
+        && request.resource.data.country is string
+        && request.resource.data.country.size() >= 2
+        && request.resource.data.country.size() <= 60;
     }
 
     match /verificationCases/{caseId} {
