@@ -19,8 +19,8 @@ after(async () => { await env.cleanup(); });
 test("users can edit profile allowlist but cannot alter server-owned account state", async () => {
   await env.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "users/u1"), {
-      uid: "u1", fullName: "Before", status: "pending",
-      verificationStatus: "not_started", createdAt: new Date(),
+      uid: "u1", fullName: "Before", phoneNumber: "+254712345678", country: "Kenya",
+      status: "pending", verificationStatus: "not_started", createdAt: new Date(),
     });
   });
   const db = env.authenticatedContext("u1").firestore();
@@ -41,7 +41,7 @@ test("clients cannot create reward ledger or wallet entries", async () => {
 test("unauthenticated users cannot read user or verification data", async () => {
   await env.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "users/private-user"), {
-      uid: "private-user", fullName: "Private", status: "pending",
+      uid: "private-user", fullName: "Private", phoneNumber: "+254712345678", country: "Kenya", status: "pending",
     });
     await setDoc(doc(context.firestore(), "verificationCases/private-case"), {
       uid: "private-user", status: "pending",
@@ -55,7 +55,7 @@ test("unauthenticated users cannot read user or verification data", async () => 
 test("users cannot read another user's profile or verification case", async () => {
   await env.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "users/owner"), {
-      uid: "owner", fullName: "Owner", status: "pending",
+      uid: "owner", fullName: "Owner", phoneNumber: "+254712345678", country: "Kenya", status: "pending",
     });
     await setDoc(doc(context.firestore(), "verificationCases/owner-case"), {
       uid: "owner", status: "pending",
@@ -76,5 +76,24 @@ test("clients cannot write verification decisions, cases or admin audit records"
   }));
   await assertFails(setDoc(doc(db, "adminAudit/fake"), {
     actorUid: "u1", action: "grant_admin",
+  }));
+});
+
+test("users cannot store malformed or oversized profile details", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "users/profile-validation"), {
+      uid: "profile-validation", fullName: "Valid Name",
+      phoneNumber: "+254712345678", country: "Kenya", status: "pending",
+    });
+  });
+  const db = env.authenticatedContext("profile-validation").firestore();
+  await assertFails(updateDoc(doc(db, "users/profile-validation"), {
+    phoneNumber: "0712345678",
+  }));
+  await assertFails(updateDoc(doc(db, "users/profile-validation"), {
+    fullName: "x".repeat(101),
+  }));
+  await assertFails(updateDoc(doc(db, "users/profile-validation"), {
+    country: "K",
   }));
 });
