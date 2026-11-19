@@ -26,7 +26,7 @@ The Cloud Function creates only a pending user profile. It cannot grant verifica
 
 ## Verification and reviewer security gates
 
-- Verification request creation is limited transactionally to three attempts per user in a 24-hour window anchored at the first attempt. A pending request cannot be duplicated.
+- Verification request creation is limited transactionally to three attempts per user in a 24-hour window anchored at the first attempt. A pending request cannot be duplicated. Pure unit tests cover the limit, reset boundary, invalid counters, missing MFA and stale/future reviewer authentication times.
 - Profile name, country and phone values are unverified user assertions only. Phone format is validated as E.164; these fields are not KYC evidence.
 - Reviewer decisions require a server-issued reviewer/admin custom claim, a Firebase MFA second-factor claim and a recent authentication time (10 minutes).
 - The callable also fails closed unless `ENABLE_VERIFICATION_REVIEW=true` is explicitly set in the Functions environment. Leave this unset in ordinary staging until reviewer governance is approved.
