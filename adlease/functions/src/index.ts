@@ -149,87 +149,21 @@ export const reviewVerification = onCall(async (request) => {
   return { status: decision };
 });
 
-export const startAdSession = onCall(async (request) => {
-  const auth = requireAuth(request);
-  if (auth.token.email_verified !== true) {
-    throw new HttpsError("failed-precondition", "Verify your email before starting an ad.");
-  }
-  const userRef = db.collection("users").doc(auth.uid);
-  const sessionRef = db.collection("adSessions").doc();
-  const now = new Date();
-  const dayKey = nairobiDay(now);
-  const counterRef = db.collection("dailyRewardCounters").doc(`${auth.uid}_${dayKey}`);
-  await db.runTransaction(async (tx) => {
-    const [user, counter] = await Promise.all([tx.get(userRef), tx.get(counterRef)]);
-    if (!user.exists || user.get("status") !== "active" || user.get("verificationStatus") !== "approved") {
-      throw new HttpsError("permission-denied", "Account is not eligible for rewards.");
-    }
-    const issued = Number(counter.get("issuedCount") ?? 0);
-    if (issued >= DAILY_LIMIT) throw new HttpsError("resource-exhausted", "Daily ad limit reached.");
-    tx.set(counterRef, { uid: auth.uid, dayKey, issuedCount: issued + 1, creditedCount: Number(counter.get("creditedCount") ?? 0), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    tx.create(sessionRef, {
-      uid: auth.uid, dayKey, status: "issued", createdAt: FieldValue.serverTimestamp(),
-      expiresAt: new Date(now.getTime() + SESSION_TTL_MS), schemaVersion: 1,
-    });
-  });
-  return { sessionId: sessionRef.id, expiresAt: new Date(now.getTime() + SESSION_TTL_MS).toISOString() };
+// Advertising/reward endpoints are intentionally disabled. Do not add a
+// client-callable reward route. A future ordinary-ad integration must have no
+// access to financing, wallet, payment or customer-ledger mutation paths.
+export const startAdSession = onCall(async () => {
+  throw new HttpsError("failed-precondition", "Ad serving is disabled pending policy and privacy review.");
 });
 
-// This function is called only after a provider-specific adapter has verified
-// the partner's signed SSV/webhook. Never expose it as a client callable.
-export async function applyVerifiedPartnerEvent(input: {
+// Compatibility seam for legacy tests and future provider adapters. No
+// partner event can currently create customer value.
+export async function applyVerifiedPartnerEvent(_input: {
   provider: string; providerEventId: string; sessionId: string; uid: string;
-}) {
-  const provider = input.provider.trim().toLowerCase();
-  if (!/^[a-z0-9][a-z0-9_-]{1,39}$/.test(provider)
-      || !input.providerEventId || !input.sessionId || !input.uid) {
-    throw new Error("Invalid verified partner event.");
-  }
-  // Provider-scoped idempotency prevents unrelated ad networks from colliding
-  // when they happen to issue the same external event identifier.
-  const eventId = safeId(`${provider}:${input.providerEventId}`);
-  const claimRef = db.collection("rewardClaims").doc(eventId);
-  const sessionRef = db.collection("adSessions").doc(input.sessionId);
-  const userRef = db.collection("users").doc(input.uid);
-  const ledgerRef = db.collection("rewardLedger").doc(eventId);
-  const walletRef = db.collection("wallets").doc(input.uid);
-  const now = new Date();
-  const dayKey = nairobiDay(now);
-  const counterRef = db.collection("dailyRewardCounters").doc(`${input.uid}_${dayKey}`);
-
-  return db.runTransaction(async (tx) => {
-    const [claim, session, user, counter, wallet] = await Promise.all([
-      tx.get(claimRef), tx.get(sessionRef), tx.get(userRef), tx.get(counterRef), tx.get(walletRef),
-    ]);
-    if (claim.exists) return { credited: false, reason: "duplicate" as const };
-    if (!session.exists || session.get("uid") !== input.uid || session.get("status") !== "issued") {
-      throw new Error("Invalid or already-used ad session.");
-    }
-    const expiry = session.get("expiresAt")?.toDate?.() as Date | undefined;
-    if (!expiry || expiry.getTime() < now.getTime() || session.get("dayKey") !== dayKey) {
-      throw new Error("Ad session expired or outside its Nairobi day.");
-    }
-    if (!user.exists || user.get("status") !== "active" || user.get("verificationStatus") !== "approved") {
-      throw new Error("Account is not eligible.");
-    }
-    const credited = Number(counter.get("creditedCount") ?? 0);
-    if (credited >= DAILY_LIMIT) throw new Error("Daily reward limit reached.");
-    const previousBalance = Number(wallet.get("balanceMinor") ?? 0);
-    tx.create(claimRef, { uid: input.uid, sessionId: input.sessionId, provider, providerEventIdHash: eventId, createdAt: FieldValue.serverTimestamp() });
-    tx.create(ledgerRef, {
-      uid: input.uid, type: "ad_reward", amountMinor: REWARD_MINOR, currency: "KES",
-      provider, sourceId: input.sessionId, idempotencyKey: eventId, createdAt: FieldValue.serverTimestamp(),
-      schemaVersion: 1,
-    });
-    tx.set(walletRef, { balanceMinor: previousBalance + REWARD_MINOR, currency: "KES", updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    tx.set(counterRef, { uid: input.uid, dayKey, creditedCount: credited + 1, issuedCount: Number(counter.get("issuedCount") ?? 0), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    tx.update(sessionRef, { status: "credited", creditedAt: FieldValue.serverTimestamp() });
-    return { credited: true, reason: "accepted" as const };
-  });
+}): Promise<never> {
+  throw new Error("Ad rewards are disabled; no provider event can create customer value.");
 }
 
-// Client callbacks are not evidence of an ad view. A partner adapter must call
-// applyVerifiedPartnerEvent only after cryptographic SSV verification.
 export const claimReward = onCall(async () => {
-  throw new HttpsError("failed-precondition", "Rewards can only be credited after verified partner server-side verification.");
+  throw new HttpsError("failed-precondition", "Ad rewards are permanently disabled in this product model.");
 });
