@@ -55,6 +55,9 @@ export const requestVerification = onCall(async (request) => {
     const userRef = db.collection("users").doc(auth.uid);
     const user = await tx.get(userRef);
     if (!user.exists) throw new HttpsError("failed-precondition", "User profile is not initialized.");
+    if (user.get("status") === "suspended" || user.get("status") === "closed") {
+      throw new HttpsError("permission-denied", "Suspended or closed accounts cannot request verification.");
+    }
     const status = user.get("verificationStatus");
     if (status === "approved") throw new HttpsError("already-exists", "Account is already verified.");
     if (status === "pending") throw new HttpsError("already-exists", "A verification request is already pending.");
