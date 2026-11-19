@@ -69,7 +69,7 @@ jobs:
   validate:
     name: Flutter ${{ matrix.flutter }}
     needs: format
-    if: always() && needs.format.result != 'failure'
+    if: always() && (needs.format.result == 'success' || needs.format.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -297,7 +297,7 @@ jobs:
   admin-dashboard:
     name: Admin dashboard build
     needs: format
-    if: always() && needs.format.result != 'failure'
+    if: always() && (needs.format.result == 'success' || needs.format.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
