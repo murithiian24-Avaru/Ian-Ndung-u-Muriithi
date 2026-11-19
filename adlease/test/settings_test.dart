@@ -135,7 +135,7 @@ void main() {
     expect(find.text('1.2.3 (45)'), findsOneWidget);
     expect(find.text('© Avaru Tech Company Limited'), findsOneWidget);
     expect(
-      find.textContaining('ads and rewards are simulated'),
+      find.text('AdLease is in development. Advertising, financing and payments are not active in this demo.'),
       findsOneWidget,
     );
     expect(find.bySemanticsLabel('Powered by Avaru'), findsWidgets);
