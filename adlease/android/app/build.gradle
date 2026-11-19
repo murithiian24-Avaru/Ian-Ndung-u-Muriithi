@@ -5,6 +5,12 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def releaseKeystoreProperties = new Properties()
+def releaseKeystoreFile = rootProject.file("key.properties")
+if (releaseKeystoreFile.exists()) {
+    releaseKeystoreFile.withInputStream { releaseKeystoreProperties.load(it) }
+}
+
 android {
     namespace = "com.adlease.adlease"
     compileSdk = flutter.compileSdkVersion
@@ -26,20 +32,65 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // Flutter 3.47 supports Android API 24 and newer (API 23 is unsupported).
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 36 // Google Play new-app requirement from 31 August 2026
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            if (releaseKeystoreFile.exists()) {
+                keyAlias = releaseKeystoreProperties['keyAlias']
+                keyPassword = releaseKeystoreProperties['keyPassword']
+                storeFile = file(releaseKeystoreProperties['storeFile'])
+                storePassword = releaseKeystoreProperties['storePassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            // Never sign a Play Store artifact with the debug certificate.
+            // Configure android/key.properties and the private keystore locally
+            // before invoking assembleRelease or bundleRelease.
+            signingConfig = signingConfigs.release
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+tasks.register("validateReleaseSigning") {
+    group = "verification"
+    description = "Checks that a private upload keystore is configured for release builds."
+
+    doLast {
+        def required = ["storePassword", "keyPassword", "keyAlias", "storeFile"]
+        def missing = required.findAll { key ->
+            !releaseKeystoreProperties[key]?.toString()?.trim()
+        }
+        if (!releaseKeystoreFile.isFile() || !missing.isEmpty()) {
+            throw new GradleException(
+                "Release signing is not configured. Create android/key.properties " +
+                "with non-empty " + required.join(", ") + " and provide the referenced upload keystore. " +
+                "Never use the debug signing key for a Play Store release."
+            )
+        }
+
+        def keystore = file(releaseKeystoreProperties["storeFile"].toString())
+        if (!keystore.isFile()) {
+            throw new GradleException(
+                "Release keystore does not exist at: " + keystore.absolutePath
+            )
+        }
+    }
+}
+
+// Validate only release variants. Debug builds remain independent of private
+// upload-signing material.
+tasks.configureEach { task ->
+    if (task.name == "preReleaseBuild") {
+        task.dependsOn("validateReleaseSigning")
+    }
 }
