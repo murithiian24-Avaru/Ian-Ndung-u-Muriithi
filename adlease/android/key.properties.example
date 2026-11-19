@@ -1,0 +1,6 @@
+# Copy this file to android/key.properties locally and replace every placeholder.
+# Never commit key.properties, the keystore, or real passwords.
+storePassword=REPLACE_WITH_PASSWORD_MANAGER_VALUE
+keyPassword=REPLACE_WITH_PASSWORD_MANAGER_VALUE
+keyAlias=adlease-upload
+storeFile=../adlease-upload.jks
