@@ -13,93 +13,55 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('WalletService.requestWithdrawal (finding C5)', () {
-    test('deducts the requested amount from the balance', () async {
-      final wallet = WalletService();
-      await wallet.addEarning('u1', 10, 'test earning');
-
-      await wallet.requestWithdrawal(
-        userId: 'u1',
-        amount: 6,
-        paymentMethod: 'M-Pesa',
-        paymentDetails: '0700000000',
-      );
-
-      final after = await wallet.getWallet('u1');
-      expect(after.balance, 4);
-    });
-
-    test('rejects a second withdrawal of the same balance', () async {
-      final wallet = WalletService();
-      await wallet.addEarning('u1', 10, 'test earning');
-
-      await wallet.requestWithdrawal(
-        userId: 'u1',
-        amount: 10,
-        paymentMethod: 'M-Pesa',
-        paymentDetails: '0700000000',
-      );
-
+  group('WalletService disables customer money movement', () {
+    test('does not allow local earnings or reward credits', () async {
       expect(
-        () => wallet.requestWithdrawal(
+        () => WalletService().addEarning('u1', 10, 'test'),
+        throwsA(isA<StateError>()),
+      );
+    });
+    test('does not allow withdrawals', () async {
+      expect(
+        () => WalletService().requestWithdrawal(
           userId: 'u1',
-          amount: 10,
+          amount: 1,
           paymentMethod: 'M-Pesa',
           paymentDetails: '0700000000',
         ),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    test('rejects zero or negative amounts', () async {
-      final wallet = WalletService();
-      await wallet.addEarning('u1', 10, 'test earning');
-      expect(
-        () => wallet.requestWithdrawal(
-          userId: 'u1',
-          amount: 0,
-          paymentMethod: 'M-Pesa',
-          paymentDetails: '0700000000',
-        ),
-        throwsA(isA<Exception>()),
+        throwsA(isA<StateError>()),
       );
     });
   });
 
-  group('AdService.recordAdView daily limit (finding H4)', () {
-    test('allows maxAdsPerDay completed views, then refuses more', () async {
-      final ads = AdService();
-      for (var i = 0; i < AdService.maxAdsPerDay; i++) {
-        await ads.recordAdView(
-          userId: 'u1',
-          adId: 'ad$i',
-          completedFully: true,
-          deviceId: '',
-        );
-      }
-      expect(await ads.getAdsWatchedToday('u1'), AdService.maxAdsPerDay);
+  group('WalletService ignores legacy customer value', () {
+    test(
+      'legacy stored wallet balances and reward transactions are not exposed',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'adlease_wallets': '[{"userId":"u1","balance":99,"totalEarnings":99,"totalWithdrawn":0,"lastUpdated":"2026-01-01T00:00:00.000"}]',
+          'adlease_transactions': '[{"id":"legacy","userId":"u1","type":"adReward","amount":2.5,"status":"completed","description":"legacy reward","createdAt":"2026-01-01T00:00:00.000"}]',
+        });
+        final wallet = WalletService();
+        expect((await wallet.getWallet('u1')).balance, 0);
+        expect(await wallet.getTransactions('u1'), isEmpty);
+      },
+    );
+  });
+
+  group('AdService disables ad tracking and rewards', () {
+    test('completed ad views are rejected', () async {
       expect(
-        () => ads.recordAdView(
+        () => AdService().recordAdView(
           userId: 'u1',
-          adId: 'extra',
+          adId: 'ad1',
           completedFully: true,
           deviceId: '',
         ),
         throwsA(isA<StateError>()),
       );
     });
-
-    test('the limit is per user', () async {
-      final ads = AdService();
-      for (var i = 0; i < AdService.maxAdsPerDay; i++) {
-        await ads.recordAdView(
-          userId: 'u1',
-          adId: 'ad$i',
-          completedFully: true,
-          deviceId: '',
-        );
-      }
-      expect(await ads.canWatchAd('u2'), isTrue);
+    test('legacy reward amount is zero', () {
+      expect(AdService.rewardPerAd, 0);
     });
   });
 

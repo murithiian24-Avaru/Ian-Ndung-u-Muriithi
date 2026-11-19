@@ -1,10 +1,20 @@
-/// Product switches for features that are deliberately turned off.
+/// Runtime-safe defaults for product capabilities that are not approved for launch.
 class AppFeatures {
   AppFeatures._();
 
-  /// Withdrawals are hidden until a secure, approved payout system exists.
-  /// While false, the app shows no withdraw buttons and has no withdrawal
-  /// route. The withdrawal screen and any locally stored requests are kept,
-  /// unused, so nothing is deleted.
+  /// No user reward may be issued for an ad view or interaction.
+  static const bool adRewardsEnabled = false;
+
+  /// Ads remain disabled until Google policy and privacy review is complete.
+  static const bool advertisingEnabled = false;
+
+  /// Financing remains a mock/read-only product journey until a licensed
+  /// partner and legal approvals are verified.
+  static const bool liveFinancingEnabled = false;
+
+  /// Payments remain sandbox-only until all release gates pass.
+  static const bool livePaymentsEnabled = false;
+
+  /// Withdrawals are disabled until an approved payout system exists.
   static const bool withdrawalsEnabled = false;
 }

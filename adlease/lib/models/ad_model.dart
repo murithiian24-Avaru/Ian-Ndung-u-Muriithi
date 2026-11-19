@@ -49,7 +49,7 @@ class AdModel {
       videoUrl: map['videoUrl'] ?? '',
       thumbnailUrl: map['thumbnailUrl'] ?? '',
       durationSeconds: map['durationSeconds'] ?? 60,
-      rewardAmount: (map['rewardAmount'] ?? 0).toDouble(),
+      rewardAmount: 0, // Ignore legacy stored reward amounts.
       isActive: map['isActive'] ?? true,
       createdAt: DateTime.parse(
         map['createdAt'] ?? DateTime.now().toIso8601String(),
@@ -105,7 +105,7 @@ class AdViewRecord {
         map['viewedAt'] ?? DateTime.now().toIso8601String(),
       ),
       completedFully: map['completedFully'] ?? false,
-      rewardEarned: (map['rewardEarned'] ?? 0).toDouble(),
+      rewardEarned: 0, // Ignore legacy stored reward amounts.
       deviceId: map['deviceId'] ?? '',
       verificationHash: map['verificationHash'] ?? '',
     );

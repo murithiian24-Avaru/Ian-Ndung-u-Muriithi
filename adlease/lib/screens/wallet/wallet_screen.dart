@@ -6,7 +6,6 @@ import 'package:adlease/config/routes.dart';
 import 'package:adlease/config/theme.dart';
 import 'package:adlease/providers/wallet_provider.dart';
 import 'package:adlease/providers/auth_provider.dart';
-import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/l10n/app_localizations.dart';
 import 'package:adlease/utils/currency.dart';
 import 'package:adlease/models/transaction_model.dart';
@@ -47,7 +46,7 @@ class WalletScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     _buildActionButtons(context),
                     const SizedBox(height: 24),
-                    _buildEarningsOverview(context, isDark),
+                    _buildEarningsOverview(isDark),
                     const SizedBox(height: 24),
                     _buildTransactionHistory(walletProvider, isDark),
                   ],
@@ -60,8 +59,7 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  // There is no cash balance: ad rewards count only toward the phone, and
-  // withdrawals are not available yet.
+  // No customer cash balance, ad reward or repayment ledger is active.
   Widget _buildWalletCard(BuildContext context, bool isDark) {
     final l = AppLocalizations.of(context)!;
     return Container(
@@ -166,88 +164,19 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  // Simulated phone-ownership progress (no cash earnings or withdrawals).
-  Widget _buildEarningsOverview(BuildContext context, bool isDark) {
-    final l = AppLocalizations.of(context)!;
-    final ownership = context.watch<OwnershipProvider>();
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.trending_up,
-                  color: AdLeaseTheme.successGreen,
-                  size: 28,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  l.appliedToPhone,
-                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.account_balance,
-                  color: AdLeaseTheme.primaryBlue,
-                  size: 28,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  formatKsh(ownership.remainingAmount),
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  l.remaining,
-                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+  // There is no customer balance or financing repayment view in this demo.
+  Widget _buildEarningsOverview(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        'Financing and customer payments are not active. No amount shown here is owed, paid or credited.',
+        style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
+      ),
     );
   }
 
@@ -281,7 +210,7 @@ class WalletScreen extends StatelessWidget {
                   style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                 ),
                 Text(
-                  'Watch ads to start earning!',
+                  'No customer payment transactions are available in this demo.',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: Colors.grey.shade500,

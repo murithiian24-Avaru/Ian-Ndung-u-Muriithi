@@ -1,12 +1,6 @@
 # AdLease architecture and security requirements
 
-> **Status: PROPOSED. None of this exists yet.**
-> AdLease today has no backend, database, API or server code. All data is
-> stored only on the user's phone (see [Current state](#current-state)). These
-> documents describe the proposed target and the rules it must follow. They
-> are not permission to create cloud projects, enable billing or incur costs;
-> each of those needs a separate approval (see
-> [open-decisions.md](open-decisions.md)).
+> **Status: mixed historical proposal and current engineering guidance.** PR #24 adds a Firebase Auth/Firestore/Functions emulator foundation, but the Flutter app is not yet fully integrated and no production backend is deployed. Rewarded-ad and ad-to-phone-credit design is superseded by the 18 Nov 2026 product decision. These documents do not authorise deployment, billing or production data use.
 
 This is roadmap step 1 of the AdLease Infrastructure Audit (29 October 2026).
 Later steps implement it in small, separately reviewed pull requests.

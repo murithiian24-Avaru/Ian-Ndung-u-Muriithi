@@ -1,23 +1,21 @@
 // Regression tests for the Phase 2 product decisions:
-// A. withdrawals hidden, B. generic sample ads, C. KSh amounts,
-// D. a simulated ad reward goes to phone-ownership progress only.
+// Covers legacy withdrawal restrictions, generic sample data, currency formatting
+// and the new disabled-ad / financing feature gates.
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adlease/config/features.dart';
+import 'package:adlease/screens/wallet/wallet_screen.dart';
+import 'package:adlease/screens/ads/ads_screen.dart';
 import 'package:adlease/config/routes.dart';
 import 'package:adlease/l10n/app_localizations.dart';
-import 'package:adlease/models/phone_model.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/providers/wallet_provider.dart';
-import 'package:adlease/screens/wallet/wallet_screen.dart';
 import 'package:adlease/services/ad_reward_service.dart';
 import 'package:adlease/services/ad_service.dart';
-import 'package:adlease/services/ownership_service.dart';
-import 'package:adlease/services/wallet_service.dart';
 import 'package:adlease/utils/currency.dart';
 
 const _realBrands = [
@@ -29,16 +27,6 @@ const _realBrands = [
   'm-pesa',
   'm-shwari',
 ];
-
-final _phone = PhoneModel(
-  id: 'demo-phone',
-  brand: 'Demo',
-  model: 'Phone',
-  imageUrl: '',
-  price: 300,
-  description: 'Test phone',
-  specs: const {},
-);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -137,57 +125,39 @@ void main() {
     });
   });
 
-  group('D. a simulated ad reward goes to phone progress only', () {
-    test('credits the phone and leaves the cash wallet untouched', () async {
-      await OwnershipService().selectPhone(userId: 'u1', phone: _phone);
+  testWidgets('advertising screen contains no reward or watch action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: AdsScreen()));
+    expect(find.text('Advertising is not available yet'), findsOneWidget);
+    expect(find.text('Claim Reward'), findsNothing);
+    expect(find.text('Watch'), findsNothing);
+  });
 
-      final result = await AdRewardService().claim(
-        userId: 'u1',
-        adId: 'ad1',
-        deviceId: '',
-      );
-
-      expect(result.outcome, AdRewardOutcome.credited);
-      final ownership = await OwnershipService().getUserOwnership('u1');
-      expect(ownership!.amountPaid, AdService.rewardPerAd);
-
-      final wallet = await WalletService().getWallet('u1');
-      expect(wallet.balance, 0);
-      expect(wallet.totalEarnings, 0);
-      expect(await WalletService().getTransactions('u1'), isEmpty);
+  group('D. advertising rewards are disabled', () {
+    test('all advertising and reward feature flags default off', () {
+      expect(AppFeatures.adRewardsEnabled, isFalse);
+      expect(AppFeatures.advertisingEnabled, isFalse);
+      expect(AppFeatures.liveFinancingEnabled, isFalse);
+      expect(AppFeatures.livePaymentsEnabled, isFalse);
     });
 
-    test('credits nothing, anywhere, when no phone has been chosen', () async {
-      final result = await AdRewardService().claim(
-        userId: 'u1',
-        adId: 'ad1',
-        deviceId: '',
+    test('legacy reward service refuses every claim', () async {
+      await expectLater(
+        AdRewardService().claim(userId: 'u1', adId: 'ad1', deviceId: ''),
+        throwsA(isA<StateError>()),
       );
-
-      expect(result.outcome, AdRewardOutcome.noActivePhone);
-      expect(await AdService().getAdsWatchedToday('u1'), 0);
-      expect((await WalletService().getWallet('u1')).balance, 0);
     });
 
-    test('still respects the daily ad limit', () async {
-      await OwnershipService().selectPhone(userId: 'u1', phone: _phone);
-      final rewards = AdRewardService();
-      for (var i = 0; i < AdService.maxAdsPerDay; i++) {
-        final r = await rewards.claim(userId: 'u1', adId: 'ad$i', deviceId: '');
-        expect(r.outcome, AdRewardOutcome.credited);
-      }
-
-      final extra = await rewards.claim(
-        userId: 'u1',
-        adId: 'extra',
-        deviceId: '',
-      );
-      expect(extra.outcome, AdRewardOutcome.rejected);
-
-      final ownership = await OwnershipService().getUserOwnership('u1');
-      expect(
-        ownership!.amountPaid,
-        AdService.rewardPerAd * AdService.maxAdsPerDay,
+    test('legacy ad records cannot record completed views', () async {
+      await expectLater(
+        AdService().recordAdView(
+          userId: 'u1',
+          adId: 'ad1',
+          completedFully: true,
+          deviceId: '',
+        ),
+        throwsA(isA<StateError>()),
       );
     });
   });

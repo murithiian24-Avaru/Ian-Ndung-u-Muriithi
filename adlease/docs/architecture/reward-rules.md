@@ -1,3 +1,5 @@
+> **SUPERSEDED — 18 November 2026.** AdLease no longer offers user rewards for advertising activity. This document is retained as a historical security-design record only. Do not implement rewarded ads, KES-per-view credits, phone credits, wallet credits, discounts or repayment credits from this document. The current product decision is ordinary non-rewarded advertising only after Google policy and privacy review; advertising revenue is Avaru publisher revenue and is separate from customer financing.
+
 # Server-authoritative reward rules
 
 > Status: **proposed**. These rules apply once real ads exist. Until then the

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:adlease/models/ad_model.dart';
 import 'package:adlease/services/storage_service.dart';
@@ -12,7 +11,8 @@ class AdService {
   static const _adsKey = 'adlease_ads_v2';
   static const _viewRecordsKey = 'adlease_ad_views';
   static const int maxAdsPerDay = 3;
-  static const double rewardPerAd = 2.50;
+  static const double rewardPerAd =
+      0; // No ad reward exists in the current product model.
 
   Future<List<AdModel>> getAvailableAds() async {
     final data = await _storage.getString(_adsKey);
@@ -41,7 +41,7 @@ class AdService {
         videoUrl: 'https://example.com/sample-ads/sample-ad-$n.mp4',
         thumbnailUrl: '',
         durationSeconds: 60,
-        rewardAmount: rewardPerAd,
+        rewardAmount: 0,
         createdAt: DateTime.now(),
         expiresAt: DateTime.now().add(const Duration(days: 30)),
       );
@@ -72,48 +72,16 @@ class AdService {
     return remaining > 0;
   }
 
-  String _generateVerificationHash(
-    String userId,
-    String adId,
-    DateTime timestamp,
-  ) {
-    final data = '$userId:$adId:${timestamp.toIso8601String()}:adlease_secret';
-    return sha256.convert(utf8.encode(data)).toString();
-  }
-
+  /// Ad-view recording is disabled: an ad interaction must never create value.
   Future<AdViewRecord> recordAdView({
     required String userId,
     required String adId,
     required bool completedFully,
     required String deviceId,
   }) async {
-    // Enforce the daily limit at the point the reward is recorded, not only
-    // before an ad starts, so a second claim cannot exceed maxAdsPerDay.
-    // (Still based on the device clock; a server must enforce this for real.)
-    if (completedFully && !await canWatchAd(userId)) {
-      throw StateError('Daily ad limit reached');
-    }
-
-    final now = DateTime.now();
-    final record = AdViewRecord(
-      id: const Uuid().v4(),
-      userId: userId,
-      adId: adId,
-      viewedAt: now,
-      completedFully: completedFully,
-      rewardEarned: completedFully ? rewardPerAd : 0,
-      deviceId: deviceId,
-      verificationHash: _generateVerificationHash(userId, adId, now),
+    throw StateError(
+      'Ad view tracking is disabled pending advertising policy and privacy review.',
     );
-
-    final records = await _getViewRecords();
-    records.add(record);
-    await _storage.saveString(
-      _viewRecordsKey,
-      jsonEncode(records.map((r) => r.toMap()).toList()),
-    );
-
-    return record;
   }
 
   Future<List<AdViewRecord>> _getViewRecords() async {

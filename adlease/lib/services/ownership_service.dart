@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:uuid/uuid.dart';
 import 'package:adlease/models/ownership_model.dart';
 import 'package:adlease/models/phone_model.dart';
 import 'package:adlease/services/storage_service.dart';
@@ -131,55 +130,20 @@ class OwnershipService {
     return OwnershipModel.fromMap(match.first);
   }
 
+  /// Local phone selection is not a financing quote or contract.
   Future<OwnershipModel> selectPhone({
     required String userId,
     required PhoneModel phone,
   }) async {
-    final ownership = OwnershipModel(
-      id: const Uuid().v4(),
-      userId: userId,
-      phoneId: phone.id,
-      phoneName: phone.fullName,
-      phonePrice: phone.price,
-      amountPaid: 0,
-      startDate: DateTime.now(),
+    throw StateError(
+      'Phone selection is disabled until a financing partner provides a verified quote.',
     );
-
-    final data = await _storage.getString(_ownershipsKey);
-    final list = data != null
-        ? List<Map<String, dynamic>>.from(jsonDecode(data))
-        : <Map<String, dynamic>>[];
-    list.add(ownership.toMap());
-    await _storage.saveString(_ownershipsKey, jsonEncode(list));
-
-    return ownership;
   }
 
+  /// Legacy local ownership balances are not financing repayments.
+  /// Only a verified financing provider integration may update contract state.
   Future<OwnershipModel> addPayment(String userId, double amount) async {
-    final data = await _storage.getString(_ownershipsKey);
-    if (data == null) throw Exception('No active ownership found');
-
-    final list = List<Map<String, dynamic>>.from(jsonDecode(data));
-    final index = list.indexWhere(
-      (o) => o['userId'] == userId && o['isCompleted'] == false,
-    );
-
-    if (index == -1) throw Exception('No active ownership found');
-
-    var ownership = OwnershipModel.fromMap(list[index]);
-    final newAmount = ownership.amountPaid + amount;
-    final isCompleted = newAmount >= ownership.phonePrice;
-
-    ownership = ownership.copyWith(
-      amountPaid: newAmount.clamp(0, ownership.phonePrice),
-      isCompleted: isCompleted,
-      completionDate: isCompleted ? DateTime.now() : null,
-    );
-
-    list[index] = ownership.toMap();
-    await _storage.saveString(_ownershipsKey, jsonEncode(list));
-
-    return ownership;
+    throw StateError('Local ownership payments are disabled.');
   }
 
   Future<List<OwnershipModel>> getUserOwnerships(String userId) async {

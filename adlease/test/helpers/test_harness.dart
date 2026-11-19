@@ -18,9 +18,7 @@ import 'package:adlease/providers/locale_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/providers/theme_provider.dart';
 import 'package:adlease/providers/wallet_provider.dart';
-import 'package:adlease/services/ad_reward_service.dart';
 import 'package:adlease/services/auth_service.dart';
-import 'package:adlease/services/ownership_service.dart';
 
 /// Phone sizes in logical pixels (what Flutter lays out against).
 class PhoneSize {
@@ -126,11 +124,14 @@ class TestProviders {
 }
 
 /// Seeds a signed-in demo user (with a long name, to stress the header).
-/// With [withPhone], a phone is chosen and [adsWatched] simulated ads are
-/// claimed, which adds progress to the phone.
+///
+/// [withPhone] and [adsWatched] are retained for source compatibility with
+/// older widget tests, but are intentionally ignored: device selection and
+/// ad rewards are disabled until a verified financing partner and approved
+/// advertising model exist.
 Future<TestProviders> seedDemoData({
-  bool withPhone = true,
-  int adsWatched = 2,
+  bool withPhone = false,
+  int adsWatched = 0,
   String fullName = 'Wanjiku Muthoni-Kamau',
 }) async {
   SharedPreferences.setMockInitialValues({});
@@ -141,17 +142,6 @@ Future<TestProviders> seedDemoData({
     phoneNumber: '+254700000000',
     country: 'Kenya',
   );
-  if (withPhone) {
-    final phones = await OwnershipService().getAvailablePhones();
-    await OwnershipService().selectPhone(userId: user.uid, phone: phones.first);
-    for (var i = 0; i < adsWatched; i++) {
-      await AdRewardService().claim(
-        userId: user.uid,
-        adId: 'ad$i',
-        deviceId: '',
-      );
-    }
-  }
   final p = TestProviders();
   await p.auth.checkAuthState();
   await p.ownership.loadOwnership(user.uid);
