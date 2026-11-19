@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { assertFreshMfaReviewer, nextVerificationRequestWindow } from "./security";
 
 initializeApp();
 const db = getFirestore();
@@ -49,8 +50,6 @@ export const requestVerification = onCall(async (request) => {
   const auth = requireAuth(request);
   const caseRef = db.collection("verificationCases").doc();
   const now = Date.now();
-  const windowMs = 24 * 60 * 60 * 1000;
-  const maxRequestsPerWindow = 3;
   await db.runTransaction(async (tx) => {
     const userRef = db.collection("users").doc(auth.uid);
     const user = await tx.get(userRef);
@@ -64,11 +63,7 @@ export const requestVerification = onCall(async (request) => {
 
     const windowStart = user.get("verificationRequestWindowStartedAt")?.toDate?.() as Date | undefined;
     const previousCount = Number(user.get("verificationRequestCount") ?? 0);
-    const inWindow = windowStart !== undefined && now - windowStart.getTime() < windowMs;
-    const requestCount = inWindow ? previousCount : 0;
-    if (requestCount >= maxRequestsPerWindow) {
-      throw new HttpsError("resource-exhausted", "Too many verification requests. Try again after the 24-hour limit resets.");
-    }
+    const limit = nextVerificationRequestWindow(windowStart, previousCount, now);
 
     tx.create(caseRef, {
       uid: auth.uid, status: "pending", createdAt: FieldValue.serverTimestamp(),
@@ -76,8 +71,8 @@ export const requestVerification = onCall(async (request) => {
     });
     tx.set(userRef, {
       verificationStatus: "pending",
-      verificationRequestWindowStartedAt: inWindow ? windowStart : new Date(now),
-      verificationRequestCount: requestCount + 1,
+      verificationRequestWindowStartedAt: limit.windowStartedAt,
+      verificationRequestCount: limit.requestCount,
       updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
   });
@@ -92,14 +87,7 @@ export const reviewVerification = onCall(async (request) => {
   if (auth.token.verificationReviewer !== true && auth.token.admin !== true) {
     throw new HttpsError("permission-denied", "Verification reviewer role required.");
   }
-  const firebaseClaims = auth.token.firebase as Record<string, unknown> | undefined;
-  if (typeof firebaseClaims?.sign_in_second_factor !== "string" || !firebaseClaims.sign_in_second_factor) {
-    throw new HttpsError("permission-denied", "Multi-factor authentication is required for verification reviewers.");
-  }
-  const authTime = Number(auth.token.auth_time ?? 0);
-  if (!authTime || authTime > Math.floor(Date.now() / 1000) + 60 || Date.now() - authTime * 1000 > 10 * 60 * 1000) {
-    throw new HttpsError("unauthenticated", "A recent sign-in is required for verification decisions.");
-  }
+  assertFreshMfaReviewer(auth.token);
   const caseId = String(request.data?.caseId ?? "");
   const decision = request.data?.decision;
   const reason = String(request.data?.reason ?? "").slice(0, 500);
