@@ -51,17 +51,39 @@ Before a pilot:
 - Do not describe M-KOPA as a partner or rely on its facilities until a signed agreement exists.
 
 ## 3. Data protection / ODPC
-Avaru must map controller/processor roles per processing activity. Before real identity, device, financial or ad-attribution data is collected:
-- Complete data inventory, purpose/legal-basis map, retention schedule and data-subject rights process.
-- Assess ODPC registration obligations for Avaru and vendors.
-- Execute data processing and sharing agreements with financier, Firebase/Google, ad networks and other vendors.
-- Assess DPIA requirements, especially for profiling, financial/identity data, monitoring or large-scale processing.
-- Publish accurate privacy notice and terms; implement access controls, encryption, retention/deletion and breach response.
-- Avoid collecting national ID documents until necessity, lawful basis, access and retention are approved.
-- Current Firebase staging database is in the US region (nam5); use synthetic data only until cross-border transfer and privacy review is complete.
 
-Official ODPC guidance: https://www.odpc.go.ke/data-protection-compliance/
-Registration portal: https://dataportal.odpc.go.ke/account/Register
+**Applicable official materials reviewed (18 Nov 2026):**
+- Data Protection Act, 2019, including sections 18, 25, 28–32, 39–43 and 48–50.
+- Data Protection (Registration of Data Controllers and Data Processors) Regulations, 2021, Legal Notice No. 265.
+- ODPC Guidance Notes for Cross-border Data Transfers (2026).
+
+### Registration decision
+Avaru must map controller/processor roles per processing activity, not simply assign one label to the whole company. Regulation 4 requires controllers/processors to register subject to the Regulation 13 exemption. Regulation 13(2) gives a general exemption for entities below KES 5 million annual turnover/revenue and with fewer than 10 employees, but Regulation 13(4) removes that exemption for processing purposes in the Third Schedule. The Third Schedule includes provision of financial services. Therefore, if counsel determines that an Avaru processing activity is provision of financial services, the small-entity exemption does not apply to that activity. Obtain a written registration determination for Avaru as controller and/or processor before any real-user pilot; do not assume the company is exempt because it is small.
+
+### US Firebase / cloud transfer gate
+The project configuration currently documents Firestore location `nam5` (US multiregion). ODPC's 2026 cross-border guidance states that personal data processed in cloud environments with servers outside Kenya constitutes a cross-border transfer. It expects a lawful basis and a valid transfer route under the Act, provider due diligence, a DPA, review of subprocessors, documented rights handling, retention/deletion controls and evidence of safeguards before transfer. Section 48 transfer routes must be assessed; consent is not a universal substitute for the other statutory requirements. Sensitive personal data transferred outside Kenya additionally requires data-subject consent and confirmation of appropriate safeguards under section 49.
+
+Before moving any Kenyan personal data to this US Firebase environment:
+- Identify the exporting and receiving entities, data categories, purpose, legal basis, destination, subprocessors and onward transfers.
+- Select and document the applicable section 48 transfer basis and legal instrument/safeguards; confirm whether ODPC notification or prior engagement is required for the specific arrangement.
+- Execute and retain the Firebase/Google DPA and applicable ODPC standard clauses or another legally sufficient instrument; record audit rights, breach notification, data-subject rights, onward-transfer restrictions and deletion/return obligations.
+- Complete the DPIA before processing where the operation is likely to create high risk. If the DPIA indicates residual high risk, obtain the required ODPC consultation before processing. ODPC guidance also calls for DPIAs for high-risk cross-border cloud deployments.
+- Maintain the transfer register required by the ODPC guidance: date/time, recipient, justification and description of data transferred.
+- Verify encryption in transit/at rest, MFA, least privilege, retained access/change logs, backup and recovery, retention automation and provider/subprocessor changes.
+- Use synthetic data only until the above is documented and approved. Do not upload real national IDs, phone lists, financial records or identity documents to the US staging project.
+
+### Other required privacy controls
+- Complete a data inventory, purpose/legal-basis map, retention schedule and data-subject rights process.
+- Execute data processing and sharing agreements with each financier, supplier, Firebase/Google, ad network and other vendor as applicable.
+- Assess DPIA requirements for profiling, credit-related/identity data, monitoring and large-scale processing.
+- Publish accurate privacy notices and terms before collection; implement access controls, encryption, retention/deletion and breach response.
+- Avoid collecting national ID documents until necessity, lawful basis, access, cross-border route and retention are approved.
+
+Official sources:
+- ODPC 2026 Cross-border Data Transfer Guidance: https://odpc.go.ke/wp-content/uploads/2026/09/ODPC-%E2%80%93-Guidance-Notes-for-Cross-border-Data-Transfers.pdf
+- Data Protection Act, 2019: https://new.kenyalaw.org/akn/ke/act/2019/24/eng%402022-12-31/source
+- Registration Regulations, 2021: https://www.odpc.go.ke/wp-content/uploads/2024/03/THE-DATA-PROTECTION-REGISTRATION-OF-DATA-CONTROLLERS-AND-DATA-PROCESSORS-REGULATIONS-2021.pdf
+- ODPC registration portal: https://dataportal.odpc.go.ke/account/Register
 
 ## 4. Payments (M-PESA)
 Use Safaricom Daraja sandbox only after an approved test use case and secure test credentials are configured. Payment initiation and callback verification must be server-side, provider-scoped, idempotent and reconciled. Never put secrets in Flutter, Vercel browser variables, source control or chat.
