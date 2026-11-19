@@ -1,13 +1,29 @@
+import { createHash } from "node:crypto";
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 
 initializeApp();
 const db = getFirestore();
+const DAILY_LIMIT = 3;
+const REWARD_MINOR = 250; // KES 2.50, expressed in cents; pilot value requires approval.
+const SESSION_TTL_MS = 5 * 60 * 1000;
 
 function requireAuth(request: { auth?: { uid: string; token: Record<string, unknown> } | null }) {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign-in required.");
   return request.auth;
+}
+
+function nairobiDay(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function safeId(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 export const initializeUserProfile = onCall(async (request) => {
@@ -16,16 +32,25 @@ export const initializeUserProfile = onCall(async (request) => {
   await db.runTransaction(async (tx) => {
     const existing = await tx.get(userRef);
     if (existing.exists) return;
-    const fullName = String(request.data?.fullName ?? "").trim().slice(0, 100);
-    const phoneNumber = String(request.data?.phoneNumber ?? "").trim().slice(0, 24);
-    const country = String(request.data?.country ?? "").trim().slice(0, 60);
-    if (!fullName || !phoneNumber || !country) {
-      throw new HttpsError("invalid-argument", "Name, phone number and country are required.");
+    const rawName = request.data?.fullName;
+    const rawPhone = request.data?.phoneNumber;
+    const rawCountry = request.data?.country;
+    if (typeof rawName !== "string" || typeof rawPhone !== "string" || typeof rawCountry !== "string") {
+      throw new HttpsError("invalid-argument", "Name, phone number and country must be text.");
+    }
+    const fullName = rawName.trim();
+    const phoneNumber = rawPhone.trim();
+    const country = rawCountry.trim();
+    if (fullName.length < 2 || fullName.length > 100
+        || !/^\\+[1-9]\\d{7,14}$/.test(phoneNumber)
+        || country.length < 2 || country.length > 60) {
+      throw new HttpsError("invalid-argument", "Provide a valid name, E.164 phone number and country.");
     }
     tx.create(userRef, {
       uid: auth.uid,
-      email: String(auth.token.email ?? ""),
+      email: String(auth.token.email ?? "").slice(0, 254),
       fullName, phoneNumber, country,
+      profileDetailsVerified: false,
       status: "pending",
       verificationStatus: "not_started",
       createdAt: FieldValue.serverTimestamp(),
@@ -39,6 +64,9 @@ export const initializeUserProfile = onCall(async (request) => {
 export const requestVerification = onCall(async (request) => {
   const auth = requireAuth(request);
   const caseRef = db.collection("verificationCases").doc();
+  const now = Date.now();
+  const windowMs = 24 * 60 * 60 * 1000;
+  const maxRequestsPerWindow = 3;
   await db.runTransaction(async (tx) => {
     const userRef = db.collection("users").doc(auth.uid);
     const user = await tx.get(userRef);
@@ -46,11 +74,25 @@ export const requestVerification = onCall(async (request) => {
     const status = user.get("verificationStatus");
     if (status === "approved") throw new HttpsError("already-exists", "Account is already verified.");
     if (status === "pending") throw new HttpsError("already-exists", "A verification request is already pending.");
+
+    const windowStart = user.get("verificationRequestWindowStartedAt")?.toDate?.() as Date | undefined;
+    const previousCount = Number(user.get("verificationRequestCount") ?? 0);
+    const inWindow = windowStart !== undefined && now - windowStart.getTime() < windowMs;
+    const requestCount = inWindow ? previousCount : 0;
+    if (requestCount >= maxRequestsPerWindow) {
+      throw new HttpsError("resource-exhausted", "Too many verification requests. Try again after the 24-hour limit resets.");
+    }
+
     tx.create(caseRef, {
       uid: auth.uid, status: "pending", createdAt: FieldValue.serverTimestamp(),
       schemaVersion: 1,
     });
-    tx.set(userRef, { verificationStatus: "pending", updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(userRef, {
+      verificationStatus: "pending",
+      verificationRequestWindowStartedAt: inWindow ? windowStart : new Date(now),
+      verificationRequestCount: requestCount + 1,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
   });
   return { caseId: caseRef.id, status: "pending" };
 });
@@ -59,6 +101,14 @@ export const reviewVerification = onCall(async (request) => {
   const auth = requireAuth(request);
   if (auth.token.verificationReviewer !== true && auth.token.admin !== true) {
     throw new HttpsError("permission-denied", "Verification reviewer role required.");
+  }
+  const firebaseClaims = auth.token.firebase as Record<string, unknown> | undefined;
+  if (typeof firebaseClaims?.sign_in_second_factor !== "string" || !firebaseClaims.sign_in_second_factor) {
+    throw new HttpsError("permission-denied", "Multi-factor authentication is required for verification reviewers.");
+  }
+  const authTime = Number(auth.token.auth_time ?? 0);
+  if (!authTime || Date.now() - authTime * 1000 > 10 * 60 * 1000) {
+    throw new HttpsError("unauthenticated", "A recent sign-in is required for verification decisions.");
   }
   const caseId = String(request.data?.caseId ?? "");
   const decision = request.data?.decision;
@@ -99,20 +149,20 @@ export const reviewVerification = onCall(async (request) => {
   return { status: decision };
 });
 
-// Compatibility seam retained for emulator regression tests. There is no
-// provider SSV verifier and this function intentionally performs no writes.
-export async function applyVerifiedPartnerEvent(_input: {
-  provider: string; providerEventId: string; sessionId: string; uid: string;
-}): Promise<never> {
-  throw new Error("Ad rewards are disabled; no provider event can create customer value.");
-}
-
 // Advertising/reward endpoints are intentionally disabled. Do not add a
 // client-callable reward route. A future ordinary-ad integration must have no
 // access to financing, wallet, payment or customer-ledger mutation paths.
 export const startAdSession = onCall(async () => {
   throw new HttpsError("failed-precondition", "Ad serving is disabled pending policy and privacy review.");
 });
+
+// Compatibility seam for legacy tests and future provider adapters. No
+// partner event can currently create customer value.
+export async function applyVerifiedPartnerEvent(_input: {
+  provider: string; providerEventId: string; sessionId: string; uid: string;
+}): Promise<never> {
+  throw new Error("Ad rewards are disabled; no provider event can create customer value.");
+}
 
 export const claimReward = onCall(async () => {
   throw new HttpsError("failed-precondition", "Ad rewards are permanently disabled in this product model.");
