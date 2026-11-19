@@ -61,3 +61,36 @@ android {
 flutter {
     source = "../.."
 }
+tasks.register("validateReleaseSigning") {
+    group = "verification"
+    description = "Checks that a private upload keystore is configured for release builds."
+
+    doLast {
+        def required = ["storePassword", "keyPassword", "keyAlias", "storeFile"]
+        def missing = required.findAll { key ->
+            !releaseKeystoreProperties[key]?.toString()?.trim()
+        }
+        if (!releaseKeystoreFile.isFile() || !missing.isEmpty()) {
+            throw new GradleException(
+                "Release signing is not configured. Create android/key.properties " +
+                "with non-empty " + required.join(", ") + " and provide the referenced upload keystore. " +
+                "Never use the debug signing key for a Play Store release."
+            )
+        }
+
+        def keystore = file(releaseKeystoreProperties["storeFile"].toString())
+        if (!keystore.isFile()) {
+            throw new GradleException(
+                "Release keystore does not exist at: " + keystore.absolutePath
+            )
+        }
+    }
+}
+
+// Validate only release variants. Debug builds remain independent of private
+// upload-signing material.
+tasks.configureEach { task ->
+    if (task.name == "preReleaseBuild") {
+        task.dependsOn("validateReleaseSigning")
+    }
+}
