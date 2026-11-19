@@ -1,0 +1,97 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import {
+  assertFreshMfaReviewer,
+  nextVerificationRequestWindow,
+} from "../src/security";
+
+test("verification request limit allows three attempts then rejects the fourth", () => {
+  const now = 1_800_000_000_000;
+  const first = nextVerificationRequestWindow(undefined, 0, now);
+  const second = nextVerificationRequestWindow(first.windowStartedAt, first.requestCount, now + 1);
+  const third = nextVerificationRequestWindow(second.windowStartedAt, second.requestCount, now + 2);
+
+  assert.equal(first.requestCount, 1);
+  assert.equal(second.requestCount, 2);
+  assert.equal(third.requestCount, 3);
+  assert.throws(
+    () => nextVerificationRequestWindow(third.windowStartedAt, third.requestCount, now + 3),
+    (error: unknown) =>
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "resource-exhausted",
+  );
+});
+
+test("verification request limit resets after its 24-hour window", () => {
+  const now = 1_800_000_000_000;
+  const first = nextVerificationRequestWindow(undefined, 0, now);
+  const second = nextVerificationRequestWindow(
+    first.windowStartedAt,
+    2,
+    now + 24 * 60 * 60 * 1000,
+  );
+  assert.equal(second.requestCount, 1);
+  assert.equal(second.windowStartedAt.getTime(), now + 24 * 60 * 60 * 1000);
+});
+
+test("invalid verification request counters fail closed", () => {
+  assert.throws(
+    () => nextVerificationRequestWindow(new Date(1_800_000_000_000), -1, 1_800_000_000_001),
+    (error: unknown) =>
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "failed-precondition",
+  );
+});
+
+test("reviewer session accepts a recent Firebase MFA sign-in", () => {
+  const now = 1_800_000_000_000;
+  assert.doesNotThrow(() =>
+    assertFreshMfaReviewer(
+      {
+        firebase: { sign_in_second_factor: "phone" },
+        auth_time: Math.floor(now / 1000),
+      },
+      now,
+    ),
+  );
+});
+
+test("reviewer session rejects missing MFA", () => {
+  const now = 1_800_000_000_000;
+  assert.throws(
+    () => assertFreshMfaReviewer({ firebase: {}, auth_time: Math.floor(now / 1000) }, now),
+    (error: unknown) =>
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "permission-denied",
+  );
+});
+
+test("reviewer session rejects stale and future authentication times", () => {
+  const now = 1_800_000_000_000;
+  const mfa = { firebase: { sign_in_second_factor: "phone" } };
+  assert.throws(
+    () =>
+      assertFreshMfaReviewer(
+        { ...mfa, auth_time: Math.floor((now - 11 * 60 * 1000) / 1000) },
+        now,
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "unauthenticated",
+  );
+  assert.throws(
+    () =>
+      assertFreshMfaReviewer(
+        { ...mfa, auth_time: Math.floor((now + 2 * 60 * 1000) / 1000) },
+        now,
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "unauthenticated",
+  );
+});
