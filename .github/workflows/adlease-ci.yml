@@ -330,7 +330,7 @@ jobs:
         working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
-          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SHA: ${{ needs.format.outputs.sha || github.event.pull_request.head.sha || github.sha }}
           CI_OUT: ${{ steps.ci.outcome }}
           BUILD: ${{ steps.build.outcome }}
         run: |
