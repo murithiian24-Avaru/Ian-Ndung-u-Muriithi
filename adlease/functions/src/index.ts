@@ -82,6 +82,9 @@ export const requestVerification = onCall(async (request) => {
 });
 
 export const reviewVerification = onCall(async (request) => {
+  if (process.env.ENABLE_VERIFICATION_REVIEW !== "true") {
+    throw new HttpsError("failed-precondition", "Verification review operations are disabled until reviewer governance is approved.");
+  }
   const auth = requireAuth(request);
   if (auth.token.verificationReviewer !== true && auth.token.admin !== true) {
     throw new HttpsError("permission-denied", "Verification reviewer role required.");
@@ -91,7 +94,7 @@ export const reviewVerification = onCall(async (request) => {
     throw new HttpsError("permission-denied", "Multi-factor authentication is required for verification reviewers.");
   }
   const authTime = Number(auth.token.auth_time ?? 0);
-  if (!authTime || Date.now() - authTime * 1000 > 10 * 60 * 1000) {
+  if (!authTime || authTime > Math.floor(Date.now() / 1000) + 60 || Date.now() - authTime * 1000 > 10 * 60 * 1000) {
     throw new HttpsError("unauthenticated", "A recent sign-in is required for verification decisions.");
   }
   const caseId = String(request.data?.caseId ?? "");
