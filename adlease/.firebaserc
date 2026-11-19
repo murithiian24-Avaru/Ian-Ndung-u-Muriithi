@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "adlease-staging",
+    "staging": "adlease-staging"
+  }
+}
