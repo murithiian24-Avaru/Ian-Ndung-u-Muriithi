@@ -26,7 +26,7 @@ The current implementation branch disables all ad session and reward issuance pa
 7. Partner event verification and reconciliation are absent: no signature validation, webhook secret rotation, raw-event retention policy, reconciliation process or real provider integration.
 8. Production identity integration is incomplete. Firebase identity adapter is not wired as the app-wide auth provider; production Firebase configuration is absent.
 9. No live financial integration exists. No Daraja sandbox integration, financier contract API or supplier settlement reconciliation is implemented.
-10. Staging Firestore uses the US nam5 region. Use synthetic data until counsel completes cross-border transfer and ODPC assessment.
+10. Staging Firestore uses the Europe multi-region `eur3` location. Use synthetic data until counsel completes the cross-border transfer and ODPC assessment.
 
 ## Current branch changes
 - App feature flags default ad rewards, advertising, live financing and live payments OFF.
