@@ -105,7 +105,7 @@ void main() {
     expect(errors, isEmpty, reason: errors.join('\n'));
   });
 
-  testWidgets('dashboard shows all four statistic cards and quick actions', (
+  testWidgets('home clearly explains disabled product capabilities', (
     tester,
   ) async {
     final p = await seedDemoData();
@@ -113,18 +113,16 @@ void main() {
     await tester.pumpWidget(buildTestApp(p, home: const HomeScreen()));
     await tester.pump(const Duration(milliseconds: 300));
     for (final title in [
-      'Ads Watched Today',
-      'Ads Remaining',
-      'Total Views',
-      'Applied to phone',
-      'Ownership Progress',
-      'Quick Actions',
-      'Watch Ad',
-      'Refer',
+      'AdLease',
+      'Financing is not active',
+      'Advertising is not active',
+      'Payments are not active',
     ]) {
       await tester.scrollUntilVisible(find.text(title), 200);
       expect(find.text(title), findsOneWidget, reason: title);
     }
+    expect(find.textContaining('Ads Watched Today'), findsNothing);
+    expect(find.textContaining('Ownership Progress'), findsNothing);
   });
 
   // Every other screen: small phone and Redmi size, at 100%, 130% and 200%
