@@ -9,7 +9,15 @@ service cloud.firestore {
       allow create, delete: if false;
       allow update: if owns(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['fullName', 'phoneNumber', 'country', 'locale', 'updatedAt']);
+          .hasOnly(['fullName', 'phoneNumber', 'country', 'locale', 'updatedAt'])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 2
+        && request.resource.data.fullName.size() <= 100
+        && request.resource.data.phoneNumber is string
+        && request.resource.data.phoneNumber.matches('^\\+[1-9][0-9]{7,14}$')
+        && request.resource.data.country is string
+        && request.resource.data.country.size() >= 2
+        && request.resource.data.country.size() <= 60;
     }
 
     match /verificationCases/{caseId} {
