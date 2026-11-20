@@ -29,8 +29,8 @@ export default function Dashboard() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Welcome back, Admin. Here's what's happening.</p>
+        <h1 className="text-3xl font-bold text-gray-900">Demo Dashboard</h1>
+        <p className="text-gray-500 mt-1">Illustrative sample metrics only — no live users, ad views, revenue or ownership events.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -42,7 +42,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4">Revenue Overview</h3>
+          <h3 className="text-lg font-semibold mb-4">Sample trend (not actual revenue)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -55,7 +55,7 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold mb-4">Revenue Distribution</h3>
+          <h3 className="text-lg font-semibold mb-4">Illustrative distribution only</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={distributionData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value">
@@ -81,7 +81,7 @@ export default function Dashboard() {
       </div>
 
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+        <h3 className="text-lg font-semibold mb-4">Synthetic sample activity</h3>
         <div className="space-y-4">
           {recentActivity.map((activity, i) => (
             <div key={i} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
