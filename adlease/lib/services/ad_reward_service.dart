@@ -1,3 +1,4 @@
+import 'package:adlease/config/features.dart';
 import 'package:adlease/models/ownership_model.dart';
 import 'package:adlease/services/ad_service.dart';
 import 'package:adlease/services/ownership_service.dart';
@@ -20,12 +21,10 @@ class AdRewardResult {
   const AdRewardResult(this.outcome, [this.ownership]);
 }
 
-/// Applies the reward for a completed (simulated) ad.
-///
-/// The reward goes to ONE place only: the user's phone-ownership progress.
-/// It is never added to a cash wallet, so it cannot be counted twice or look
-/// like withdrawable money. Ads and rewards are simulated: there is no ad
-/// network, no payment and no real money.
+/// Applies a reward for a completed ad only when the reward feature is enabled.
+/// Ads and rewards are currently disabled as financial/product promises: there
+/// is no approved reward model, live ad network, server ledger or partner
+/// repayment agreement.
 class AdRewardService {
   final AdService _ads;
   final OwnershipService _ownership;
@@ -39,6 +38,10 @@ class AdRewardService {
     required String adId,
     required String deviceId,
   }) async {
+    if (!AppFeatures.rewardsEnabled) {
+      return const AdRewardResult(AdRewardOutcome.rejected);
+    }
+
     final current = await _ownership.getUserOwnership(userId);
     if (current == null) {
       return const AdRewardResult(AdRewardOutcome.noActivePhone);
