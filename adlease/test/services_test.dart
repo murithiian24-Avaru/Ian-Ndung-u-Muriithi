@@ -1,7 +1,8 @@
-// Tests for the audit fixes on branch fix/adlease-audit-safe-fixes.
+// Tests for demo-only and financial feature guards.
 // Run with: flutter test
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:adlease/services/ad_reward_service.dart';
 import 'package:adlease/services/ad_service.dart';
 import 'package:adlease/services/auth_service.dart';
 import 'package:adlease/services/wallet_service.dart';
@@ -13,60 +14,48 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('WalletService.requestWithdrawal (finding C5)', () {
-    test('deducts the requested amount from the balance', () async {
+  group('Disabled financial features', () {
+    test('wallet rejects local reward credits while rewards are disabled', () async {
       final wallet = WalletService();
-      await wallet.addEarning('u1', 10, 'test earning');
 
-      await wallet.requestWithdrawal(
-        userId: 'u1',
-        amount: 6,
-        paymentMethod: 'M-Pesa',
-        paymentDetails: '0700000000',
+      await expectLater(
+        wallet.addEarning('u1', 10, 'test earning'),
+        throwsA(isA<StateError>()),
       );
-
-      final after = await wallet.getWallet('u1');
-      expect(after.balance, 4);
     });
 
-    test('rejects a second withdrawal of the same balance', () async {
+    test('withdrawal request is rejected before balance or payment details are stored', () async {
       final wallet = WalletService();
-      await wallet.addEarning('u1', 10, 'test earning');
 
-      await wallet.requestWithdrawal(
-        userId: 'u1',
-        amount: 10,
-        paymentMethod: 'M-Pesa',
-        paymentDetails: '0700000000',
-      );
-
-      expect(
-        () => wallet.requestWithdrawal(
+      await expectLater(
+        wallet.requestWithdrawal(
           userId: 'u1',
           amount: 10,
           paymentMethod: 'M-Pesa',
           paymentDetails: '0700000000',
         ),
-        throwsA(isA<Exception>()),
+        throwsA(isA<StateError>()),
       );
+
+      expect((await wallet.getUserWithdrawals('u1')), isEmpty);
+      expect((await wallet.getTransactions('u1')), isEmpty);
+      expect((await wallet.getWallet('u1')).balance, 0);
     });
 
-    test('rejects zero or negative amounts', () async {
-      final wallet = WalletService();
-      await wallet.addEarning('u1', 10, 'test earning');
-      expect(
-        () => wallet.requestWithdrawal(
-          userId: 'u1',
-          amount: 0,
-          paymentMethod: 'M-Pesa',
-          paymentDetails: '0700000000',
-        ),
-        throwsA(isA<Exception>()),
+    test('ad reward claims are rejected before touching ownership or ad history', () async {
+      final result = await AdRewardService().claim(
+        userId: 'u1',
+        adId: 'sample-ad',
+        deviceId: 'demo-device',
       );
+
+      expect(result.outcome, AdRewardOutcome.rejected);
+      expect(result.ownership, isNull);
+      expect(await AdService().getAdsWatchedToday('u1'), 0);
     });
   });
 
-  group('AdService.recordAdView daily limit (finding H4)', () {
+  group('AdService.recordAdView daily limit (demo playback only)', () {
     test('allows maxAdsPerDay completed views, then refuses more', () async {
       final ads = AdService();
       for (var i = 0; i < AdService.maxAdsPerDay; i++) {
@@ -103,8 +92,8 @@ void main() {
     });
   });
 
-  group('AuthService placeholders (findings H1, H2)', () {
-    test('Google sign-in no longer logs into a demo account', () async {
+  group('AuthService placeholders', () {
+    test('Google sign-in does not log into a demo account', () async {
       expect(() => AuthService().signInWithGoogle(), throwsA(isA<Exception>()));
     });
 
