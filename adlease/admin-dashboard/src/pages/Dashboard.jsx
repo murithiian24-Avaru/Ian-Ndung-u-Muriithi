@@ -1,5 +1,5 @@
 import React from 'react'
-import { Users, Banknote, PlayCircle, Smartphone, TrendingUp, Eye } from 'lucide-react'
+import { Users, Banknote, PlayCircle, Smartphone } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import StatCard from '../components/StatCard'
 
@@ -19,10 +19,10 @@ const distributionData = [
 ]
 
 const recentActivity = [
-  { user: 'John Kamau', action: 'Watched sample ad (phone progress)', amount: '+KSh 2.50', time: '2 min ago' },
-  { user: 'Peter Ochieng', action: 'New registration', amount: '', time: '12 min ago' },
-  { user: 'Sarah Muthoni', action: 'Phone ownership complete', amount: 'KSh 300', time: '1 hr ago' },
-  { user: 'James Njoroge', action: 'Referral bonus', amount: '+KSh 5.00', time: '2 hr ago' },
+  { user: 'Demo User 01', action: 'Sample playback event', amount: 'Sample event', time: 'Demo timestamp' },
+  { user: 'Demo User 02', action: 'Sample registration event', amount: 'Sample event', time: 'Demo timestamp' },
+  { user: 'Demo User 03', action: 'Sample ownership event', amount: 'Sample event', time: 'Demo timestamp' },
+  { user: 'Demo User 04', action: 'Sample referral event', amount: 'Sample event', time: 'Demo timestamp' },
 ]
 
 export default function Dashboard() {
@@ -34,10 +34,10 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard title="Total Users" value="1,247" icon={Users} color="blue" change={12.5} />
-        <StatCard title="Revenue (demo)" value="KSh 45,200" icon={Banknote} color="green" change={8.3} />
-        <StatCard title="Ads Watched" value="3,842" icon={PlayCircle} color="orange" change={15.2} />
-        <StatCard title="Phones Owned" value="89" icon={Smartphone} color="purple" change={5.7} />
+        <StatCard title="Sample users" value="1,247 (demo)" icon={Users} color="blue" change={0} />
+        <StatCard title="Revenue" value="Not available" icon={Banknote} color="green" change={0} />
+        <StatCard title="Sample ad views" value="3,842 (demo)" icon={PlayCircle} color="orange" change={0} />
+        <StatCard title="Sample ownership events" value="89 (demo)" icon={Smartphone} color="purple" change={0} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
