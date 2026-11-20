@@ -35,11 +35,9 @@ class FirebaseIdentityService {
       throw StateError('Firebase did not return a newly created user.');
     }
     await user.sendEmailVerification();
-    await _initializeProfile(
-      fullName: fullName,
-      phoneNumber: phoneNumber,
-      country: country,
-    );
+    // Profile creation is deferred until the user verifies their email.
+    // The caller retains the onboarding details and invokes
+    // initializeProfileAfterVerification after verification is confirmed.
     return credential;
   }
 
@@ -57,9 +55,10 @@ class FirebaseIdentityService {
     if (!user.emailVerified) {
       throw FirebaseAuthException(
         code: 'email-not-verified',
-        message: 'Verify your email before using reward features.',
+        message: 'Verify your email before continuing.',
       );
     }
+    await user.getIdToken(true);
     return credential;
   }
 
@@ -76,7 +75,18 @@ class FirebaseIdentityService {
       accessToken: tokens.accessToken,
       idToken: tokens.idToken,
     );
-    return _auth.signInWithCredential(credential);
+    final result = await _auth.signInWithCredential(credential);
+    await result.user?.reload();
+    final user = _auth.currentUser;
+    if (user == null || !user.emailVerified) {
+      await _auth.signOut();
+      throw FirebaseAuthException(
+        code: 'email-not-verified',
+        message: 'A verified email address is required.',
+      );
+    }
+    await user.getIdToken(true);
+    return result;
   }
 
   Future<void> sendPasswordReset(String email) =>
@@ -89,7 +99,36 @@ class FirebaseIdentityService {
   }
 
   Future<void> refreshVerificationState() async {
-    await _auth.currentUser?.reload();
+    final user = _auth.currentUser;
+    await user?.reload();
+    final refreshedUser = _auth.currentUser;
+    if (refreshedUser?.emailVerified == true) {
+      await refreshedUser!.getIdToken(true);
+    }
+  }
+
+  /// Creates the server-controlled profile only after email verification.
+  /// Call this after the verification-pending screen confirms the address.
+  Future<void> initializeProfileAfterVerification({
+    required String fullName,
+    required String phoneNumber,
+    required String country,
+  }) async {
+    final user = _auth.currentUser;
+    await user?.reload();
+    final verifiedUser = _auth.currentUser;
+    if (verifiedUser == null || !verifiedUser.emailVerified) {
+      throw FirebaseAuthException(
+        code: 'email-not-verified',
+        message: 'Verify your email before creating your profile.',
+      );
+    }
+    await verifiedUser.getIdToken(true);
+    await _initializeProfile(
+      fullName: fullName,
+      phoneNumber: phoneNumber,
+      country: country,
+    );
   }
 
   Future<void> signOut() async {
