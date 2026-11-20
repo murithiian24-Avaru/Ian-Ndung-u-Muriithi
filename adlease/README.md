@@ -81,7 +81,7 @@ Nothing below is production-ready. Reward claims, wallet credits and withdrawal 
 | Google Sign-In | Disabled / unavailable | Shows "not available yet" (`signInWithGoogle()` only throws). The `google_sign_in` package is declared but never used |
 | Password reset | Disabled / unavailable | Shows "not available yet" (`resetPassword()` only throws) |
 | Home dashboard (ownership progress, ad stats) | Working, with simulated data | Shows the phone's own demo records. The cash balance shows "Not available" |
-| Watch ads (60-second ads, 3 per day) | Simulated / demo-only | Five generated "Sample Ad" entries and a 60-second countdown; no ad network and no real ads. The daily limit uses the phone's clock and can be bypassed |
+| Watch ads | Disabled / unavailable | The screen explains that ad rewards are paused; no ad can earn cash or phone credit |
 | Anti-cheat verification | Planned, not implemented | The app stores a "verification hash" computed on the phone with a fixed string; it provides **no** protection. Server-side verification is only proposed ([`reward-rules.md`](docs/architecture/reward-rules.md)) |
 | Ad rewards / money toward a phone | Disabled / unavailable | Reward claims and local wallet credits are blocked by service-level feature guards. No real value, payment or financing exists |
 | Phone ownership tracking | Working, with simulated data | Choose a phone and see progress; stored on the phone only |
