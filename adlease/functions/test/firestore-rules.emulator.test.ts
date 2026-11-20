@@ -97,3 +97,19 @@ test("users cannot store malformed or oversized profile details", async () => {
     country: "K",
   }));
 });
+
+
+test("pending verification locks identity fields but still permits locale changes", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "users/pending-profile"), {
+      uid: "pending-profile", fullName: "Applicant", phoneNumber: "+254712345678",
+      country: "Kenya", locale: "en", status: "pending",
+      verificationStatus: "pending", profileDetailsVerified: false,
+    });
+  });
+  const db = env.authenticatedContext("pending-profile").firestore();
+  await assertFails(updateDoc(doc(db, "users/pending-profile"), { fullName: "Changed Name" }));
+  await assertFails(updateDoc(doc(db, "users/pending-profile"), { phoneNumber: "+254700000000" }));
+  await assertFails(updateDoc(doc(db, "users/pending-profile"), { country: "Uganda" }));
+  await assertSucceeds(updateDoc(doc(db, "users/pending-profile"), { locale: "sw" }));
+});
