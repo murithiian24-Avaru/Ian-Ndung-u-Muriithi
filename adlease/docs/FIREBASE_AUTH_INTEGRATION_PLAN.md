@@ -42,10 +42,10 @@ Use a dedicated Firebase-backed provider/service rather than replacing the demo 
 
 Required journeys:
 1. Register with email/password, full name, E.164 phone and country.
-2. Send email verification.
-3. Do not navigate into an authenticated customer area until email is verified.
-4. Handle verification-pending UI, resend with throttling, reload current Firebase user and refresh state.
-5. On first verified sign-in, call 'initializeUserProfile' (idempotent server-side).
+2. Send email verification; do not call 'initializeUserProfile' during registration.
+3. Keep the user in a verification-pending state; do not navigate into protected customer areas.
+4. Handle verification-pending UI, resend with throttling, reload the Firebase user and force-refresh its ID token after verification.
+5. After verification is confirmed, call 'initializeProfileAfterVerification' with the retained onboarding details; the server independently checks Admin Auth email verification and creates the profile idempotently.
 6. Sign in with email/password and restore auth state from Firebase Auth's 'authStateChanges'.
 7. Password reset through Firebase Auth; show generic confirmation without disclosing account existence.
 8. Sign out and clear local sensitive/session state.
@@ -57,7 +57,9 @@ Required journeys:
 - Firebase UID is the stable account key.
 - User profile creation is callable/server-side; client cannot create or delete 'users/{uid}'.
 - Client profile updates are restricted to approved profile fields in Firestore rules.
-- Verification status, account status, reviewer decisions, wallet, ledger, payment and financing state are server-controlled. Customer callables re-check the authoritative Firebase Auth user (not just token claims), require a non-disabled account and verified email, and fail closed on unknown account/verification states.\n- Verification review requires a non-disabled, email-verified reviewer with the existing reviewer claim and fresh MFA; self-review is denied. The applicant must also remain enabled and email-verified at review time.\n- A verification request stores a server-side snapshot of the applicant's name, phone and country. Firestore rules prevent customers changing those identity fields while verification is pending. Approval updates verification status, profile-details verification and pending account activation atomically.
+- Verification status, account status, reviewer decisions, wallet, ledger, payment and financing state are server-controlled. Customer callables re-check the authoritative Firebase Auth user (not just token claims), require a non-disabled account and verified email, and fail closed on unknown account/verification states.
+- Verification review requires a non-disabled, email-verified reviewer with the existing reviewer claim and fresh MFA; self-review is denied. The applicant must also remain enabled and email-verified at review time.
+- A verification request stores a server-side snapshot of the applicant's name, phone and country. Firestore rules prevent customers changing those identity fields while verification is pending. Approval updates verification status, profile-details verification and pending account activation atomically.
 - Do not store password hashes, identity documents or financial records in SharedPreferences.
 - Do not treat email verification as KYC or credit approval.
 - No advertising/reward path is enabled; no ad view can create customer value.
@@ -72,7 +74,10 @@ Unit/service:
 - Password reset generic success and failure handling.
 - Sign-out clears session and returns to welcome.
 - Staging/emulator/demo mode isolation and release-mode fail-closed behaviour.
-- Suspended/closed or unknown account states are blocked by server state.\n- Unverified or disabled Firebase Auth users cannot initialize profiles or request verification.\n- A reviewer cannot approve their own case, a disabled/unverified applicant, or a case whose profile snapshot no longer matches the server profile.\n- Identity fields cannot be edited by a customer while verification is pending; locale-only changes remain permitted.
+- Suspended/closed or unknown account states are blocked by server state.
+- Unverified or disabled Firebase Auth users cannot initialize profiles or request verification.
+- A reviewer cannot approve their own case, a disabled/unverified applicant, or a case whose profile snapshot no longer matches the server profile.
+- Identity fields cannot be edited by a customer while verification is pending; locale-only changes remain permitted.
 
 Widget/integration (Firebase Emulator Suite):
 - Register → verification email action simulated → reload → verified sign-in.
