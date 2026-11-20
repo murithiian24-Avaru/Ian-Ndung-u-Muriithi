@@ -42,7 +42,12 @@ class WalletScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'DEMO ONLY — historical local entries are not cash, payments or amounts owed.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 16),
                     _buildWalletCard(context, isDark),
                     const SizedBox(height: 20),
                     _buildActionButtons(context),
@@ -256,7 +261,7 @@ class WalletScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Transaction History',
+          'Demo Activity History',
           style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
@@ -277,7 +282,7 @@ class WalletScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'No transactions yet',
+                  'No demo activity yet',
                   style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                 ),
                 Text(
