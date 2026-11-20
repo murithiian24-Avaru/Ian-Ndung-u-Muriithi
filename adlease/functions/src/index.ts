@@ -1,22 +1,69 @@
+import { getAuth, UserRecord } from "firebase-admin/auth";
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
-import { assertFreshMfaReviewer, nextVerificationRequestWindow } from "./security";
+import {
+  assertCustomerAccountStatus,
+  assertFreshMfaReviewer,
+  assertVerificationState,
+  assertVerifiedEmail,
+  nextVerificationRequestWindow,
+} from "./security";
 
 initializeApp();
 const db = getFirestore();
 
-function requireAuth(request: { auth?: { uid: string; token: Record<string, unknown> } | null }) {
+type CallableAuth = { uid: string; token: Record<string, unknown> };
+
+function requireAuth(request: { auth?: CallableAuth | null }): CallableAuth {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign-in required.");
   return request.auth;
 }
 
+async function requireVerifiedFirebaseUser(uid: string): Promise<UserRecord> {
+  let user: UserRecord;
+  try {
+    user = await getAuth().getUser(uid);
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "auth/user-not-found"
+    ) {
+      throw new HttpsError("unauthenticated", "A valid Firebase account is required.");
+    }
+    throw error;
+  }
+  assertVerifiedEmail(user);
+  return user;
+}
+
+function profileProjection(uid: string, data: FirebaseFirestore.DocumentData) {
+  return {
+    uid,
+    status: data.status,
+    verificationStatus: data.verificationStatus,
+    profileDetailsVerified: data.profileDetailsVerified === true,
+    fullName: data.fullName,
+    phoneNumber: data.phoneNumber,
+    country: data.country,
+  };
+}
+
 export const initializeUserProfile = onCall(async (request) => {
   const auth = requireAuth(request);
+  const firebaseUser = await requireVerifiedFirebaseUser(auth.uid);
   const userRef = db.collection("users").doc(auth.uid);
-  await db.runTransaction(async (tx) => {
+  const profile = await db.runTransaction(async (tx) => {
     const existing = await tx.get(userRef);
-    if (existing.exists) return;
+    if (existing.exists) {
+      const data = existing.data()!;
+      assertCustomerAccountStatus(data.status);
+      assertVerificationState(data.verificationStatus);
+      return profileProjection(auth.uid, data);
+    }
+
     const rawName = request.data?.fullName;
     const rawPhone = request.data?.phoneNumber;
     const rawCountry = request.data?.country;
@@ -31,9 +78,9 @@ export const initializeUserProfile = onCall(async (request) => {
         || country.length < 2 || country.length > 60) {
       throw new HttpsError("invalid-argument", "Provide a valid name, E.164 phone number and country.");
     }
-    tx.create(userRef, {
+    const data = {
       uid: auth.uid,
-      email: String(auth.token.email ?? "").slice(0, 254),
+      email: (firebaseUser.email ?? "").slice(0, 254),
       fullName, phoneNumber, country,
       profileDetailsVerified: false,
       status: "pending",
@@ -41,32 +88,52 @@ export const initializeUserProfile = onCall(async (request) => {
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
       schemaVersion: 1,
-    });
+    };
+    tx.create(userRef, data);
+    return profileProjection(auth.uid, data);
   });
-  return { initialized: true };
+  return { initialized: true, profile };
 });
 
 export const requestVerification = onCall(async (request) => {
   const auth = requireAuth(request);
+  await requireVerifiedFirebaseUser(auth.uid);
   const caseRef = db.collection("verificationCases").doc();
   const now = Date.now();
   await db.runTransaction(async (tx) => {
     const userRef = db.collection("users").doc(auth.uid);
     const user = await tx.get(userRef);
     if (!user.exists) throw new HttpsError("failed-precondition", "User profile is not initialized.");
-    if (user.get("status") === "suspended" || user.get("status") === "closed") {
-      throw new HttpsError("permission-denied", "Suspended or closed accounts cannot request verification.");
+    const data = user.data()!;
+    assertCustomerAccountStatus(data.status);
+    assertVerificationState(data.verificationStatus);
+    if (data.verificationStatus === "approved") {
+      throw new HttpsError("already-exists", "Account is already verified.");
     }
-    const status = user.get("verificationStatus");
-    if (status === "approved") throw new HttpsError("already-exists", "Account is already verified.");
-    if (status === "pending") throw new HttpsError("already-exists", "A verification request is already pending.");
+    if (data.verificationStatus === "pending") {
+      throw new HttpsError("already-exists", "A verification request is already pending.");
+    }
+    if (
+      typeof data.fullName !== "string" ||
+      typeof data.phoneNumber !== "string" ||
+      typeof data.country !== "string"
+    ) {
+      throw new HttpsError("failed-precondition", "Complete your profile before requesting verification.");
+    }
 
-    const windowStart = user.get("verificationRequestWindowStartedAt")?.toDate?.() as Date | undefined;
-    const previousCount = Number(user.get("verificationRequestCount") ?? 0);
+    const windowStart = data.verificationRequestWindowStartedAt?.toDate?.() as Date | undefined;
+    const previousCount = Number(data.verificationRequestCount ?? 0);
     const limit = nextVerificationRequestWindow(windowStart, previousCount, now);
 
     tx.create(caseRef, {
-      uid: auth.uid, status: "pending", createdAt: FieldValue.serverTimestamp(),
+      uid: auth.uid,
+      status: "pending",
+      profileSnapshot: {
+        fullName: data.fullName,
+        phoneNumber: data.phoneNumber,
+        country: data.country,
+      },
+      createdAt: FieldValue.serverTimestamp(),
       schemaVersion: 1,
     });
     tx.set(userRef, {
@@ -88,39 +155,76 @@ export const reviewVerification = onCall(async (request) => {
     throw new HttpsError("permission-denied", "Verification reviewer role required.");
   }
   assertFreshMfaReviewer(auth.token);
-  const caseId = String(request.data?.caseId ?? "");
+  const reviewer = await getAuth().getUser(auth.uid);
+  assertVerifiedEmail(reviewer);
+
+  const caseId = typeof request.data?.caseId === "string" ? request.data.caseId.trim() : "";
   const decision = request.data?.decision;
-  const reason = String(request.data?.reason ?? "").slice(0, 500);
+  const reason = typeof request.data?.reason === "string" ? request.data.reason.slice(0, 500) : "";
   if (!caseId || !["approved", "rejected"].includes(decision)) {
     throw new HttpsError("invalid-argument", "A valid case and decision are required.");
   }
+
   const caseRef = db.collection("verificationCases").doc(caseId);
+  const initialCase = await caseRef.get();
+  if (!initialCase.exists || initialCase.get("status") !== "pending") {
+    throw new HttpsError("failed-precondition", "Verification case is not pending.");
+  }
+  const applicantUid = initialCase.get("uid");
+  if (typeof applicantUid !== "string" || !applicantUid) {
+    throw new HttpsError("failed-precondition", "Verification case has no valid applicant.");
+  }
+  if (applicantUid === auth.uid) {
+    throw new HttpsError("permission-denied", "Reviewers cannot review their own verification cases.");
+  }
+  await requireVerifiedFirebaseUser(applicantUid);
+
   const decisionRef = db.collection("verificationDecisions").doc();
   await db.runTransaction(async (tx) => {
     const snap = await tx.get(caseRef);
-    if (!snap.exists || snap.get("status") !== "pending") {
-      throw new HttpsError("failed-precondition", "Verification case is not pending.");
+    if (!snap.exists || snap.get("status") !== "pending" || snap.get("uid") !== applicantUid) {
+      throw new HttpsError("failed-precondition", "Verification case is no longer pending.");
     }
-    const userRef = db.collection("users").doc(snap.get("uid"));
+    const userRef = db.collection("users").doc(applicantUid);
     const user = await tx.get(userRef);
     if (!user.exists) throw new HttpsError("not-found", "User profile not found.");
-    if (decision === "approved" && (user.get("status") === "suspended" || user.get("status") === "closed")) {
-      throw new HttpsError("failed-precondition", "Suspended or closed accounts cannot be approved.");
+    const data = user.data()!;
+    assertCustomerAccountStatus(data.status);
+    assertVerificationState(data.verificationStatus);
+    if (data.verificationStatus !== "pending") {
+      throw new HttpsError("failed-precondition", "Applicant verification is not pending.");
     }
+    const snapshot = snap.get("profileSnapshot") as
+      | { fullName?: unknown; phoneNumber?: unknown; country?: unknown }
+      | undefined;
+    if (
+      !snapshot ||
+      snapshot.fullName !== data.fullName ||
+      snapshot.phoneNumber !== data.phoneNumber ||
+      snapshot.country !== data.country
+    ) {
+      throw new HttpsError("failed-precondition", "Applicant profile changed after verification was requested.");
+    }
+
     const auditRef = db.collection("adminAudit").doc();
     tx.create(decisionRef, {
-      caseId, uid: snap.get("uid"), decision, reason, reviewerUid: auth.uid,
+      caseId, uid: applicantUid, decision, reason, reviewerUid: auth.uid,
       createdAt: FieldValue.serverTimestamp(), schemaVersion: 1,
     });
-    tx.update(caseRef, { status: decision, reviewedAt: FieldValue.serverTimestamp() });
+    tx.update(caseRef, {
+      status: decision,
+      reviewedAt: FieldValue.serverTimestamp(),
+      reviewerUid: auth.uid,
+    });
     tx.set(userRef, {
       verificationStatus: decision,
-      status: decision === "approved" && user.get("status") === "pending" ? "active" : user.get("status"),
+      profileDetailsVerified: decision === "approved",
+      status: decision === "approved" && data.status === "pending" ? "active" : data.status,
       verifiedAt: decision === "approved" ? FieldValue.serverTimestamp() : null,
       updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
     tx.create(auditRef, {
-      actorUid: auth.uid, action: "verification_review", targetUid: snap.get("uid"),
+      actorUid: auth.uid, action: "verification_review", targetUid: applicantUid,
       caseId, decision, reason, createdAt: FieldValue.serverTimestamp(),
     });
   });

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  assertCustomerAccountStatus,
   assertFreshMfaReviewer,
+  assertVerificationState,
+  assertVerifiedEmail,
   nextVerificationRequestWindow,
 } from "../src/security";
 
@@ -94,4 +97,28 @@ test("reviewer session rejects stale and future authentication times", () => {
       "code" in error &&
       error.code === "unauthenticated",
   );
+});
+
+test("customer access requires a non-disabled Firebase account with verified email", () => {
+  assert.doesNotThrow(() => assertVerifiedEmail({ disabled: false, emailVerified: true }));
+  assert.throws(
+    () => assertVerifiedEmail({ disabled: true, emailVerified: true }),
+    (error: unknown) => error instanceof Error && "code" in error && error.code === "permission-denied",
+  );
+  assert.throws(
+    () => assertVerifiedEmail({ disabled: false, emailVerified: false }),
+    (error: unknown) => error instanceof Error && "code" in error && error.code === "unauthenticated",
+  );
+});
+
+test("customer account and verification states fail closed", () => {
+  assert.doesNotThrow(() => assertCustomerAccountStatus("pending"));
+  assert.doesNotThrow(() => assertCustomerAccountStatus("active"));
+  assert.throws(() => assertCustomerAccountStatus("suspended"));
+  assert.throws(() => assertCustomerAccountStatus("closed"));
+  assert.throws(() => assertCustomerAccountStatus("unexpected"));
+  for (const state of ["not_started", "pending", "approved", "rejected"]) {
+    assert.doesNotThrow(() => assertVerificationState(state));
+  }
+  assert.throws(() => assertVerificationState("unknown"));
 });

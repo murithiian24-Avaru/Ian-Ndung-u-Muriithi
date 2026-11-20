@@ -10,6 +10,9 @@ service cloud.firestore {
       allow update: if owns(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['fullName', 'phoneNumber', 'country', 'locale', 'updatedAt'])
+        && (resource.data.verificationStatus != 'pending'
+          || !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['fullName', 'phoneNumber', 'country']))
         && request.resource.data.fullName is string
         && request.resource.data.fullName.size() >= 2
         && request.resource.data.fullName.size() <= 100
