@@ -75,7 +75,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Watch. Earn. Own.',
+                    'Phone ownership concept demo',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: Colors.grey,
@@ -448,8 +448,8 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: _buildActionButton(
                   context,
-                  'Watch Ad',
-                  Icons.play_arrow,
+                  AppFeatures.rewardsEnabled ? 'Watch Ad' : 'Ads paused',
+                  AppFeatures.rewardsEnabled ? Icons.play_arrow : Icons.pause_circle_outline,
                   AdLeaseTheme.primaryBlue,
                   () => Navigator.pushNamed(context, AppRoutes.watchAd),
                   isDark,
