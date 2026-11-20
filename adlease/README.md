@@ -2,7 +2,7 @@
 
 AdLease is an early-stage product concept exploring phone ownership and possible partner-supported payment models. The current app is a local demo only; it does not offer financing, compulsory advertising, cash rewards, or a route to earn a phone.
 
- > **Status: demo prototype.** There is no backend: demo accounts and sample playback history are stored only on the phone. Reward claims, wallet credits and withdrawals are disabled; no real money, ads, financing or customer service is available. See [Features](#features) for what
+> **Status: demo prototype.** There is no backend: demo accounts and sample playback history are stored only on the phone. Reward claims, wallet credits and withdrawals are disabled; no real money, ads, financing or customer service is available. See [Features](#features) for what
 > works today, and [`docs/architecture/`](docs/architecture/README.md) for the
 > proposed (not yet built) production design.
 
