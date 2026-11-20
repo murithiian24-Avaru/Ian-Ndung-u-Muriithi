@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { Plus, Upload, PlayCircle, Eye, Trash2, Clock } from 'lucide-react'
+import { Upload, PlayCircle } from 'lucide-react'
 
 const sampleAds = [
   // Generic samples only: no real company has agreed to appear.
-  { id: 1, title: 'Sample Ad 1', advertiser: 'Sample Advertiser A', duration: 60, views: 1240, reward: 2.50, status: 'active', created: '2024-01-15' },
-  { id: 2, title: 'Sample Ad 2', advertiser: 'Sample Advertiser B', duration: 60, views: 890, reward: 2.50, status: 'active', created: '2024-01-20' },
+  { id: 1, title: 'Sample Ad 1', advertiser: 'Sample Advertiser A', duration: 60, views: 1240, status: 'active', created: '2024-01-15' },
+  { id: 2, title: 'Sample Ad 2', advertiser: 'Sample Advertiser B', duration: 60, views: 890, status: 'active', created: '2024-01-20' },
   { id: 3, title: 'Sample Ad 3', advertiser: 'Sample Advertiser C', duration: 60, views: 560, reward: 2.50, status: 'active', created: '2024-02-01' },
   { id: 4, title: 'Sample Ad 4', advertiser: 'Sample Advertiser D', duration: 60, views: 2100, reward: 2.50, status: 'paused', created: '2024-01-10' },
   { id: 5, title: 'Sample Ad 5', advertiser: 'Sample Advertiser E', duration: 60, views: 340, reward: 2.50, status: 'active', created: '2024-02-10' },
@@ -20,12 +20,7 @@ export default function AdsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Advertisements</h1>
           <p className="text-gray-500 mt-1">Manage and upload advertisements</p>
         </div>
-        <button
-          onClick={() => setShowUpload(!showUpload)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors font-medium"
-        >
-          <Upload className="w-5 h-5" /> Upload Ad
-        </button>
+        <span className="text-sm text-amber-700">Ad upload disabled — no advertiser backend</span>
       </div>
 
       {showUpload && (
@@ -39,7 +34,7 @@ export default function AdsPage() {
               <option>Sample Advertiser B</option>
               <option>Sample Advertiser C</option>
             </select>
-            <input placeholder="Reward Amount (KSh)" className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            <p className="text-sm text-amber-700">Ad rewards are disabled. No KSh-per-view amount is configured.</p>
             <input type="number" placeholder="Duration (seconds)" defaultValue={60} className="px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
           </div>
           <div className="mt-4 border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
@@ -85,7 +80,7 @@ export default function AdsPage() {
                   <td className="p-4 text-sm text-gray-600">{ad.advertiser}</td>
                   <td className="p-4 text-sm text-gray-600">{ad.duration}s</td>
                   <td className="p-4 text-sm font-semibold">{ad.views.toLocaleString()}</td>
-                  <td className="p-4 text-sm font-semibold text-green-600">KSh {ad.reward.toFixed(2)}</td>
+                  <td className="p-4 text-sm text-gray-500">Disabled</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       ad.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
@@ -94,10 +89,7 @@ export default function AdsPage() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <button className="p-1.5 hover:bg-blue-50 rounded-lg"><Eye className="w-4 h-4 text-blue-600" /></button>
-                      <button className="p-1.5 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4 text-red-600" /></button>
-                    </div>
+                    <span className="text-xs text-gray-500">Demo only — unavailable</span>
                   </td>
                 </tr>
               ))}
