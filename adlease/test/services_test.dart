@@ -6,6 +6,7 @@ import 'package:adlease/services/ad_reward_service.dart';
 import 'package:adlease/services/ad_service.dart';
 import 'package:adlease/services/auth_service.dart';
 import 'package:adlease/services/wallet_service.dart';
+import 'package:adlease/services/ownership_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,13 @@ void main() {
       expect((await wallet.getUserWithdrawals('u1')), isEmpty);
       expect((await wallet.getTransactions('u1')), isEmpty);
       expect((await wallet.getWallet('u1')).balance, 0);
+    });
+
+    test('direct phone progress credits are rejected', () async {
+      await expectLater(
+        OwnershipService().addPayment('u1', 10),
+        throwsA(isA<StateError>()),
+      );
     });
 
     test('ad reward claims are rejected before touching ownership or ad history', () async {
