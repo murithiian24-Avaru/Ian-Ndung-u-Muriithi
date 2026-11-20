@@ -18,7 +18,6 @@ import 'package:adlease/providers/locale_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
 import 'package:adlease/providers/theme_provider.dart';
 import 'package:adlease/providers/wallet_provider.dart';
-import 'package:adlease/services/ad_reward_service.dart';
 import 'package:adlease/services/auth_service.dart';
 import 'package:adlease/services/ownership_service.dart';
 
@@ -126,8 +125,9 @@ class TestProviders {
 }
 
 /// Seeds a signed-in demo user (with a long name, to stress the header).
-/// With [withPhone], a phone is chosen and [adsWatched] simulated ads are
-/// claimed, which adds progress to the phone.
+/// With [withPhone], a sample phone is selected. [adsWatched] is retained
+/// for older test callers but intentionally has no effect: reward claims are
+/// disabled in this demo and must not create phone progress.
 Future<TestProviders> seedDemoData({
   bool withPhone = true,
   int adsWatched = 2,
@@ -144,13 +144,6 @@ Future<TestProviders> seedDemoData({
   if (withPhone) {
     final phones = await OwnershipService().getAvailablePhones();
     await OwnershipService().selectPhone(userId: user.uid, phone: phones.first);
-    for (var i = 0; i < adsWatched; i++) {
-      await AdRewardService().claim(
-        userId: user.uid,
-        adId: 'ad$i',
-        deviceId: '',
-      );
-    }
   }
   final p = TestProviders();
   await p.auth.checkAuthState();
