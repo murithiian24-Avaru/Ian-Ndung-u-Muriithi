@@ -137,8 +137,8 @@ void main() {
     });
   });
 
-  group('D. a simulated ad reward goes to phone progress only', () {
-    test('credits the phone and leaves the cash wallet untouched', () async {
+  group('D. ad rewards are disabled', () {
+    test('reward claims are rejected without changing phone progress', () async {
       await OwnershipService().selectPhone(userId: 'u1', phone: _phone);
 
       final result = await AdRewardService().claim(
@@ -147,9 +147,10 @@ void main() {
         deviceId: '',
       );
 
-      expect(result.outcome, AdRewardOutcome.credited);
+      expect(result.outcome, AdRewardOutcome.rejected);
       final ownership = await OwnershipService().getUserOwnership('u1');
-      expect(ownership!.amountPaid, AdService.rewardPerAd);
+      expect(ownership!.amountPaid, 0);
+      expect(await AdService().getAdsWatchedToday('u1'), 0);
 
       final wallet = await WalletService().getWallet('u1');
       expect(wallet.balance, 0);
@@ -157,38 +158,16 @@ void main() {
       expect(await WalletService().getTransactions('u1'), isEmpty);
     });
 
-    test('credits nothing, anywhere, when no phone has been chosen', () async {
+    test('reward claims are rejected even if no phone has been selected', () async {
       final result = await AdRewardService().claim(
         userId: 'u1',
         adId: 'ad1',
         deviceId: '',
       );
 
-      expect(result.outcome, AdRewardOutcome.noActivePhone);
+      expect(result.outcome, AdRewardOutcome.rejected);
       expect(await AdService().getAdsWatchedToday('u1'), 0);
       expect((await WalletService().getWallet('u1')).balance, 0);
-    });
-
-    test('still respects the daily ad limit', () async {
-      await OwnershipService().selectPhone(userId: 'u1', phone: _phone);
-      final rewards = AdRewardService();
-      for (var i = 0; i < AdService.maxAdsPerDay; i++) {
-        final r = await rewards.claim(userId: 'u1', adId: 'ad$i', deviceId: '');
-        expect(r.outcome, AdRewardOutcome.credited);
-      }
-
-      final extra = await rewards.claim(
-        userId: 'u1',
-        adId: 'extra',
-        deviceId: '',
-      );
-      expect(extra.outcome, AdRewardOutcome.rejected);
-
-      final ownership = await OwnershipService().getUserOwnership('u1');
-      expect(
-        ownership!.amountPaid,
-        AdService.rewardPerAd * AdService.maxAdsPerDay,
-      );
     });
   });
 }
