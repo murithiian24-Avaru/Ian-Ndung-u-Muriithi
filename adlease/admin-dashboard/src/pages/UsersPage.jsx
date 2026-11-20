@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, Filter, MoreVertical, UserCheck, UserX, Eye } from 'lucide-react'
+import { Search, Filter } from 'lucide-react'
 
 const sampleUsers = [
   { id: 1, name: 'John Kamau', email: 'john@email.com', phone: '+254711222333', country: 'Kenya', balance: 45.50, ownership: 67, verified: true, status: 'active' },
@@ -95,17 +95,7 @@ export default function UsersPage() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <button className="p-1.5 hover:bg-blue-50 rounded-lg" title="View">
-                        <Eye className="w-4 h-4 text-blue-600" />
-                      </button>
-                      <button className="p-1.5 hover:bg-green-50 rounded-lg" title="Verify">
-                        <UserCheck className="w-4 h-4 text-green-600" />
-                      </button>
-                      <button className="p-1.5 hover:bg-red-50 rounded-lg" title="Suspend">
-                        <UserX className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
+                    <span className="text-xs text-gray-500">Demo only — unavailable</span>
                   </td>
                 </tr>
               ))}
