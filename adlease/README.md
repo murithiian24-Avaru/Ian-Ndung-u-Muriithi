@@ -2,9 +2,7 @@
 
 AdLease is an early-stage product concept exploring phone ownership and possible partner-supported payment models. The current app is a local demo only; it does not offer financing, compulsory advertising, cash rewards, or a route to earn a phone.
 
-> **Status: demo prototype.** There is no backend: every account, ad view and
-> reward is stored only on the phone. Ads, rewards and money are simulated, and
-> nothing is suitable for real users yet. See [Features](#features) for what
+ > **Status: demo prototype.** There is no backend: demo accounts and sample playback history are stored only on the phone. Reward claims, wallet credits and withdrawals are disabled; no real money, ads, financing or customer service is available. See [Features](#features) for what
 > works today, and [`docs/architecture/`](docs/architecture/README.md) for the
 > proposed (not yet built) production design.
 
@@ -109,9 +107,9 @@ authentication and authorization.
 | User list | Simulated / demo-only | Synthetic sample records with search; not real customers |
 | Verify and suspend users | Disabled / unavailable | No action controls; there is no customer-management backend |
 | Advertiser management | Simulated / demo-only | Sample advertisers; the add form saves nothing |
-| Ad upload and management | Simulated / demo-only | The upload form saves nothing |
+| Ad upload and management | Disabled / unavailable | Upload controls are removed; no advertiser or storage backend exists |
 | Withdrawal approvals | Disabled / unavailable | The page is hidden (`WITHDRAWALS_ENABLED = false` in `src/features.js`); its buttons would do nothing |
-| Analytics (revenue, users, ad views) | Simulated / demo-only | Charts of sample numbers. Revenue is labelled "(demo)"; there is no real revenue |
+| Analytics (revenue, users, ad views) | Simulated / demo-only | Synthetic illustrative metrics only; no live users, revenue or ad events |
 | Fraud detection and monitoring | Simulated / demo-only | A page of sample alerts; no fraud detection runs anywhere |
 | Admin sign-in, roles, audit log | Planned, not implemented | Proposed in [`operations.md`](docs/architecture/operations.md). The dashboard must not be deployed publicly before these exist |
 
