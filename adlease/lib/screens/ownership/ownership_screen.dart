@@ -22,14 +22,14 @@ class OwnershipScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Phone Ownership',
+                'Phone Ownership Demo',
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                'Track your phone ownership progress',
+                'Illustrative sample only — no device is reserved, financed or owned through this app.',
                 style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 24),
@@ -160,6 +160,11 @@ class OwnershipScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              const Text(
+                'DEMO ONLY — these figures do not represent payments, a financing agreement or legal ownership.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
               const SizedBox(height: 24),
               LinearPercentIndicator(
                 lineHeight: 16,
@@ -199,7 +204,7 @@ class OwnershipScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _buildInfoCard(
-                      'Phone Value',
+                      'Sample phone value',
                       formatKsh(current.phonePrice, decimals: 0),
                       Icons.phone_android,
                       AdLeaseTheme.primaryBlue,
@@ -209,7 +214,7 @@ class OwnershipScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildInfoCard(
-                      'Amount Paid',
+                      'Sample amount paid',
                       formatKsh(current.amountPaid),
                       Icons.payments,
                       AdLeaseTheme.successGreen,
@@ -239,7 +244,7 @@ class OwnershipScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Phone Owned! Congratulations!',
+                        'Demo progress complete — no purchase or ownership transferred',
                         style: GoogleFonts.poppins(
                           color: AdLeaseTheme.successGreen,
                           fontWeight: FontWeight.w600,
@@ -302,7 +307,7 @@ class OwnershipScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Completed Ownerships',
+              'Completed Demo Selections',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
