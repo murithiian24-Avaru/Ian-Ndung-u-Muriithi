@@ -60,7 +60,7 @@ class ResendThrottle {
 /// `checkingProfile`, and only a server lookup result moves it further.
 class VerificationFlow {
   VerificationFlow(this._gateway, {ResendThrottle? throttle})
-      : _throttle = throttle ?? ResendThrottle();
+    : _throttle = throttle ?? ResendThrottle();
 
   final IdentityGateway _gateway;
   final ResendThrottle _throttle;

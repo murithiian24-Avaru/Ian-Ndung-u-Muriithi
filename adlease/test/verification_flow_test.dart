@@ -6,10 +6,15 @@ class FakeGateway implements IdentityGateway {
   final List<String> calls = [];
 
   GatewayUser? sessionUser;
-  GatewayUser registerResult =
-      const GatewayUser(uid: 'u1', emailVerified: false);
+  GatewayUser registerResult = const GatewayUser(
+    uid: 'u1',
+    emailVerified: false,
+  );
   GatewayUser signInResult = const GatewayUser(uid: 'u1', emailVerified: false);
-  GatewayUser? reloadResult = const GatewayUser(uid: 'u1', emailVerified: false);
+  GatewayUser? reloadResult = const GatewayUser(
+    uid: 'u1',
+    emailVerified: false,
+  );
 
   Object? restoreError;
   Object? registerError;
@@ -80,13 +85,12 @@ void main() {
       bool verified = true,
       ProfileLookup profile = ProfileLookup.present,
       String? status,
-    }) =>
-        resolveAuthStage(
-          signedIn: signedIn,
-          emailVerified: verified,
-          profile: profile,
-          accountStatus: status,
-        );
+    }) => resolveAuthStage(
+      signedIn: signedIn,
+      emailVerified: verified,
+      profile: profile,
+      accountStatus: status,
+    );
 
     test('signed out', () {
       expect(stage(signedIn: false), AuthStage.signedOut);
@@ -172,14 +176,20 @@ void main() {
     });
 
     test('register -> verificationPending and sends one email', () async {
-      expect(await flow.register('a@b.co', 'pw'), AuthStage.verificationPending);
+      expect(
+        await flow.register('a@b.co', 'pw'),
+        AuthStage.verificationPending,
+      );
       expect(gw.calls, ['register', 'send']);
       expect(flow.verificationEmailFailed, isFalse);
     });
 
     test('register: email send failure stays recoverable', () async {
       gw.sendError = const IdentityAuthException('network-request-failed');
-      expect(await flow.register('a@b.co', 'pw'), AuthStage.verificationPending);
+      expect(
+        await flow.register('a@b.co', 'pw'),
+        AuthStage.verificationPending,
+      );
       expect(flow.verificationEmailFailed, isTrue);
       gw.sendError = null;
       expect(await flow.resendVerificationEmail(), ResendOutcome.sent);
@@ -196,11 +206,16 @@ void main() {
       expect(flow.stage, AuthStage.signedOut);
     });
 
-    test('unverified sign-in keeps session only as verificationPending',
-        () async {
-      expect(await flow.signIn('a@b.co', 'pw'), AuthStage.verificationPending);
-      expect(gw.calls, isNot(contains('signOut')));
-    });
+    test(
+      'unverified sign-in keeps session only as verificationPending',
+      () async {
+        expect(
+          await flow.signIn('a@b.co', 'pw'),
+          AuthStage.verificationPending,
+        );
+        expect(gw.calls, isNot(contains('signOut')));
+      },
+    );
 
     test('failed sign-in leaves no session', () async {
       gw.signInError = const IdentityAuthException('wrong-password');
@@ -217,22 +232,23 @@ void main() {
       expect(await flow.signIn('a@b.co', 'pw'), AuthStage.checkingProfile);
     });
 
-    test('refresh while still unverified does not refresh the token',
-        () async {
+    test('refresh while still unverified does not refresh the token', () async {
       await flow.register('a@b.co', 'pw');
       gw.calls.clear();
       expect(await flow.refreshVerification(), AuthStage.verificationPending);
       expect(gw.calls, ['reload']);
     });
 
-    test('refresh after verification reloads, then force-refreshes token',
-        () async {
-      await flow.register('a@b.co', 'pw');
-      gw.calls.clear();
-      gw.reloadResult = const GatewayUser(uid: 'u1', emailVerified: true);
-      expect(await flow.refreshVerification(), AuthStage.checkingProfile);
-      expect(gw.calls, ['reload', 'forceRefresh']);
-    });
+    test(
+      'refresh after verification reloads, then force-refreshes token',
+      () async {
+        await flow.register('a@b.co', 'pw');
+        gw.calls.clear();
+        gw.reloadResult = const GatewayUser(uid: 'u1', emailVerified: true);
+        expect(await flow.refreshVerification(), AuthStage.checkingProfile);
+        expect(gw.calls, ['reload', 'forceRefresh']);
+      },
+    );
 
     test('token refresh failure stays verificationPending', () async {
       await flow.register('a@b.co', 'pw');
@@ -288,10 +304,7 @@ void main() {
     });
 
     test('resend outside verificationPending is not applicable', () async {
-      expect(
-        await flow.resendVerificationEmail(),
-        ResendOutcome.notApplicable,
-      );
+      expect(await flow.resendVerificationEmail(), ResendOutcome.notApplicable);
       expect(gw.sendCount, 0);
     });
 

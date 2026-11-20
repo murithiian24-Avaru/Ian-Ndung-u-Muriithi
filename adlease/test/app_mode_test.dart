@@ -56,9 +56,9 @@ void main() {
 
   group('DemoModeBanner', () {
     Widget host(AppMode mode) => Directionality(
-          textDirection: TextDirection.ltr,
-          child: DemoModeBanner(mode: mode, child: const SizedBox()),
-        );
+      textDirection: TextDirection.ltr,
+      child: DemoModeBanner(mode: mode, child: const SizedBox()),
+    );
 
     testWidgets('shows a banner in demo mode', (tester) async {
       await tester.pumpWidget(host(AppMode.demo));

@@ -6,7 +6,7 @@ import '../config/app_mode.dart';
 /// demo data cannot be mistaken for real customer records.
 class DemoModeBanner extends StatelessWidget {
   const DemoModeBanner({Key? key, required this.mode, required this.child})
-      : super(key: key);
+    : super(key: key);
 
   final AppMode mode;
   final Widget child;
