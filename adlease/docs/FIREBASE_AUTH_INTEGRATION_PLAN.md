@@ -8,7 +8,7 @@
 ## Current verified code state
 
 - Firebase SDK dependencies are present in 'pubspec.yaml'.
-- 'FirebaseIdentityService' exists with email/password create, sign-in, email verification, password reset, sign-out and a server profile-initialization callable.
+- 'FirebaseIdentityService' supports email/password create and sign-in, email verification, password reset, sign-out and explicit profile initialization after verification. Registration no longer creates a server profile before the email is verified.
 - 'FirebaseBootstrap' currently supports only explicit local emulator mode using project 'demo-adlease'; it returns without initializing Firebase when emulator mode is off.
 - 'main.dart' still constructs the existing local 'AuthProvider'.
 - 'AuthProvider' delegates to 'AuthService', which stores demo accounts in SharedPreferences.
@@ -57,7 +57,7 @@ Required journeys:
 - Firebase UID is the stable account key.
 - User profile creation is callable/server-side; client cannot create or delete 'users/{uid}'.
 - Client profile updates are restricted to approved profile fields in Firestore rules.
-- Verification status, account status, reviewer decisions, wallet, ledger, payment and financing state are server-controlled.
+- Verification status, account status, reviewer decisions, wallet, ledger, payment and financing state are server-controlled. Customer callables re-check the authoritative Firebase Auth user (not just token claims), require a non-disabled account and verified email, and fail closed on unknown account/verification states.\n- Verification review requires a non-disabled, email-verified reviewer with the existing reviewer claim and fresh MFA; self-review is denied. The applicant must also remain enabled and email-verified at review time.\n- A verification request stores a server-side snapshot of the applicant's name, phone and country. Firestore rules prevent customers changing those identity fields while verification is pending. Approval updates verification status, profile-details verification and pending account activation atomically.
 - Do not store password hashes, identity documents or financial records in SharedPreferences.
 - Do not treat email verification as KYC or credit approval.
 - No advertising/reward path is enabled; no ad view can create customer value.
@@ -72,7 +72,7 @@ Unit/service:
 - Password reset generic success and failure handling.
 - Sign-out clears session and returns to welcome.
 - Staging/emulator/demo mode isolation and release-mode fail-closed behaviour.
-- Suspended/closed account is blocked by server state.
+- Suspended/closed or unknown account states are blocked by server state.\n- Unverified or disabled Firebase Auth users cannot initialize profiles or request verification.\n- A reviewer cannot approve their own case, a disabled/unverified applicant, or a case whose profile snapshot no longer matches the server profile.\n- Identity fields cannot be edited by a customer while verification is pending; locale-only changes remain permitted.
 
 Widget/integration (Firebase Emulator Suite):
 - Register → verification email action simulated → reload → verified sign-in.
