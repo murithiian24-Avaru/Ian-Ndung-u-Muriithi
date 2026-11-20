@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
+import 'package:adlease/config/features.dart';
 import 'package:adlease/models/ownership_model.dart';
 import 'package:adlease/models/phone_model.dart';
 import 'package:adlease/services/storage_service.dart';
@@ -156,6 +157,10 @@ class OwnershipService {
   }
 
   Future<OwnershipModel> addPayment(String userId, double amount) async {
+    if (!AppFeatures.rewardsEnabled) {
+      throw StateError('Phone progress credits are disabled in this demo.');
+    }
+
     final data = await _storage.getString(_ownershipsKey);
     if (data == null) throw Exception('No active ownership found');
 
