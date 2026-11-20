@@ -156,9 +156,7 @@ export const reviewVerification = onCall(async (request) => {
   }
   assertFreshMfaReviewer(auth.token);
   const reviewer = await getAuth().getUser(auth.uid);
-  if (reviewer.disabled) {
-    throw new HttpsError("permission-denied", "Disabled reviewer accounts cannot make verification decisions.");
-  }
+  assertVerifiedEmail(reviewer);
 
   const caseId = typeof request.data?.caseId === "string" ? request.data.caseId.trim() : "";
   const decision = request.data?.decision;
@@ -195,6 +193,17 @@ export const reviewVerification = onCall(async (request) => {
     assertVerificationState(data.verificationStatus);
     if (data.verificationStatus !== "pending") {
       throw new HttpsError("failed-precondition", "Applicant verification is not pending.");
+    }
+    const snapshot = snap.get("profileSnapshot") as
+      | { fullName?: unknown; phoneNumber?: unknown; country?: unknown }
+      | undefined;
+    if (
+      !snapshot ||
+      snapshot.fullName !== data.fullName ||
+      snapshot.phoneNumber !== data.phoneNumber ||
+      snapshot.country !== data.country
+    ) {
+      throw new HttpsError("failed-precondition", "Applicant profile changed after verification was requested.");
     }
 
     const auditRef = db.collection("adminAudit").doc();
