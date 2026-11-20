@@ -74,7 +74,7 @@ export const initializeUserProfile = onCall(async (request) => {
     const phoneNumber = rawPhone.trim();
     const country = rawCountry.trim();
     if (fullName.length < 2 || fullName.length > 100
-        || !/^\\+[1-9]\\d{7,14}$/.test(phoneNumber)
+        || !/^\+[1-9]\d{7,14}$/.test(phoneNumber)
         || country.length < 2 || country.length > 60) {
       throw new HttpsError("invalid-argument", "Provide a valid name, E.164 phone number and country.");
     }
