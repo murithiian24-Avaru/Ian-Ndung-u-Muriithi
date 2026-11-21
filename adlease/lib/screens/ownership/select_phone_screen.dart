@@ -36,7 +36,9 @@ class SelectPhoneScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.amber.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: const Text(
                   'DEMO CATALOGUE ONLY — selecting a sample phone does not reserve, purchase, finance or transfer ownership of a device. No partner offer or payment plan is available.',
@@ -203,7 +205,9 @@ class SelectPhoneScreen extends StatelessWidget {
                 if (success && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${phone.fullName} added to your demo only.'),
+                      content: Text(
+                        '${phone.fullName} added to your demo only.',
+                      ),
                       backgroundColor: AdLeaseTheme.successGreen,
                     ),
                   );

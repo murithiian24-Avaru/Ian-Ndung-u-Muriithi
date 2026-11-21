@@ -16,14 +16,17 @@ void main() {
   });
 
   group('Disabled financial features', () {
-    test('wallet rejects local reward credits while rewards are disabled', () async {
-      final wallet = WalletService();
+    test(
+      'wallet rejects local reward credits while rewards are disabled',
+      () async {
+        final wallet = WalletService();
 
-      await expectLater(
-        wallet.addEarning('u1', 10, 'test earning'),
-        throwsA(isA<StateError>()),
-      );
-    });
+        await expectLater(
+          wallet.addEarning('u1', 10, 'test earning'),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
 
     test('withdrawal request is rejected before balance or payment details are stored', () async {
       final wallet = WalletService();
@@ -50,17 +53,20 @@ void main() {
       );
     });
 
-    test('ad reward claims are rejected before touching ownership or ad history', () async {
-      final result = await AdRewardService().claim(
-        userId: 'u1',
-        adId: 'sample-ad',
-        deviceId: 'demo-device',
-      );
+    test(
+      'ad reward claims are rejected before touching ownership or ad history',
+      () async {
+        final result = await AdRewardService().claim(
+          userId: 'u1',
+          adId: 'sample-ad',
+          deviceId: 'demo-device',
+        );
 
-      expect(result.outcome, AdRewardOutcome.rejected);
-      expect(result.ownership, isNull);
-      expect(await AdService().getAdsWatchedToday('u1'), 0);
-    });
+        expect(result.outcome, AdRewardOutcome.rejected);
+        expect(result.ownership, isNull);
+        expect(await AdService().getAdsWatchedToday('u1'), 0);
+      },
+    );
   });
 
   group('AdService.recordAdView daily limit (demo playback only)', () {

@@ -284,7 +284,10 @@ class HomeScreen extends StatelessWidget {
                         'Sample phone value',
                         formatKsh(phonePrice, decimals: 0),
                       ),
-                      _buildProgressRow('Sample progress', formatKsh(amountPaid)),
+                      _buildProgressRow(
+                        'Sample progress',
+                        formatKsh(amountPaid),
+                      ),
                       _buildProgressRow(
                         'Illustrative remaining',
                         formatKsh(
@@ -482,7 +485,9 @@ class HomeScreen extends StatelessWidget {
                 child: _buildActionButton(
                   context,
                   AppFeatures.rewardsEnabled ? 'Watch Ad' : 'Ads paused',
-                  AppFeatures.rewardsEnabled ? Icons.play_arrow : Icons.pause_circle_outline,
+                  AppFeatures.rewardsEnabled
+                      ? Icons.play_arrow
+                      : Icons.pause_circle_outline,
                   AdLeaseTheme.primaryBlue,
                   () => Navigator.pushNamed(context, AppRoutes.watchAd),
                   isDark,
