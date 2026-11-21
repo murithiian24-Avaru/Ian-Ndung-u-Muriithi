@@ -173,7 +173,6 @@ class WalletScreen extends StatelessWidget {
 
   // Illustrative phone-selection figures only; no payment or financing exists.
   Widget _buildEarningsOverview(BuildContext context, bool isDark) {
-    final l = AppLocalizations.of(context)!;
     final ownership = context.watch<OwnershipProvider>();
     return Row(
       children: [
