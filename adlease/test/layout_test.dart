@@ -112,14 +112,16 @@ void main() {
     setPhone(tester, PhoneSize.redmi, 1.0);
     await tester.pumpWidget(buildTestApp(p, home: const HomeScreen()));
     await tester.pump(const Duration(milliseconds: 300));
+    // Rewards are deliberately disabled in the demo, so assert the
+    // paused-state dashboard rather than the retired earning labels.
     for (final title in [
-      'Ads Watched Today',
-      'Ads Remaining',
-      'Total Views',
-      'Applied to phone',
-      'Ownership Progress',
+      'Ad rewards',
+      'Ad views',
+      'Phone progress',
+      'Withdrawals',
+      'Illustrative Ownership Demo',
       'Quick Actions',
-      'Watch Ad',
+      'Ads paused',
       'Refer',
     ]) {
       await tester.scrollUntilVisible(find.text(title), 200);
