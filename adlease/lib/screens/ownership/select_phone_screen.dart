@@ -28,16 +28,28 @@ class SelectPhoneScreen extends StatelessWidget {
       ),
       body: Consumer<OwnershipProvider>(
         builder: (_, ownership, __) {
-          return ListView.builder(
+          return ListView(
             padding: const EdgeInsets.all(20),
-            itemCount: ownership.availablePhones.length,
-            itemBuilder: (context, index) {
-              return _buildPhoneCard(
-                context,
-                ownership.availablePhones[index],
-                isDark,
-              );
-            },
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: const Text(
+                  'DEMO CATALOGUE ONLY — selecting a sample phone does not reserve, purchase, finance or transfer ownership of a device. No partner offer or payment plan is available.',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...ownership.availablePhones.map(
+                (phone) => _buildPhoneCard(context, phone, isDark),
+              ),
+            ],
           );
         },
       ),
@@ -154,7 +166,7 @@ class SelectPhoneScreen extends StatelessWidget {
               SizedBox(
                 width: 150,
                 child: GradientButton(
-                  text: 'Select',
+                  text: 'Add to demo',
                   onPressed: () => _selectPhone(context, phone),
                 ),
               ),
@@ -174,7 +186,7 @@ class SelectPhoneScreen extends StatelessWidget {
           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Start your ownership journey for ${phone.fullName} at ${formatKsh(phone.price, decimals: 0)}?',
+          'Add ${phone.fullName} (${formatKsh(phone.price, decimals: 0)}) to your sample demo? This does not reserve, purchase, finance or confer ownership of a device.',
           style: GoogleFonts.poppins(),
         ),
         actions: [
@@ -193,7 +205,9 @@ class SelectPhoneScreen extends StatelessWidget {
                 if (success && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${phone.fullName} selected!'),
+                      content: Text(
+                        '${phone.fullName} added to your demo only.',
+                      ),
                       backgroundColor: AdLeaseTheme.successGreen,
                     ),
                   );
@@ -201,7 +215,7 @@ class SelectPhoneScreen extends StatelessWidget {
                 }
               }
             },
-            child: const Text('Confirm'),
+            child: const Text('Add sample'),
           ),
         ],
       ),

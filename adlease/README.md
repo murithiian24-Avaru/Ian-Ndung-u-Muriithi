@@ -1,10 +1,8 @@
-# AdLease - Watch. Earn. Own.
+# AdLease — phone-ownership concept demo
 
-An innovative ad-powered phone ownership platform where users reduce or complete payment for smartphones by watching compulsory advertisements.
+AdLease is an early-stage product concept exploring phone ownership and possible partner-supported payment models. The current app is a local demo only; it does not offer financing, compulsory advertising, cash rewards, or a route to earn a phone.
 
-> **Status: demo prototype.** There is no backend: every account, ad view and
-> reward is stored only on the phone. Ads, rewards and money are simulated, and
-> nothing is suitable for real users yet. See [Features](#features) for what
+> **Status: demo prototype.** There is no backend: demo accounts and sample playback history are stored only on the phone. Reward claims, wallet credits and withdrawals are disabled; no real money, ads, financing or customer service is available. See [Features](#features) for what
 > works today, and [`docs/architecture/`](docs/architecture/README.md) for the
 > proposed (not yet built) production design.
 
@@ -71,7 +69,7 @@ Each feature is labelled with its real status today:
 - **Planned, not implemented**: proposed in
   [`docs/architecture/`](docs/architecture/README.md); no code exists.
 
-Nothing below is production-ready.
+Nothing below is production-ready. Reward claims, wallet credits and withdrawal requests are blocked at the service boundary while their feature switches are false; existing demo records are not converted into money or customer balances.
 
 ### User App
 
@@ -81,9 +79,9 @@ Nothing below is production-ready.
 | Google Sign-In | Disabled / unavailable | Shows "not available yet" (`signInWithGoogle()` only throws). The `google_sign_in` package is declared but never used |
 | Password reset | Disabled / unavailable | Shows "not available yet" (`resetPassword()` only throws) |
 | Home dashboard (ownership progress, ad stats) | Working, with simulated data | Shows the phone's own demo records. The cash balance shows "Not available" |
-| Watch ads (60-second ads, 3 per day) | Simulated / demo-only | Five generated "Sample Ad" entries and a 60-second countdown; no ad network and no real ads. The daily limit uses the phone's clock and can be bypassed |
+| Watch ads | Disabled / unavailable | The screen explains that ad rewards are paused; no ad can earn cash or phone credit |
 | Anti-cheat verification | Planned, not implemented | The app stores a "verification hash" computed on the phone with a fixed string; it provides **no** protection. Server-side verification is only proposed ([`reward-rules.md`](docs/architecture/reward-rules.md)) |
-| Rewards towards a phone | Simulated / demo-only | Each simulated ad adds KSh 2.50 (a demo value) to phone-ownership progress, stored on the phone. No real value |
+| Ad rewards / money toward a phone | Disabled / unavailable | Reward claims and local wallet credits are blocked by service-level feature guards. No real value, payment or financing exists |
 | Phone ownership tracking | Working, with simulated data | Choose a phone and see progress; stored on the phone only |
 | Wallet and transaction history | Simulated / demo-only | Shows simulated phone-progress entries; there is no cash balance |
 | Withdrawals | Disabled / unavailable | Hidden (`AppFeatures.withdrawalsEnabled = false`). No payment integration exists |
@@ -98,17 +96,20 @@ Nothing below is production-ready.
 ### Admin Dashboard
 
 The dashboard is a front-end prototype. **It shows hard-coded sample data, is
-not connected to the app or any backend, has no sign-in, and is not
-deployed.** A banner in the dashboard says "Demo data only".
+not connected to the app or any backend, has no sign-in, and must not be
+deployed or used to administer customers.** The unauthenticated prototype is
+rendered only by Vite development builds; production builds show an access
+notice instead. This is a deployment guard, not a substitute for real admin
+authentication and authorization.
 
 | Feature | Status | What it actually does today |
 |---|---|---|
-| User list | Simulated / demo-only | Sample users with search |
-| Verify and suspend users | Simulated / demo-only | Buttons are shown but do nothing |
+| User list | Simulated / demo-only | Synthetic sample records with search; not real customers |
+| Verify and suspend users | Disabled / unavailable | No action controls; there is no customer-management backend |
 | Advertiser management | Simulated / demo-only | Sample advertisers; the add form saves nothing |
-| Ad upload and management | Simulated / demo-only | The upload form saves nothing |
+| Ad upload and management | Disabled / unavailable | Upload controls are removed; no advertiser or storage backend exists |
 | Withdrawal approvals | Disabled / unavailable | The page is hidden (`WITHDRAWALS_ENABLED = false` in `src/features.js`); its buttons would do nothing |
-| Analytics (revenue, users, ad views) | Simulated / demo-only | Charts of sample numbers. Revenue is labelled "(demo)"; there is no real revenue |
+| Analytics (revenue, users, ad views) | Simulated / demo-only | Synthetic illustrative metrics only; no live users, revenue or ad events |
 | Fraud detection and monitoring | Simulated / demo-only | A page of sample alerts; no fraud detection runs anywhere |
 | Admin sign-in, roles, audit log | Planned, not implemented | Proposed in [`operations.md`](docs/architecture/operations.md). The dashboard must not be deployed publicly before these exist |
 

@@ -2,9 +2,11 @@
 class AppFeatures {
   AppFeatures._();
 
-  /// Withdrawals are hidden until a secure, approved payout system exists.
-  /// While false, the app shows no withdraw buttons and has no withdrawal
-  /// route. The withdrawal screen and any locally stored requests are kept,
-  /// unused, so nothing is deleted.
+  /// Ad rewards remain disabled until the business model, legal review,
+  /// server-side ledger and partner terms are approved and implemented.
+  static const bool rewardsEnabled = false;
+
+  /// Withdrawals remain disabled until a secure, approved server-side payout
+  /// system exists. The UI route and service operation both enforce this.
   static const bool withdrawalsEnabled = false;
 }

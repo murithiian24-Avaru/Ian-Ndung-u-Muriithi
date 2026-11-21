@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
+import 'package:adlease/config/features.dart';
 import 'package:adlease/models/wallet_model.dart';
 import 'package:adlease/models/transaction_model.dart';
 import 'package:adlease/services/storage_service.dart';
@@ -35,6 +36,10 @@ class WalletService {
     double amount,
     String description,
   ) async {
+    if (!AppFeatures.rewardsEnabled) {
+      throw StateError('Ad rewards are disabled in this demo.');
+    }
+
     final wallets = await _getWallets();
     final index = wallets.indexWhere((w) => w['userId'] == userId);
 
@@ -85,6 +90,9 @@ class WalletService {
     required String paymentMethod,
     required String paymentDetails,
   }) async {
+    if (!AppFeatures.withdrawalsEnabled) {
+      throw StateError('Withdrawals are disabled in this demo.');
+    }
     if (amount <= 0) {
       throw Exception('Enter an amount greater than zero');
     }
@@ -94,8 +102,7 @@ class WalletService {
     }
 
     // Reserve the amount immediately so the same balance cannot be requested
-    // twice. The request stays "pending"; totalWithdrawn is only updated once
-    // a payout is actually made.
+    // twice. This path is unreachable while withdrawals are disabled.
     final wallets = await _getWallets();
     final walletIndex = wallets.indexWhere((w) => w['userId'] == userId);
     if (walletIndex != -1) {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:adlease/config/theme.dart';
+import 'package:adlease/config/features.dart';
 import 'package:adlease/providers/auth_provider.dart';
 import 'package:adlease/providers/ad_provider.dart';
 import 'package:adlease/providers/ownership_provider.dart';
@@ -153,6 +154,21 @@ class _WatchAdScreenState extends State<WatchAdScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (!AppFeatures.rewardsEnabled) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Ads paused')),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'Ad rewards are disabled in this demo. Watching sample ads cannot earn cash or phone credit.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(

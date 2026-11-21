@@ -24,7 +24,51 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  format:
+    name: Apply Dart formatting to same-repository PR branches
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+      - name: Set up Flutter formatter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.8'
+          cache: true
+      - name: Format all tracked Dart files and commit only formatter changes
+        id: commit
+        env:
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' files < <(git ls-files -z -- '*.dart')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No tracked Dart files found."
+          else
+            dart format "${files[@]}"
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet; then
+            git add -- '*.dart'
+            git commit -m "style(adlease): apply Dart formatter"
+            git push origin "HEAD:${PR_BRANCH}"
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
   validate:
+    needs: format
+    if: always() && (needs.format.result == 'success' || needs.format.result == 'skipped')
     name: Flutter ${{ matrix.flutter }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -39,6 +83,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.format.outputs.sha || github.event.pull_request.head.sha || github.sha }}
 
       - uses: actions/setup-java@v5
         with:

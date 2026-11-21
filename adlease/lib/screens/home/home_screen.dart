@@ -75,7 +75,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Watch. Earn. Own.',
+                    'Phone ownership concept demo',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: Colors.grey,
@@ -229,11 +229,16 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Ownership Progress',
+                'Illustrative Ownership Demo',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Sample figures only — no payment, financing or phone ownership is being processed.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 16),
               LayoutBuilder(
@@ -276,12 +281,15 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       _buildProgressRow(
-                        'Phone Value',
+                        'Sample phone value',
                         formatKsh(phonePrice, decimals: 0),
                       ),
-                      _buildProgressRow('Paid', formatKsh(amountPaid)),
                       _buildProgressRow(
-                        'Remaining',
+                        'Sample progress',
+                        formatKsh(amountPaid),
+                      ),
+                      _buildProgressRow(
+                        'Illustrative remaining',
                         formatKsh(
                           (phonePrice - amountPaid).clamp(0, phonePrice),
                         ),
@@ -364,33 +372,61 @@ class HomeScreen extends StatelessWidget {
   Widget _buildStatsGrid(BuildContext context) {
     return Consumer2<AdProvider, OwnershipProvider>(
       builder: (_, adProvider, ownership, __) {
-        final cards = <Widget>[
-          StatsCard(
-            title: 'Ads Watched Today',
-            value: '${adProvider.adsWatchedToday}',
-            icon: Icons.play_circle,
-            color: AdLeaseTheme.primaryBlue,
-            subtitle: '${adProvider.adsRemainingToday} remaining',
-          ),
-          StatsCard(
-            title: 'Ads Remaining',
-            value: '${adProvider.adsRemainingToday}',
-            icon: Icons.timer,
-            color: AdLeaseTheme.accentGold,
-          ),
-          StatsCard(
-            title: 'Total Views',
-            value: '${adProvider.viewHistory.length}',
-            icon: Icons.visibility,
-            color: AdLeaseTheme.successGreen,
-          ),
-          StatsCard(
-            title: AppLocalizations.of(context)!.appliedToPhone,
-            value: formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
-            icon: Icons.monetization_on,
-            color: AdLeaseTheme.warningOrange,
-          ),
-        ];
+        final cards = AppFeatures.rewardsEnabled
+            ? <Widget>[
+                StatsCard(
+                  title: 'Ads Watched Today',
+                  value: '${adProvider.adsWatchedToday}',
+                  icon: Icons.play_circle,
+                  color: AdLeaseTheme.primaryBlue,
+                  subtitle: '${adProvider.adsRemainingToday} remaining',
+                ),
+                StatsCard(
+                  title: 'Ads Remaining',
+                  value: '${adProvider.adsRemainingToday}',
+                  icon: Icons.timer,
+                  color: AdLeaseTheme.accentGold,
+                ),
+                StatsCard(
+                  title: 'Total Views',
+                  value: '${adProvider.viewHistory.length}',
+                  icon: Icons.visibility,
+                  color: AdLeaseTheme.successGreen,
+                ),
+                StatsCard(
+                  title: 'Sample progress',
+                  value: formatKsh(ownership.currentOwnership?.amountPaid ?? 0),
+                  icon: Icons.monetization_on,
+                  color: AdLeaseTheme.warningOrange,
+                ),
+              ]
+            : <Widget>[
+                StatsCard(
+                  title: 'Ad rewards',
+                  value: 'Paused',
+                  icon: Icons.pause_circle_outline,
+                  color: AdLeaseTheme.primaryBlue,
+                  subtitle: 'Not earning',
+                ),
+                StatsCard(
+                  title: 'Ad views',
+                  value: 'Unavailable',
+                  icon: Icons.visibility_off,
+                  color: AdLeaseTheme.accentGold,
+                ),
+                StatsCard(
+                  title: 'Phone progress',
+                  value: 'Demo only',
+                  icon: Icons.phone_android,
+                  color: AdLeaseTheme.successGreen,
+                ),
+                StatsCard(
+                  title: 'Withdrawals',
+                  value: 'Disabled',
+                  icon: Icons.block,
+                  color: AdLeaseTheme.warningOrange,
+                ),
+              ];
         return LayoutBuilder(
           builder: (context, constraints) {
             final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
@@ -448,8 +484,10 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: _buildActionButton(
                   context,
-                  'Watch Ad',
-                  Icons.play_arrow,
+                  AppFeatures.rewardsEnabled ? 'Watch Ad' : 'Ads paused',
+                  AppFeatures.rewardsEnabled
+                      ? Icons.play_arrow
+                      : Icons.pause_circle_outline,
                   AdLeaseTheme.primaryBlue,
                   () => Navigator.pushNamed(context, AppRoutes.watchAd),
                   isDark,
