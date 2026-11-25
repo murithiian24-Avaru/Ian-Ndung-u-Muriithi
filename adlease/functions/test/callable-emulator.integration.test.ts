@@ -28,7 +28,7 @@ async function signedInUser(options: { emailVerified?: boolean; claims?: Record<
   const email = `test-${Date.now()}-${Math.random().toString(16).slice(2)}@example.test`;
   const user = await adminAuth.createUser({ email, emailVerified: options.emailVerified ?? true });
   if (options.claims) await adminAuth.setCustomUserClaims(user.uid, options.claims);
-  const token = await adminAuth.createCustomToken(user.uid);
+  const token = await adminAuth.createCustomToken(user.uid, options.claims);
   await signInWithCustomToken(clientAuth, token);
   return { uid: user.uid, user };
 }
@@ -97,3 +97,12 @@ test("advertising and reward callables reject without customer-value side effect
 async function signedOut() {
   await signOut(clientAuth).catch(() => undefined);
 }
+
+test("disabled Firebase accounts cannot initialize profiles", async () => {
+  await signedOut();
+  const { uid } = await signedInUser();
+  await adminAuth.updateUser(uid, { disabled: true });
+  await assert.rejects(call("initializeUserProfile", {
+    fullName: "Disabled User", phoneNumber: "+254712345678", country: "Kenya",
+  }), (error: unknown) => typeof error === "object" && error !== null && "code" in error && error.code === "functions/permission-denied");
+});
