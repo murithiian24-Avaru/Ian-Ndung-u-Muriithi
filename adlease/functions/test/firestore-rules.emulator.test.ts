@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { after, before, test } from "node:test";
 import { initializeTestEnvironment, RulesTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
 
 let env: RulesTestEnvironment;
 
@@ -141,4 +141,52 @@ test("users cannot list all user profiles or all verification cases", async () =
   const { collection, getDocs } = await import("firebase/firestore");
   await assertFails(getDocs(collection(db, "users")));
   await assertFails(getDocs(collection(db, "verificationCases")));
+});
+
+test("collection-group queries cannot enumerate verification or wallet records", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "users/u1/verificationCases/c1"), { uid: "u1", status: "pending" });
+    await setDoc(doc(db, "users/u2/verificationCases/c2"), { uid: "u2", status: "pending" });
+  });
+  const db = env.authenticatedContext("u1").firestore();
+  await assertFails(getDocs(query(collectionGroup(db, "verificationCases"))));
+  await assertFails(getDocs(query(collectionGroup(db, "wallets"))));
+});
+
+test("clients cannot read or mutate any disabled financial or operational records", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    const protectedDocs = [
+      "wallets/u1", "rewardClaims/r1", "rewardLedger/l1", "dailyRewardCounters/u1",
+      "payments/p1", "financingApplications/f1", "withdrawalRequests/w1",
+      "adSessions/a1", "partnerEvents/e1", "adminAudit/a1",
+    ];
+    for (const path of protectedDocs) {
+      await setDoc(doc(db, path), { uid: "u1", status: "pending", amountMinor: 100 });
+    }
+  });
+  const db = env.authenticatedContext("u1").firestore();
+  const protectedDocs = [
+    "wallets/u1", "rewardClaims/r1", "rewardLedger/l1", "dailyRewardCounters/u1",
+    "payments/p1", "financingApplications/f1", "withdrawalRequests/w1",
+    "adSessions/a1", "partnerEvents/e1", "adminAudit/a1",
+  ];
+  for (const path of protectedDocs) {
+    await assertFails(getDoc(doc(db, path)));
+    await assertFails(updateDoc(doc(db, path), { amountMinor: 999999 }));
+    await assertFails(deleteDoc(doc(db, path)));
+  }
+});
+
+test("profile query must be constrained to the authenticated uid", async () => {
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "users/u1"), {
+      uid: "u1", fullName: "User One", phoneNumber: "+254712345678", country: "Kenya",
+      status: "pending", verificationStatus: "not_started",
+    });
+  });
+  const db = env.authenticatedContext("u1").firestore();
+  await assertSucceeds(getDocs(query(collection(db, "users"), where("uid", "==", "u1"))));
+  await assertFails(getDocs(collection(db, "users")));
 });
