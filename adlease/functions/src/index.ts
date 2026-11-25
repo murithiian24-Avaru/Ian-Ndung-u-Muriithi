@@ -152,14 +152,13 @@ export const reviewVerification = onCall(async (request) => {
     throw new HttpsError("failed-precondition", "Verification review operations are disabled until reviewer governance is approved.");
   }
   const auth = requireAuth(request);
-  assertFreshMfaReviewer(auth.token);
   const reviewer = await getAuth().getUser(auth.uid);
   assertVerifiedEmail(reviewer);
 
-  // The ID token may outlive a custom-claim change. Never authorize review
-  // from token claims alone: require the role to exist on the live Auth record
-  // and to agree with the token presented to this callable.
+  // Check live authorization before MFA so a revoked role is rejected even
+  // when an old ID token still contains reviewer claims.
   assertLiveReviewerAuthorization(reviewer.customClaims, auth.token);
+  assertFreshMfaReviewer(auth.token);
 
   const caseId = typeof request.data?.caseId === "string" ? request.data.caseId.trim() : "";
   const decision = request.data?.decision;
