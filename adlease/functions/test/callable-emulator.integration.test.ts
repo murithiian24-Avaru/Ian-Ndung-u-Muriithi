@@ -4,10 +4,12 @@ import { initializeApp, deleteApp } from "firebase-admin/app";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
 import { initializeApp as initializeClientApp } from "firebase/app";
-import { getAuth, signInWithCustomToken, signOut } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getFunctions, connectFunctionsEmulator, httpsCallable } from "firebase/functions";
 
 const projectId = "demo-adlease";
+process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
+process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8080";
 const adminApp = initializeApp({ projectId }, "adlease-callable-test-admin");
 const adminAuth = getAdminAuth(adminApp);
 const clientApp = initializeClientApp({ projectId, apiKey: "fake-api-key", authDomain: "localhost" }, "adlease-callable-test-client");
@@ -15,10 +17,6 @@ const clientAuth = getAuth(clientApp);
 const functions = getFunctions(clientApp, "us-central1");
 connectFunctionsEmulator(functions, "127.0.0.1", 5001);
 
-before(async () => {
-  process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
-  process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8080";
-});
 after(async () => {
   await signOut(clientAuth).catch(() => undefined);
   await deleteApp(clientApp);
@@ -27,10 +25,12 @@ after(async () => {
 
 async function signedInUser(options: { emailVerified?: boolean; claims?: Record<string, unknown> } = {}) {
   const email = `test-${Date.now()}-${Math.random().toString(16).slice(2)}@example.test`;
-  const user = await adminAuth.createUser({ email, emailVerified: options.emailVerified ?? true });
+  const password = "emulator-test-password-123!";
+  const user = await adminAuth.createUser({
+    email, password, emailVerified: options.emailVerified ?? true,
+  });
   if (options.claims) await adminAuth.setCustomUserClaims(user.uid, options.claims);
-  const token = await adminAuth.createCustomToken(user.uid, options.claims);
-  await signInWithCustomToken(clientAuth, token);
+  await signInWithEmailAndPassword(clientAuth, email, password);
   return { uid: user.uid, user };
 }
 
