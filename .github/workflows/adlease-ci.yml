@@ -38,15 +38,17 @@ jobs:
         working-directory: adlease
         shell: bash
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@fd55f4c5af5b953cc57a2be44cb082c8f6635e8e
         with:
           channel: stable
           flutter-version: ${{ matrix.flutter }}
@@ -59,24 +61,15 @@ jobs:
 
       - name: Committed lockfile (flutter pub get --enforce-lockfile)
         id: lock
-        continue-on-error: true
         run: |
           set -o pipefail
           flutter pub get --enforce-lockfile 2>&1 | tee ../lock.txt
 
       - name: Dependencies
         id: pub
-        continue-on-error: true
         run: |
           set -o pipefail
-          if [ "${{ steps.lock.outcome }}" != success ]; then
-            # The committed lock does not match pubspec.yaml for this Flutter:
-            # re-resolve here (this runner only) so the remaining checks still
-            # run; the new lock is posted in a separate check for review.
-            flutter pub upgrade 2>&1 | tee ../pub.txt
-          else
-            echo "Using the committed pubspec.lock" | tee ../pub.txt
-          fi
+          echo "Using only the committed pubspec.lock" | tee ../pub.txt
           flutter gen-l10n 2>&1 | tee -a ../pub.txt
 
       - name: flutter analyze
@@ -142,7 +135,7 @@ jobs:
 
       - name: Upload debug APK
         if: steps.build.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: adlease-debug-apk-flutter-${{ matrix.flutter }}
           path: adlease/build/app/outputs/flutter-apk/app-debug.apk
@@ -266,7 +259,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
       - name: npm ci
