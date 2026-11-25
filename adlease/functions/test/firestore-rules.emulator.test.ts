@@ -173,6 +173,7 @@ test("clients cannot read or mutate any disabled financial or operational record
     "adSessions/a1", "partnerEvents/e1", "adminAudit/a1",
   ];
   for (const path of protectedDocs) {
+    await assertFails(setDoc(doc(db, path), { uid: "u1", amountMinor: 1 }));
     await assertFails(getDoc(doc(db, path)));
     await assertFails(updateDoc(doc(db, path), { amountMinor: 999999 }));
     await assertFails(deleteDoc(doc(db, path)));
