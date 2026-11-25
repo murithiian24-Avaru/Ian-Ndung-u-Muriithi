@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   assertCustomerAccountStatus,
   assertFreshMfaReviewer,
+  assertLiveReviewerAuthorization,
   assertVerificationState,
   assertVerifiedEmail,
   nextVerificationRequestWindow,
@@ -123,35 +124,26 @@ test("customer account and verification states fail closed", () => {
   assert.throws(() => assertVerificationState("unknown"));
 });
 
+
 test("reviewer authorization requires a current live role and matching token claims", () => {
-  const authorize = (live: { verificationReviewer?: boolean; admin?: boolean }, token: { verificationReviewer?: boolean; admin?: boolean }) => {
-    const liveReviewer = live.verificationReviewer === true;
-    const liveAdmin = live.admin === true;
-    const tokenReviewer = token.verificationReviewer === true;
-    const tokenAdmin = token.admin === true;
-    if (!(liveReviewer || liveAdmin) || tokenReviewer !== liveReviewer || tokenAdmin !== liveAdmin) {
-      throw new Error("permission-denied");
-    }
-  };
-  assert.doesNotThrow(() => authorize({ verificationReviewer: true }, { verificationReviewer: true }));
-  assert.doesNotThrow(() => authorize({ admin: true }, { admin: true }));
-  assert.throws(() => authorize({}, { verificationReviewer: true }), /permission-denied/);
-  assert.throws(() => authorize({ verificationReviewer: true }, {}), /permission-denied/);
-  assert.throws(() => authorize({}, { admin: true }), /permission-denied/);
-  assert.throws(() => authorize({ admin: true }, { verificationReviewer: true }), /permission-denied/);
-  assert.throws(() => authorize({ verificationReviewer: false }, { verificationReviewer: true }), /permission-denied/);
+  assert.doesNotThrow(() => assertLiveReviewerAuthorization({ verificationReviewer: true }, { verificationReviewer: true }));
+  assert.doesNotThrow(() => assertLiveReviewerAuthorization({ admin: true }, { admin: true }));
+  for (const [live, token] of [
+    [{}, { verificationReviewer: true }],
+    [{ verificationReviewer: true }, {}],
+    [{}, { admin: true }],
+    [{ admin: true }, { verificationReviewer: true }],
+  ]) {
+    assert.throws(
+      () => assertLiveReviewerAuthorization(live, token),
+      (error: unknown) => error instanceof Error && "code" in error && error.code === "permission-denied",
+    );
+  }
 });
 
 test("revoked reviewer role is denied even when an old token still carries reviewer claim", () => {
-  const liveClaims = {};
-  const staleTokenClaims = { verificationReviewer: true };
-  const liveReviewer = liveClaims.verificationReviewer === true;
-  const tokenReviewer = staleTokenClaims.verificationReviewer === true;
-  assert.equal(liveReviewer, false);
-  assert.equal(tokenReviewer, true);
-  assert.throws(() => {
-    if (!(liveReviewer || liveClaims.admin === true) || tokenReviewer !== liveReviewer) {
-      throw new Error("permission-denied");
-    }
-  }, /permission-denied/);
+  assert.throws(
+    () => assertLiveReviewerAuthorization({}, { verificationReviewer: true }),
+    (error: unknown) => error instanceof Error && "code" in error && error.code === "permission-denied",
+  );
 });
