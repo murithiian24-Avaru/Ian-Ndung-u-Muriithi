@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { after, before, test } from "node:test";
 import { initializeTestEnvironment, RulesTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
-import { collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where, documentId } from "firebase/firestore";
 
 let env: RulesTestEnvironment;
 
@@ -187,6 +187,6 @@ test("profile query must be constrained to the authenticated uid", async () => {
     });
   });
   const db = env.authenticatedContext("u1").firestore();
-  await assertSucceeds(getDocs(query(collection(db, "users"), where("uid", "==", "u1"))));
+  await assertSucceeds(getDocs(query(collection(db, "users"), where(documentId(), "==", "u1"))));
   await assertFails(getDocs(collection(db, "users")));
 });
