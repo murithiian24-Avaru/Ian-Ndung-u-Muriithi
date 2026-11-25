@@ -1,6 +1,6 @@
 # AdLease Backend Authorization Matrix
 
-Status: implementation baseline only. Emulator execution and callable integration tests are still required. Verification review is disabled unless `ENABLE_VERIFICATION_REVIEW=true`; do not set that variable in any environment as part of this work.
+Status: implementation and test coverage added; execution remains blocked until the Functions lockfile is committed and emulator tests run. `ENABLE_VERIFICATION_REVIEW=true` is set only by the disposable emulator test script. Never set it in production or a deployed environment.
 
 ## Firestore rules matrix
 
