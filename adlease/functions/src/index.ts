@@ -5,6 +5,7 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import {
   assertCustomerAccountStatus,
   assertFreshMfaReviewer,
+  assertLiveReviewerAuthorization,
   assertVerificationState,
   assertVerifiedEmail,
   nextVerificationRequestWindow,
@@ -158,13 +159,7 @@ export const reviewVerification = onCall(async (request) => {
   // The ID token may outlive a custom-claim change. Never authorize review
   // from token claims alone: require the role to exist on the live Auth record
   // and to agree with the token presented to this callable.
-  const liveReviewer = reviewer.customClaims?.verificationReviewer === true;
-  const liveAdmin = reviewer.customClaims?.admin === true;
-  const tokenReviewer = auth.token.verificationReviewer === true;
-  const tokenAdmin = auth.token.admin === true;
-  if (!(liveReviewer || liveAdmin) || tokenReviewer !== liveReviewer || tokenAdmin !== liveAdmin) {
-    throw new HttpsError("permission-denied", "A current reviewer role and refreshed authorization token are required.");
-  }
+  assertLiveReviewerAuthorization(reviewer.customClaims, auth.token);
 
   const caseId = typeof request.data?.caseId === "string" ? request.data.caseId.trim() : "";
   const decision = request.data?.decision;
