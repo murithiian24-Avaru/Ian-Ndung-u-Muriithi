@@ -31,7 +31,7 @@ service cloud.firestore {
     match /adSessions/{id} { allow read, write: if false; }
     match /rewardClaims/{id} { allow read, write: if false; }
     match /rewardLedger/{id} { allow read, write: if false; }
-    match /wallets/{uid} { allow read: if owns(uid); allow write: if false; }
+    match /wallets/{uid} { allow read, write: if false; }
     match /dailyRewardCounters/{id} { allow read, write: if false; }
     match /adminAudit/{id} { allow read, write: if false; }
     match /{document=**} { allow read, write: if false; }
