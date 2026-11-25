@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:production-guard": "npm run build && node scripts/assert-production-disabled.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
