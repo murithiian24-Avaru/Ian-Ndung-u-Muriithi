@@ -83,3 +83,16 @@ export function assertFreshMfaReviewer(
     );
   }
 }
+
+export function assertLiveReviewerAuthorization(
+  liveClaims: Record<string, unknown> | undefined,
+  token: Record<string, unknown>,
+): void {
+  const liveReviewer = liveClaims?.verificationReviewer === true;
+  const liveAdmin = liveClaims?.admin === true;
+  const tokenReviewer = token.verificationReviewer === true;
+  const tokenAdmin = token.admin === true;
+  if (!(liveReviewer || liveAdmin) || tokenReviewer !== liveReviewer || tokenAdmin !== liveAdmin) {
+    throw new HttpsError("permission-denied", "A current reviewer role and refreshed authorization token are required.");
+  }
+}
