@@ -20,6 +20,23 @@ const pages = {
 }
 
 export default function App() {
+  if (import.meta.env.PROD) {
+    return (
+      <main
+        data-adlease-admin-status="ADLEASE_ADMIN_PRODUCTION_DISABLED"
+        className="min-h-screen flex items-center justify-center bg-slate-950 p-8 text-center text-white"
+      >
+        <section className="max-w-lg">
+          <h1 className="text-2xl font-semibold">Admin dashboard unavailable</h1>
+          <p className="mt-3 text-slate-300">
+            The AdLease admin dashboard is disabled in production. No administrator
+            sign-in or production data access is available from this build.
+          </p>
+        </section>
+      </main>
+    )
+  }
+
   const [currentPage, setCurrentPage] = useState('dashboard')
   const PageComponent = pages[currentPage] || Dashboard
 
