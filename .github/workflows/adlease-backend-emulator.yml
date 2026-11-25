@@ -1,0 +1,80 @@
+name: AdLease backend and production isolation
+
+on:
+  pull_request:
+    paths:
+      - 'adlease/functions/**'
+      - 'adlease/firestore.rules'
+      - 'adlease/firebase.json'
+      - 'adlease/admin-dashboard/**'
+      - '.github/workflows/adlease-backend-emulator.yml'
+  push:
+    branches:
+      - 'security/**'
+    paths:
+      - 'adlease/functions/**'
+      - 'adlease/firestore.rules'
+      - 'adlease/firebase.json'
+      - 'adlease/admin-dashboard/**'
+      - '.github/workflows/adlease-backend-emulator.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adlease-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-emulators:
+    name: Functions and Firestore emulator tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: adlease/functions
+        shell: bash
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.16.0'
+          cache: npm
+          cache-dependency-path: adlease/functions/package-lock.json
+      - name: Require committed dependency lockfile
+        run: |
+          test -f package-lock.json || {
+            echo "::error::BLOCKED: adlease/functions/package-lock.json is missing. npm ci is intentionally not replaced by npm install."
+            exit 1
+          }
+      - name: Install exact dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Compile and run unit plus emulator integration tests
+        env:
+          CI: 'true'
+        run: npm run test:emulator
+
+  admin-production-isolation:
+    name: Admin production build is unavailable-only
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: adlease/admin-dashboard
+        shell: bash
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.16.0'
+          cache: npm
+          cache-dependency-path: adlease/admin-dashboard/package-lock.json
+      - name: Install exact dashboard dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Build and verify production dashboard isolation
+        run: npm run test:production-guard
