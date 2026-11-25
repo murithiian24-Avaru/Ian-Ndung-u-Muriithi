@@ -17,7 +17,7 @@ service cloud.firestore {
         && request.resource.data.fullName.size() >= 2
         && request.resource.data.fullName.size() <= 100
         && request.resource.data.phoneNumber is string
-        && request.resource.data.phoneNumber.matches('^\\\\+[1-9][0-9]{7,14}$')
+        && request.resource.data.phoneNumber.matches('^\\+[1-9][0-9]{7,14}$')
         && request.resource.data.country is string
         && request.resource.data.country.size() >= 2
         && request.resource.data.country.size() <= 60;
