@@ -128,12 +128,13 @@ test("customer account and verification states fail closed", () => {
 test("reviewer authorization requires a current live role and matching token claims", () => {
   assert.doesNotThrow(() => assertLiveReviewerAuthorization({ verificationReviewer: true }, { verificationReviewer: true }));
   assert.doesNotThrow(() => assertLiveReviewerAuthorization({ admin: true }, { admin: true }));
-  for (const [live, token] of [
+  const revokedOrStaleCases: Array<[Record<string, unknown>, Record<string, unknown>]> = [
     [{}, { verificationReviewer: true }],
     [{ verificationReviewer: true }, {}],
     [{}, { admin: true }],
     [{ admin: true }, { verificationReviewer: true }],
-  ]) {
+  ];
+  for (const [live, token] of revokedOrStaleCases) {
     assert.throws(
       () => assertLiveReviewerAuthorization(live, token),
       (error: unknown) => error instanceof Error && "code" in error && error.code === "permission-denied",
