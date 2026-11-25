@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { initializeApp, deleteApp } from "firebase-admin/app";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
+import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
 import { initializeApp as initializeClientApp } from "firebase/app";
 import { getAuth, signInWithCustomToken, signOut } from "firebase/auth";
 import { getFunctions, connectFunctionsEmulator, httpsCallable } from "firebase/functions";
@@ -105,4 +106,22 @@ test("disabled Firebase accounts cannot initialize profiles", async () => {
   await assert.rejects(call("initializeUserProfile", {
     fullName: "Disabled User", phoneNumber: "+254712345678", country: "Kenya",
   }), (error: unknown) => typeof error === "object" && error !== null && "code" in error && error.code === "functions/permission-denied");
+});
+
+test("suspended customer cannot request verification", async () => {
+  await signedOut();
+  const { uid } = await signedInUser();
+  await call("initializeUserProfile", {
+    fullName: "Suspended User", phoneNumber: "+254712345678", country: "Kenya",
+  });
+  await getAdminFirestore(adminApp).doc(`users/${uid}`).update({ status: "suspended" });
+  await assert.rejects(call("requestVerification"), (error: unknown) =>
+    typeof error === "object" && error !== null && "code" in error && error.code === "functions/permission-denied");
+});
+
+test("review callable rejects a user with no reviewer role", async () => {
+  await signedOut();
+  await signedInUser();
+  await assert.rejects(call("reviewVerification", { caseId: "not-a-case", decision: "approved" }),
+    (error: unknown) => typeof error === "object" && error !== null && "code" in error && error.code === "functions/permission-denied");
 });
