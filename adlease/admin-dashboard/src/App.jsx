@@ -20,6 +20,8 @@ const pages = {
 }
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState('dashboard')
+
   if (import.meta.env.PROD) {
     return (
       <main
@@ -36,8 +38,7 @@ export default function App() {
       </main>
     )
   }
-
-  const [currentPage, setCurrentPage] = useState('dashboard')
+ 
   const PageComponent = pages[currentPage] || Dashboard
 
   return (
